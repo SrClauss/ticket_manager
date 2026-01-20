@@ -1,0 +1,314 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ evento.nome }} - Detalhes{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="text-glass mb-1">{{ evento.nome }}</h1>
+                    <p class="text-glass-muted mb-0">{{ evento.descricao }}</p>
+                </div>
+                <a href="/admin/eventos" class="btn btn-glass">
+                    <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
+                    Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Event Info -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="glass-card p-3 text-center">
+            <i data-lucide="calendar" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>
+            <h6 class="text-glass-muted mb-1">Data do Evento</h6>
+            <h5 class="text-glass">{{ evento.data_evento.strftime('%d/%m/%Y %H:%M') }}</h5>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card p-3 text-center">
+            <i data-lucide="key" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>
+            <h6 class="text-glass-muted mb-1">Token Bilheteria</h6>
+            <code class="text-glass small">{{ evento.token_bilheteria[:20] }}...</code>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card p-3 text-center">
+            <i data-lucide="shield" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>
+            <h6 class="text-glass-muted mb-1">Token Portaria</h6>
+            <code class="text-glass small">{{ evento.token_portaria[:20] }}...</code>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="glass-card p-3">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <a href="/admin/eventos/layout/{{ evento.id }}" class="btn btn-gradient w-100">
+                        <i data-lucide="layout" style="width: 20px; height: 20px;"></i>
+                        Editor de Layout
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="/bilheteria/credenciamento?token={{ evento.token_bilheteria }}" class="btn btn-glass w-100" target="_blank">
+                        <i data-lucide="users" style="width: 20px; height: 20px;"></i>
+                        Abrir Bilheteria
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="/portaria/controle?token={{ evento.token_portaria }}" class="btn btn-glass w-100" target="_blank">
+                        <i data-lucide="door-open" style="width: 20px; height: 20px;"></i>
+                        Abrir Portaria
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ilhas/Setores -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="text-glass mb-0">Ilhas/Setores</h5>
+                <button class="btn btn-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#addIlhaModal">
+                    <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+                    Adicionar Ilha
+                </button>
+            </div>
+            
+            {% if ilhas %}
+            <div class="row">
+                {% for ilha in ilhas %}
+                <div class="col-md-6 mb-3">
+                    <div class="glass-card p-3">
+                        <h6 class="text-glass">{{ ilha.nome_setor }}</h6>
+                        <p class="text-glass-muted mb-0 small">
+                            <i data-lucide="users" style="width: 14px; height: 14px;"></i>
+                            Capacidade: {{ ilha.capacidade_maxima }}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-glass-muted text-center">Nenhuma ilha cadastrada</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Tipos de Ingresso -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="text-glass mb-0">Tipos de Ingresso</h5>
+                <button class="btn btn-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#addTipoIngressoModal">
+                    <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+                    Adicionar Tipo
+                </button>
+            </div>
+            
+            {% if tipos_ingresso %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr class="text-glass-muted">
+                            <th>Descrição</th>
+                            <th>Valor</th>
+                            <th>Permissões</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tipo in tipos_ingresso %}
+                        <tr class="text-glass">
+                            <td>{{ tipo.descricao }}</td>
+                            <td>R$ {{ "%.2f"|format(tipo.valor) }}</td>
+                            <td>
+                                <span class="badge bg-primary">{{ tipo.permissoes|length }} ilha(s)</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-glass-muted text-center">Nenhum tipo de ingresso cadastrado</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Ilha Modal -->
+<div class="modal fade" id="addIlhaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content glass-card">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-glass">Adicionar Ilha/Setor</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addIlhaForm">
+                    <div class="mb-3">
+                        <label class="form-label text-glass">Nome do Setor *</label>
+                        <input type="text" class="form-control" id="ilhaNome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-glass">Capacidade Máxima *</label>
+                        <input type="number" class="form-control" id="ilhaCapacidade" min="1" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-gradient" onclick="addIlha()">
+                    <i data-lucide="save" style="width: 16px; height: 16px;"></i>
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Tipo Ingresso Modal -->
+<div class="modal fade" id="addTipoIngressoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content glass-card">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-glass">Adicionar Tipo de Ingresso</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addTipoIngressoForm">
+                    <div class="mb-3">
+                        <label class="form-label text-glass">Descrição *</label>
+                        <input type="text" class="form-control" id="tipoDescricao" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-glass">Valor (R$) *</label>
+                        <input type="number" class="form-control" id="tipoValor" min="0" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-glass">Permissões de Acesso</label>
+                        {% for ilha in ilhas %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="{{ ilha.id }}" id="ilha_{{ ilha.id }}">
+                            <label class="form-check-label text-glass" for="ilha_{{ ilha.id }}">
+                                {{ ilha.nome_setor }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                        {% if not ilhas %}
+                        <p class="text-glass-muted small">Nenhuma ilha disponível. Adicione ilhas primeiro.</p>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-gradient" onclick="addTipoIngresso()">
+                    <i data-lucide="save" style="width: 16px; height: 16px;"></i>
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const EVENTO_ID = "{{ evento.id }}";
+    const API_BASE = "/api/admin";
+    const ADMIN_KEY = "{{ evento.token_bilheteria }}"; // TODO: Get actual admin key
+    
+    async function addIlha() {
+        const form = document.getElementById('addIlhaForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        const data = {
+            evento_id: EVENTO_ID,
+            nome_setor: document.getElementById('ilhaNome').value,
+            capacidade_maxima: parseInt(document.getElementById('ilhaCapacidade').value)
+        };
+        
+        try {
+            const response = await fetch(`${API_BASE}/ilhas`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Key': ADMIN_KEY
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+                alert('Ilha adicionada com sucesso!');
+                location.reload();
+            } else {
+                throw new Error('Erro ao adicionar ilha');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Erro ao adicionar ilha');
+        }
+    }
+    
+    async function addTipoIngresso() {
+        const form = document.getElementById('addTipoIngressoForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        // Get selected ilhas
+        const permissoes = [];
+        document.querySelectorAll('[id^="ilha_"]:checked').forEach(checkbox => {
+            permissoes.push(checkbox.value);
+        });
+        
+        const data = {
+            evento_id: EVENTO_ID,
+            descricao: document.getElementById('tipoDescricao').value,
+            valor: parseFloat(document.getElementById('tipoValor').value),
+            permissoes: permissoes
+        };
+        
+        try {
+            const response = await fetch(`${API_BASE}/tipos-ingresso`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Key': ADMIN_KEY
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+                alert('Tipo de ingresso adicionado com sucesso!');
+                location.reload();
+            } else {
+                throw new Error('Erro ao adicionar tipo de ingresso');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Erro ao adicionar tipo de ingresso');
+        }
+    }
+    
+    // Initialize icons
+    lucide.createIcons();
+</script>
+{% endblock %}

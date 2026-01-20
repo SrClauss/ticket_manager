@@ -291,6 +291,53 @@ async def admin_evento_criar(
     return RedirectResponse(url="/admin/eventos", status_code=status.HTTP_303_SEE_OTHER)
 
 
+@router.get("/eventos/{evento_id}", response_class=HTMLResponse)
+async def admin_evento_detalhes(request: Request, evento_id: str):
+    """Event details with ilhas and ticket types"""
+    redirect = check_admin_session(request)
+    if redirect:
+        return redirect
+    
+    db = get_database()
+    
+    try:
+        evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+        if not evento:
+            raise HTTPException(status_code=404, detail="Evento não encontrado")
+        
+        evento["_id"] = str(evento["_id"])
+        evento["id"] = evento["_id"]
+        
+        # Get ilhas
+        ilhas = []
+        cursor = db.ilhas.find({"evento_id": evento["id"]})
+        async for ilha in cursor:
+            ilha["_id"] = str(ilha["_id"])
+            ilha["id"] = ilha["_id"]
+            ilhas.append(ilha)
+        
+        # Get ticket types
+        tipos_ingresso = []
+        cursor = db.tipos_ingresso.find({"evento_id": evento["id"]})
+        async for tipo in cursor:
+            tipo["_id"] = str(tipo["_id"])
+            tipo["id"] = tipo["_id"]
+            tipos_ingresso.append(tipo)
+        
+        return templates.TemplateResponse(
+            "admin/evento_detalhes.html",
+            {
+                "request": request,
+                "active_page": "eventos",
+                "evento": evento,
+                "ilhas": ilhas,
+                "tipos_ingresso": tipos_ingresso
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.get("/eventos/layout/{evento_id}", response_class=HTMLResponse)
 async def admin_evento_layout_page(request: Request, evento_id: str):
     """Ticket layout editor"""
