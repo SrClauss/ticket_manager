@@ -248,7 +248,7 @@
         const fontSize = document.getElementById('fontSize').value;
         
         if (type !== 'logo' && !content) {
-            alert('Por favor, insira o conteúdo do elemento');
+            showToast('Por favor, insira o conteúdo do elemento', 'warning');
             return;
         }
         
@@ -386,9 +386,9 @@
             const response = await fetch('/admin/eventos/layout/{{ evento.id }}', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-Admin-Key': 'admin_key_change_in_production'
+                    'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify({ layout_ingresso: layout })
             });
             

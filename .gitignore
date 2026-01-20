@@ -132,3 +132,4 @@ Thumbs.db
 # Uploads
 app/static/uploads/*
 !app/static/uploads/.gitkeep
+uploads_dev/

@@ -6,7 +6,10 @@ Sistema completo de gerenciamento de eventos com controle de acesso e emissão d
 
 O EventMaster API é uma solução backend para gestão de eventos que oferece:
 
+- **Interface Web Administrativa**: Painel moderno com design glassmorphism
 - **Gerenciamento de Eventos**: CRUD completo de eventos com configuração de layout personalizável
+- **Upload de Logo**: Sistema de upload com validação e otimização automática de imagens
+- **Editor Visual de Ingressos**: Criador drag-and-drop de layouts de ingressos
 - **Controle de Acesso por Setores (Ilhas)**: Defina áreas e permissões de acesso
 - **Tipos de Ingresso Flexíveis**: Configure diferentes categorias com permissões específicas
 - **Bilheteria Digital**: Emissão de ingressos com QR Code único
@@ -46,23 +49,67 @@ O EventMaster API é uma solução backend para gestão de eventos que oferece:
 
 ## 🚀 Como executar
 
+### Método 1: Docker Compose (Recomendado)
+
 1. Clone o repositório:
 ```bash
 git clone https://github.com/SrClauss/ticket_manager.git
 cd ticket_manager
 ```
 
-2. Copie o arquivo de exemplo de variáveis de ambiente:
+2. Copie o arquivo de exemplo de variáveis de ambiente (ou use o script de inicialização):
 ```bash
 cp .env.example .env
 ```
 
-3. Execute o projeto com Docker Compose:
+3. Execute o script de inicialização:
 ```bash
-docker-compose up --build
+./start.sh
 ```
 
-A API estará disponível em: `http://localhost:8000`
+OU execute manualmente:
+```bash
+docker compose up --build -d
+```
+
+4. Acesse a aplicação:
+- **Admin Web UI**: http://localhost:8000/admin/login
+- **API Docs (Swagger)**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+**Chave de acesso padrão**: `admin_key_change_in_production`
+
+### Método 2: Desenvolvimento Local com Hot-Reload
+
+Use o arquivo docker-compose.dev.yml que inclui Mongo Express para visualizar o banco:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+Isso iniciará:
+- **FastAPI** com hot-reload em http://localhost:8000
+- **MongoDB** em localhost:27017
+- **Mongo Express** em http://localhost:8081 (usuário: admin, senha: admin)
+
+### Comandos Úteis do Docker Compose
+
+```bash
+# Parar serviços
+docker compose down
+
+# Ver logs
+docker compose logs -f fastapi
+
+# Reconstruir após mudanças
+docker compose up --build
+
+# Limpar tudo (incluindo volumes)
+docker compose down -v
+
+# Verificar status
+docker compose ps
+```
 
 ## 📚 Documentação da API
 
@@ -90,7 +137,31 @@ O sistema utiliza três tipos de autenticação baseada em tokens:
 
 ## 🔌 Módulos e Endpoints
 
-### 📊 Módulo Administrativo (`/api/admin`)
+### 🌐 Interface Web Administrativa (`/admin`)
+
+**Interface Web Moderna com Glassmorphism Design**
+
+- `GET /admin/login` - Tela de login administrativa
+- `GET /admin/dashboard` - Dashboard com estatísticas
+- `GET /admin/eventos` - Listagem de eventos com filtros
+- `GET /admin/eventos/novo` - Formulário de criação de evento
+- `POST /admin/eventos/novo` - Criar evento com upload de logo
+- `GET /admin/eventos/layout/{id}` - Editor visual de layout de ingressos
+- `POST /admin/eventos/layout/{id}` - Salvar layout do ingresso
+- `POST /admin/eventos/limpar-passados` - Soft delete de eventos passados
+- `GET /admin/financeiro` - Módulo financeiro (em desenvolvimento)
+- `GET /admin/configuracoes` - Configurações do sistema
+
+**Recursos da Interface:**
+- Design glassmorphism com gradientes vibrantes
+- Navegação bottom bar mobile-first
+- Upload de logo com validação (200KB max, PNG/JPG)
+- Editor visual drag-and-drop de ingressos
+- Sistema de template tags: `{NOME}`, `{CPF}`, `{EMAIL}`, `{TIPO_INGRESSO}`, etc.
+- Filtros avançados de eventos
+- Notificações toast do Bootstrap
+
+### 📊 Módulo Administrativo API (`/api/admin`)
 
 **Gestão de Eventos**
 - `GET /eventos` - Lista todos os eventos
