@@ -167,28 +167,34 @@
     <nav class="bottom-nav glass-nav">
         <div class="container">
             <div class="row text-center">
-                <div class="col-3">
+                <div class="col">
                     <a href="/admin/dashboard" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
                         <i data-lucide="layout-dashboard"></i>
                         <span>Dashboard</span>
                     </a>
                 </div>
-                <div class="col-3">
+                <div class="col">
                     <a href="/admin/eventos" class="nav-link {% if active_page == 'eventos' %}active{% endif %}">
                         <i data-lucide="calendar"></i>
                         <span>Eventos</span>
                     </a>
                 </div>
-                <div class="col-3">
+                <div class="col">
                     <a href="/admin/financeiro" class="nav-link {% if active_page == 'financeiro' %}active{% endif %}">
                         <i data-lucide="trending-up"></i>
                         <span>Financeiro</span>
                     </a>
                 </div>
-                <div class="col-3">
+                <div class="col">
                     <a href="/admin/configuracoes" class="nav-link {% if active_page == 'configuracoes' %}active{% endif %}">
                         <i data-lucide="settings"></i>
                         <span>Config</span>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="/admin/logout" class="nav-link">
+                        <i data-lucide="log-out"></i>
+                        <span>Sair</span>
                     </a>
                 </div>
             </div>

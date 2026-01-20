@@ -2,11 +2,16 @@ from fastapi import APIRouter, Request, HTTPException, status, Depends, Form, Up
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 from bson import ObjectId
 from app.models.evento import EventoUpdate
 from app.config.database import get_database
-from app.config.auth import verify_admin_access
+from app.config.auth import (
+    verify_admin_access, 
+    verify_admin_credentials, 
+    create_access_token,
+    verify_jwt_token
+)
 from PIL import Image
 import base64
 import io
@@ -19,11 +24,18 @@ admin_sessions = set()
 
 
 def check_admin_session(request: Request):
-    """Check if admin is logged in"""
-    session_token = request.cookies.get("admin_session")
-    if not session_token or session_token not in admin_sessions:
+    """Check if admin is logged in via JWT cookie"""
+    jwt_token = request.cookies.get("admin_jwt")
+    if not jwt_token:
         return RedirectResponse(url="/admin/login", status_code=status.HTTP_303_SEE_OTHER)
-    return None
+    
+    try:
+        payload = verify_jwt_token(jwt_token)
+        if payload.get("role") != "admin":
+            return RedirectResponse(url="/admin/login", status_code=status.HTTP_303_SEE_OTHER)
+        return None
+    except HTTPException:
+        return RedirectResponse(url="/admin/login", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -36,20 +48,32 @@ async def admin_login_page(request: Request, error: Optional[str] = None):
 
 
 @router.post("/login")
-async def admin_login(request: Request, admin_key: str = Form(...)):
-    """Process admin login"""
-    # Simple authentication (in production, use proper authentication)
-    if admin_key == "admin_key_change_in_production":
-        session_token = base64.b64encode(f"{admin_key}:{datetime.utcnow()}".encode()).decode()
-        admin_sessions.add(session_token)
+async def admin_login(
+    request: Request, 
+    username: str = Form(...),
+    password: str = Form(...)
+):
+    """Process admin login with JWT"""
+    if verify_admin_credentials(username, password):
+        # Create JWT token
+        access_token = create_access_token(
+            data={"sub": username, "role": "admin"},
+            expires_delta=timedelta(hours=24)
+        )
         
         response = RedirectResponse(url="/admin/dashboard", status_code=status.HTTP_303_SEE_OTHER)
-        response.set_cookie(key="admin_session", value=session_token, httponly=True)
+        response.set_cookie(
+            key="admin_jwt", 
+            value=access_token, 
+            httponly=True,
+            max_age=86400,  # 24 hours
+            samesite="lax"
+        )
         return response
     else:
         return templates.TemplateResponse(
             "admin/login.html",
-            {"request": request, "error": "Chave de acesso inválida", "active_page": ""}
+            {"request": request, "error": "Credenciais inválidas", "active_page": ""}
         )
 
 
@@ -267,6 +291,53 @@ async def admin_evento_criar(
     return RedirectResponse(url="/admin/eventos", status_code=status.HTTP_303_SEE_OTHER)
 
 
+@router.get("/eventos/{evento_id}", response_class=HTMLResponse)
+async def admin_evento_detalhes(request: Request, evento_id: str):
+    """Event details with ilhas and ticket types"""
+    redirect = check_admin_session(request)
+    if redirect:
+        return redirect
+    
+    db = get_database()
+    
+    try:
+        evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+        if not evento:
+            raise HTTPException(status_code=404, detail="Evento não encontrado")
+        
+        evento["_id"] = str(evento["_id"])
+        evento["id"] = evento["_id"]
+        
+        # Get ilhas
+        ilhas = []
+        cursor = db.ilhas.find({"evento_id": evento["id"]})
+        async for ilha in cursor:
+            ilha["_id"] = str(ilha["_id"])
+            ilha["id"] = ilha["_id"]
+            ilhas.append(ilha)
+        
+        # Get ticket types
+        tipos_ingresso = []
+        cursor = db.tipos_ingresso.find({"evento_id": evento["id"]})
+        async for tipo in cursor:
+            tipo["_id"] = str(tipo["_id"])
+            tipo["id"] = tipo["_id"]
+            tipos_ingresso.append(tipo)
+        
+        return templates.TemplateResponse(
+            "admin/evento_detalhes.html",
+            {
+                "request": request,
+                "active_page": "eventos",
+                "evento": evento,
+                "ilhas": ilhas,
+                "tipos_ingresso": tipos_ingresso
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.get("/eventos/layout/{evento_id}", response_class=HTMLResponse)
 async def admin_evento_layout_page(request: Request, evento_id: str):
     """Ticket layout editor"""
@@ -359,6 +430,15 @@ async def admin_financeiro(request: Request):
             "active_page": "financeiro"
         }
     )
+
+
+@router.get("/logout", response_class=HTMLResponse)
+async def admin_logout(request: Request):
+    """Logout admin"""
+    response = RedirectResponse(url="/admin/login", status_code=status.HTTP_303_SEE_OTHER)
+    response.delete_cookie(key="admin_jwt")
+    return response
+
 
 
 @router.get("/configuracoes", response_class=HTMLResponse)

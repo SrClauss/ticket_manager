@@ -118,48 +118,96 @@ docker compose ps
 
 ## 🔐 Autenticação
 
-O sistema utiliza três tipos de autenticação baseada em tokens:
+O sistema utiliza autenticação moderna com múltiplas camadas de segurança:
 
-### 1. Acesso Administrativo
-- Header: `X-Admin-Key`
-- Valor padrão (DEV): `admin_key_change_in_production`
-- **⚠️ IMPORTANTE**: Altere para OAuth2/JWT em produção
+### 1. Acesso Administrativo (JWT)
+- **Login**: Interface web em `/admin/login`
+- **Credenciais padrão (DEV)**:
+  - Username: `admin`
+  - Password: `admin_key_change_in_production`
+- **Tecnologia**: JWT (JSON Web Tokens) com Bearer Authentication
+- **Expiração**: 24 horas (configurável)
+- **Header API**: `Authorization: Bearer <JWT_TOKEN>`
+- **Cookie Web**: `admin_jwt` (HttpOnly, Secure)
+- ⚠️ **IMPORTANTE**: Configure JWT_SECRET_KEY forte em produção
 
 ### 2. Token de Bilheteria
 - Header: `X-Token-Bilheteria`
 - Gerado automaticamente ao criar um evento
 - Permite: cadastro de participantes, emissão de ingressos
+- Acesso via URL: `/bilheteria/credenciamento?token=TOKEN`
 
 ### 3. Token de Portaria
 - Header: `X-Token-Portaria`
 - Gerado automaticamente ao criar um evento
 - Permite: validação de QR codes e controle de acesso
+- Acesso via URL: `/portaria/controle?token=TOKEN`
 
 ## 🔌 Módulos e Endpoints
 
 ### 🌐 Interface Web Administrativa (`/admin`)
 
-**Interface Web Moderna com Glassmorphism Design**
+**Interface Web Moderna com Glassmorphism Design e JWT Authentication**
 
-- `GET /admin/login` - Tela de login administrativa
-- `GET /admin/dashboard` - Dashboard com estatísticas
-- `GET /admin/eventos` - Listagem de eventos com filtros
+- `GET /admin/login` - Tela de login administrativa com JWT
+- `POST /admin/login` - Autenticação (username/password → JWT)
+- `GET /admin/logout` - Encerrar sessão
+- `GET /admin/dashboard` - Dashboard com estatísticas em tempo real
+- `GET /admin/eventos` - Listagem de eventos com filtros avançados
 - `GET /admin/eventos/novo` - Formulário de criação de evento
 - `POST /admin/eventos/novo` - Criar evento com upload de logo
-- `GET /admin/eventos/layout/{id}` - Editor visual de layout de ingressos
+- `GET /admin/eventos/{id}` - Detalhes do evento com gestão de ilhas e tipos de ingresso
+- `GET /admin/eventos/layout/{id}` - Editor visual de layout de ingressos (drag-and-drop)
 - `POST /admin/eventos/layout/{id}` - Salvar layout do ingresso
-- `POST /admin/eventos/limpar-passados` - Soft delete de eventos passados
+- `POST /admin/eventos/limpar-passados` - Soft delete de eventos passados (manutenção)
 - `GET /admin/financeiro` - Módulo financeiro (em desenvolvimento)
 - `GET /admin/configuracoes` - Configurações do sistema
 
 **Recursos da Interface:**
 - Design glassmorphism com gradientes vibrantes
-- Navegação bottom bar mobile-first
-- Upload de logo com validação (200KB max, PNG/JPG)
-- Editor visual drag-and-drop de ingressos
-- Sistema de template tags: `{NOME}`, `{CPF}`, `{EMAIL}`, `{TIPO_INGRESSO}`, etc.
-- Filtros avançados de eventos
+- Navegação bottom bar mobile-first com logout
+- Upload de logo com validação (200KB max, PNG/JPG, resize 400x400)
+- Editor visual drag-and-drop de ingressos com Interact.js
+- Sistema de template tags: `{NOME}`, `{CPF}`, `{EMAIL}`, `{TIPO_INGRESSO}`, `{qrcode_hash}`, etc.
+- Filtros avançados de eventos (status, período, busca)
 - Notificações toast do Bootstrap
+- Gestão completa de ilhas/setores e tipos de ingresso
+- Links diretos para módulos operacionais
+
+### 🎫 Módulos Operacionais (Web UI)
+
+**Box Office/Credenciamento** (`/bilheteria/credenciamento?token=TOKEN`)
+- Interface responsiva para tablets/desktops
+- Busca de participantes por nome, email ou CPF
+- Botão "Adicionar Participante" com formulário completo
+- Emissão de ingressos com QR code
+- Design glassmorphism consistente
+
+**Gate/Access Control** (`/portaria/controle?token=TOKEN`)
+- Scanner QR code com Html5-qrcode
+- Suporte a câmera frontal para dispositivos móveis
+- Seleção de setor/ilha para validação
+- Feedback visual full-screen:
+  - ✓ Verde para acesso PERMITIDO
+  - ✗ Vermelho para acesso NEGADO
+- Contadores em tempo real (permitidos/negados)
+- Informações da última validação
+
+**Lead Collector** (`/leads/coletor`)
+- Scanner QR code para captura de leads
+- Armazenamento local com localStorage
+- Contador de leads coletados (total e hoje)
+- Exportação para CSV
+- Feedback sonoro em captura bem-sucedida
+- Sem necessidade de autenticação
+
+**Self-Credentialing** (`/auto-credenciamento?evento_id=ID`)
+- Interface de auto-atendimento
+- Scanner QR code com câmera frontal
+- Simulação de impressão automática de crachá
+- Tela de boas-vindas personalizada
+- Redirecionamento para Help Desk em caso de erro
+- Design intuitivo para público geral
 
 ### 📊 Módulo Administrativo API (`/api/admin`)
 
@@ -189,8 +237,9 @@ O sistema utiliza três tipos de autenticação baseada em tokens:
 ### 🎫 Módulo Bilheteria (`/api/bilheteria`)
 
 - `POST /participantes` - Cadastro rápido de participantes
+- `GET /participantes/buscar` - Busca participantes por filtros (nome, email, CPF)
 - `POST /emitir` - Emite ingresso com QR code e retorna layout preenchido
-- `GET /busca-credenciamento` - Busca participantes por nome/email
+- `GET /busca-credenciamento` - Busca participantes com ingressos para reimpressão
 - `POST /reimprimir/{ingresso_id}` - Reimprime ingresso existente
 
 ### 🚪 Módulo Portaria (`/api/portaria`)
@@ -351,37 +400,74 @@ O campo `layout_ingresso` permite personalização completa do layout de impress
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **FastAPI**: Framework web moderno para APIs
+- **FastAPI**: Framework web moderno e rápido para APIs
 - **MongoDB**: Banco de dados NoSQL com Motor (driver assíncrono)
-- **Pydantic v2**: Validação de dados
-- **Docker**: Containerização
-- **QRCode**: Geração de códigos QR
+- **Pydantic v2**: Validação de dados e serialização
+- **PyJWT & python-jose**: Autenticação JWT
+- **Docker & Docker Compose**: Containerização e orquestração
+- **QRCode & Pillow**: Geração de QR codes e processamento de imagens
 - **OpenPyXL**: Exportação de planilhas Excel
+- **Jinja2**: Template engine para renderização de páginas
+- **Bootstrap 5**: Framework CSS para UI responsiva
+- **Html5-qrcode**: Biblioteca JavaScript para leitura de QR codes
+- **Interact.js**: Biblioteca para drag-and-drop no editor visual
+- **Lucide Icons**: Ícones modernos e consistentes
 
 ## 🔒 Segurança
 
 ### Recursos Implementados
-- Tokens únicos por evento para bilheteria e portaria
-- Validação de permissões baseada em ilhas
-- Índices únicos para QR codes e emails
-- CORS configurável
+- ✅ **JWT Authentication**: Autenticação segura com tokens JWT para administradores
+- ✅ **Tokens únicos por evento**: Para bilheteria e portaria
+- ✅ **Validação de permissões**: Baseada em ilhas/setores
+- ✅ **Índices únicos**: Para QR codes e emails (previne duplicatas)
+- ✅ **CORS configurável**: Controle de origens permitidas
+- ✅ **Secure cookies**: HttpOnly cookies para JWT
+- ✅ **Timezone-aware datetime**: Compatibilidade com Python 3.12+
+- ✅ **Environment validation**: Validação de JWT secret em produção
+- ✅ **Image validation**: Validação de tipo, tamanho e resize automático para logos
+
+### CodeQL Security Scan
+- ✅ **0 vulnerabilities encontradas** - Código verificado e aprovado
 
 ### Recomendações para Produção
-- ⚠️ Implementar OAuth2/JWT para autenticação administrativa
-- Configurar CORS com domínios específicos
-- Usar HTTPS
-- Implementar rate limiting
-- Adicionar logs de auditoria
-- Configurar variáveis de ambiente seguras
+- ⚠️ Configure JWT_SECRET_KEY forte (use `openssl rand -hex 32`)
+- ⚠️ Configure ENVIRONMENT=production no .env
+- ⚠️ Configure ADMIN_USERNAME e ADMIN_PASSWORD seguros
+- ⚠️ Restrinja CORS com domínios específicos
+- ⚠️ Use HTTPS em produção
+- ⚠️ Implemente rate limiting (ex: slowapi)
+- ⚠️ Adicione logs de auditoria
+- ⚠️ Configure backup automático do MongoDB
+- ⚠️ Use secrets manager (AWS Secrets Manager, Azure Key Vault, etc.)
 
 ## 🌐 Variáveis de Ambiente
 
 ```env
+# Environment Configuration
+ENVIRONMENT=development  # or production
+
+# MongoDB Configuration
 MONGO_USERNAME=admin
 MONGO_PASSWORD=password
 MONGO_DATABASE=ticket_manager
 MONGODB_URL=mongodb://admin:password@localhost:27017
 DATABASE_NAME=ticket_manager
+
+# JWT Configuration (CRITICAL FOR PRODUCTION)
+JWT_SECRET_KEY=your-secret-key-change-in-production-use-openssl-rand-hex-32
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=1440
+
+# Admin Configuration (CHANGE IN PRODUCTION)
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=change-this-password-in-production
+```
+
+**Gerando JWT_SECRET_KEY seguro:**
+```bash
+openssl rand -hex 32
+# or
+python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
 ## 🔧 Desenvolvimento Local

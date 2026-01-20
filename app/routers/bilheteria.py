@@ -147,6 +147,36 @@ def preencher_layout(layout: Dict[str, Any], dados: Dict[str, str]) -> Dict[str,
     return json.loads(layout_str)
 
 
+@router.get("/participantes/buscar", response_model=List[Participante])
+async def buscar_participantes(
+    nome: str = None,
+    email: str = None,
+    cpf: str = None,
+    evento_id: str = Depends(verify_token_bilheteria)
+):
+    """Busca participantes por filtros"""
+    db = get_database()
+    
+    query = {}
+    if nome:
+        query["nome"] = {"$regex": nome, "$options": "i"}
+    if email:
+        query["email"] = {"$regex": email, "$options": "i"}
+    if cpf:
+        query["cpf"] = {"$regex": cpf, "$options": "i"}
+    
+    if not query:
+        return []
+    
+    participantes = []
+    cursor = db.participantes.find(query).limit(20)
+    async for participante in cursor:
+        participante["_id"] = str(participante["_id"])
+        participantes.append(Participante(**participante))
+    
+    return participantes
+
+
 @router.get("/busca-credenciamento", response_model=List[Dict[str, Any]])
 async def buscar_credenciamento(
     nome: str = None,

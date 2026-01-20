@@ -1,0 +1,277 @@
+{% extends "operational/base.html" %}
+
+{% block title %}Coletor de Leads{% endblock %}
+
+{% block extra_css %}
+<style>
+    #qr-reader-lead {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .lead-card {
+        margin-bottom: 10px;
+    }
+    
+    .stats-row {
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="glass-card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="text-glass mb-1">Coletor de Leads</h2>
+                <p class="text-glass-muted mb-0">Capture contatos via QR Code</p>
+            </div>
+            <button class="btn btn-gradient" onclick="exportLeads()">
+                <i data-lucide="download" style="width: 20px; height: 20px;"></i>
+                Exportar
+            </button>
+        </div>
+    </div>
+    
+    <!-- Stats -->
+    <div class="row stats-row">
+        <div class="col-6">
+            <div class="glass-card p-3 text-center">
+                <h3 class="text-glass" id="leadsCount">0</h3>
+                <small class="text-glass-muted">Leads Coletados</small>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="glass-card p-3 text-center">
+                <h3 class="text-glass" id="todayCount">0</h3>
+                <small class="text-glass-muted">Hoje</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- QR Scanner -->
+    <div class="glass-card p-4 text-center mb-4">
+        <h5 class="text-glass mb-3">Scanner QR Code</h5>
+        <div id="qr-reader-lead"></div>
+        <p class="text-glass-muted mt-3" id="scannerStatus">Clique no botão para iniciar</p>
+        <button class="btn btn-gradient mt-3" id="toggleCameraLead">
+            <i data-lucide="camera" style="width: 20px; height: 20px;"></i>
+            Iniciar Scanner
+        </button>
+    </div>
+    
+    <!-- Leads List -->
+    <div class="glass-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="text-glass mb-0">Leads Capturados</h5>
+            <button class="btn btn-glass btn-sm" onclick="clearLeads()">
+                <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                Limpar
+            </button>
+        </div>
+        <div id="leadsList">
+            <p class="text-glass-muted text-center">Nenhum lead capturado ainda</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Html5-qrcode library -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<script>
+    let leads = JSON.parse(localStorage.getItem('collectedLeads') || '[]');
+    let html5QrCode = null;
+    let scanning = false;
+    
+    const toggleButton = document.getElementById('toggleCameraLead');
+    
+    // Initialize
+    updateLeadsList();
+    updateStats();
+    
+    toggleButton.addEventListener('click', async () => {
+        if (!scanning) {
+            await startScanner();
+        } else {
+            await stopScanner();
+        }
+    });
+    
+    async function startScanner() {
+        try {
+            html5QrCode = new Html5Qrcode("qr-reader-lead");
+            
+            await html5QrCode.start(
+                { facingMode: "environment" }, // Back camera for lead collection
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 }
+                },
+                onScanSuccess,
+                onScanError
+            );
+            
+            scanning = true;
+            toggleButton.innerHTML = '<i data-lucide="camera-off" style="width: 20px; height: 20px;"></i> Parar Scanner';
+            lucide.createIcons();
+            document.getElementById('scannerStatus').textContent = 'Scanner ativo - Aguardando QR Code...';
+            
+        } catch (err) {
+            console.error('Error starting scanner:', err);
+            alert('Erro ao iniciar scanner. Verifique as permissões da câmera.');
+        }
+    }
+    
+    async function stopScanner() {
+        if (html5QrCode) {
+            try {
+                await html5QrCode.stop();
+                html5QrCode.clear();
+                scanning = false;
+                toggleButton.innerHTML = '<i data-lucide="camera" style="width: 20px; height: 20px;"></i> Iniciar Scanner';
+                lucide.createIcons();
+                document.getElementById('scannerStatus').textContent = 'Scanner parado';
+            } catch (err) {
+                console.error('Error stopping scanner:', err);
+            }
+        }
+    }
+    
+    function onScanSuccess(decodedText, decodedResult) {
+        // Add to leads
+        const lead = {
+            qrcode: decodedText,
+            timestamp: new Date().toISOString(),
+            data: decodedResult
+        };
+        
+        // Check if already collected
+        const exists = leads.some(l => l.qrcode === decodedText);
+        if (exists) {
+            alert('Este QR Code já foi coletado!');
+            return;
+        }
+        
+        leads.unshift(lead);
+        localStorage.setItem('collectedLeads', JSON.stringify(leads));
+        
+        updateLeadsList();
+        updateStats();
+        
+        // Play success sound or show visual feedback
+        playSuccessSound();
+    }
+    
+    function onScanError(errorMessage) {
+        // Ignore scan errors
+    }
+    
+    function updateLeadsList() {
+        const container = document.getElementById('leadsList');
+        
+        if (leads.length === 0) {
+            container.innerHTML = '<p class="text-glass-muted text-center">Nenhum lead capturado ainda</p>';
+            return;
+        }
+        
+        let html = '';
+        leads.forEach((lead, index) => {
+            const date = new Date(lead.timestamp);
+            html += `
+                <div class="glass-card p-3 lead-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-glass-muted d-block">Lead #${leads.length - index}</small>
+                            <code class="text-glass">${lead.qrcode.substring(0, 40)}...</code>
+                            <small class="text-glass-muted d-block mt-1">${date.toLocaleString('pt-BR')}</small>
+                        </div>
+                        <button class="btn btn-glass btn-sm" onclick="removeLead(${index})">
+                            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+        lucide.createIcons();
+    }
+    
+    function updateStats() {
+        document.getElementById('leadsCount').textContent = leads.length;
+        
+        const today = new Date().toDateString();
+        const todayLeads = leads.filter(l => new Date(l.timestamp).toDateString() === today);
+        document.getElementById('todayCount').textContent = todayLeads.length;
+    }
+    
+    function removeLead(index) {
+        if (confirm('Remover este lead?')) {
+            leads.splice(index, 1);
+            localStorage.setItem('collectedLeads', JSON.stringify(leads));
+            updateLeadsList();
+            updateStats();
+        }
+    }
+    
+    function clearLeads() {
+        if (confirm('Limpar todos os leads? Esta ação não pode ser desfeita.')) {
+            leads = [];
+            localStorage.setItem('collectedLeads', JSON.stringify(leads));
+            updateLeadsList();
+            updateStats();
+        }
+    }
+    
+    function exportLeads() {
+        if (leads.length === 0) {
+            alert('Nenhum lead para exportar');
+            return;
+        }
+        
+        // Create CSV
+        let csv = 'QR Code,Data/Hora\n';
+        leads.forEach(lead => {
+            csv += `"${lead.qrcode}","${new Date(lead.timestamp).toLocaleString('pt-BR')}"\n`;
+        });
+        
+        // Download
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `leads_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+    
+    function playSuccessSound() {
+        // Create a simple beep sound
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+    }
+    
+    // Initialize icons
+    lucide.createIcons();
+</script>
+{% endblock %}
