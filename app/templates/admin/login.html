@@ -1,0 +1,46 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Login - EventMaster Admin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: calc(100vh - 100px);">
+    <div class="col-md-6 col-lg-4">
+        <div class="glass-card p-4 shadow-lg">
+            <div class="text-center mb-4">
+                <h2 class="text-glass fw-bold">EventMaster Pro</h2>
+                <p class="text-glass-muted">Painel Administrativo</p>
+            </div>
+            
+            <form action="/admin/login" method="POST">
+                <div class="mb-3">
+                    <label for="admin_key" class="form-label text-glass">Chave de Acesso</label>
+                    <input type="password" class="form-control" id="admin_key" name="admin_key" 
+                           placeholder="Digite sua chave de administrador" required>
+                </div>
+                
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-gradient btn-lg">
+                        <i data-lucide="log-in" class="me-2"></i>
+                        Entrar
+                    </button>
+                </div>
+            </form>
+            
+            {% if error %}
+            <div class="alert alert-danger mt-3 glass-card" role="alert">
+                {{ error }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize icons after DOM load
+    document.addEventListener('DOMContentLoaded', function() {
+        lucide.createIcons();
+    });
+</script>
+{% endblock %}

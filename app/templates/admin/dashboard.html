@@ -1,0 +1,116 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Dashboard - EventMaster Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="glass-card p-4">
+            <h1 class="text-glass mb-0">Dashboard</h1>
+            <p class="text-glass-muted">Visão geral do sistema</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Total de Eventos -->
+    <div class="col-md-6 col-lg-3">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-glass-muted mb-1">Total de Eventos</h6>
+                    <h2 class="text-glass mb-0">{{ stats.total_eventos }}</h2>
+                </div>
+                <div>
+                    <i data-lucide="calendar" class="text-glass" style="width: 40px; height: 40px;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Eventos Ativos -->
+    <div class="col-md-6 col-lg-3">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-glass-muted mb-1">Eventos Ativos</h6>
+                    <h2 class="text-glass mb-0">{{ stats.eventos_ativos }}</h2>
+                </div>
+                <div>
+                    <i data-lucide="check-circle" class="text-glass" style="width: 40px; height: 40px;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Total de Ingressos -->
+    <div class="col-md-6 col-lg-3">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-glass-muted mb-1">Ingressos Emitidos</h6>
+                    <h2 class="text-glass mb-0">{{ stats.total_ingressos }}</h2>
+                </div>
+                <div>
+                    <i data-lucide="ticket" class="text-glass" style="width: 40px; height: 40px;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Receita Total -->
+    <div class="col-md-6 col-lg-3">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-glass-muted mb-1">Receita Total</h6>
+                    <h2 class="text-glass mb-0">R$ {{ "%.2f"|format(stats.receita_total) }}</h2>
+                </div>
+                <div>
+                    <i data-lucide="dollar-sign" class="text-glass" style="width: 40px; height: 40px;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="glass-card p-4">
+            <h5 class="text-glass mb-3">Próximos Eventos</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr class="text-glass">
+                            <th>Evento</th>
+                            <th>Data</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for evento in proximos_eventos %}
+                        <tr class="text-glass-muted">
+                            <td>{{ evento.nome }}</td>
+                            <td>{{ evento.data_evento.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                {% if evento.ativo %}
+                                <span class="badge bg-success">Ativo</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inativo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="/admin/eventos/{{ evento.id }}" class="btn btn-sm btn-glass">
+                                    <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

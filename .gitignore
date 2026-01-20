@@ -128,3 +128,8 @@ dmypy.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Uploads
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+uploads_dev/
