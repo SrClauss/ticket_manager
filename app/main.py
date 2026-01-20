@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.config.database import connect_to_mongo, close_mongo_connection
 from app.config.indexes import create_indexes
-from app.routers import admin, bilheteria, portaria, leads, admin_web
+from app.routers import admin, bilheteria, portaria, leads, admin_web, operational_web
 
 app = FastAPI(
     title="EventMaster API",
@@ -35,6 +35,7 @@ async def shutdown_db_client():
 
 # Include routers
 app.include_router(admin_web.router, prefix="/admin", tags=["Admin Web UI"])
+app.include_router(operational_web.router, tags=["Operational Web UI"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Administrativo"])
 app.include_router(bilheteria.router, prefix="/api/bilheteria", tags=["Bilheteria"])
 app.include_router(portaria.router, prefix="/api/portaria", tags=["Portaria/Controle de Acesso"])

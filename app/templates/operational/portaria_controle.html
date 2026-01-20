@@ -1,0 +1,249 @@
+{% extends "operational/base.html" %}
+
+{% block title %}Controle de Acesso - {{ evento.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    #qr-reader {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .ilha-selector {
+        margin-bottom: 20px;
+    }
+    
+    .stats-card {
+        text-align: center;
+        padding: 15px;
+    }
+    
+    .stats-card h3 {
+        font-size: 2rem;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="glass-card p-4 mb-4">
+        <h2 class="text-glass mb-1">Controle de Acesso</h2>
+        <p class="text-glass-muted mb-0">{{ evento.nome }}</p>
+    </div>
+    
+    <!-- Ilha Selector -->
+    <div class="glass-card p-4 ilha-selector">
+        <label class="form-label text-glass">Selecione o Setor/Ilha</label>
+        <select class="form-select form-select-lg" id="ilhaSelect">
+            <option value="">-- Selecione um setor --</option>
+            {% for ilha in ilhas %}
+            <option value="{{ ilha.id }}">{{ ilha.nome_setor }} (Cap: {{ ilha.capacidade_maxima }})</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <!-- Stats -->
+    <div class="row mb-4">
+        <div class="col-6">
+            <div class="glass-card stats-card">
+                <h3 class="text-success" id="successCount">0</h3>
+                <small class="text-glass-muted">Acessos Permitidos</small>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="glass-card stats-card">
+                <h3 class="text-danger" id="deniedCount">0</h3>
+                <small class="text-glass-muted">Acessos Negados</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- QR Scanner -->
+    <div class="glass-card p-4 text-center">
+        <h5 class="text-glass mb-3">Scanner QR Code</h5>
+        <div id="qr-reader"></div>
+        <p class="text-glass-muted mt-3" id="scannerStatus">Posicione o QR Code na frente da câmera</p>
+        <button class="btn btn-glass mt-3" id="toggleCamera">
+            <i data-lucide="camera" style="width: 20px; height: 20px;"></i>
+            Iniciar Scanner
+        </button>
+    </div>
+    
+    <!-- Last Scan Info -->
+    <div class="glass-card p-4 mt-4" id="lastScanInfo" style="display: none;">
+        <h6 class="text-glass mb-3">Última Validação</h6>
+        <div id="lastScanDetails"></div>
+    </div>
+</div>
+
+<!-- Full Screen Feedback -->
+<div class="fullscreen-feedback" id="feedbackScreen">
+    <h1 id="feedbackIcon"></h1>
+    <h2 id="feedbackMessage" class="text-white"></h2>
+    <p id="feedbackDetails" class="text-white fs-4"></p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Html5-qrcode library -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<script>
+    const TOKEN = "{{ token }}";
+    const API_BASE = "/api/portaria";
+    
+    let successCount = 0;
+    let deniedCount = 0;
+    let html5QrCode = null;
+    let scanning = false;
+    
+    const toggleButton = document.getElementById('toggleCamera');
+    const ilhaSelect = document.getElementById('ilhaSelect');
+    
+    toggleButton.addEventListener('click', async () => {
+        if (!scanning) {
+            await startScanner();
+        } else {
+            await stopScanner();
+        }
+    });
+    
+    async function startScanner() {
+        if (!ilhaSelect.value) {
+            alert('Por favor, selecione um setor/ilha primeiro');
+            return;
+        }
+        
+        try {
+            html5QrCode = new Html5Qrcode("qr-reader");
+            
+            await html5QrCode.start(
+                { facingMode: "user" }, // Front camera
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 }
+                },
+                onScanSuccess,
+                onScanError
+            );
+            
+            scanning = true;
+            toggleButton.innerHTML = '<i data-lucide="camera-off" style="width: 20px; height: 20px;"></i> Parar Scanner';
+            lucide.createIcons();
+            document.getElementById('scannerStatus').textContent = 'Scanner ativo - Aguardando QR Code...';
+            
+        } catch (err) {
+            console.error('Error starting scanner:', err);
+            alert('Erro ao iniciar scanner. Verifique as permissões da câmera.');
+        }
+    }
+    
+    async function stopScanner() {
+        if (html5QrCode) {
+            try {
+                await html5QrCode.stop();
+                html5QrCode.clear();
+                scanning = false;
+                toggleButton.innerHTML = '<i data-lucide="camera" style="width: 20px; height: 20px;"></i> Iniciar Scanner';
+                lucide.createIcons();
+                document.getElementById('scannerStatus').textContent = 'Scanner parado';
+            } catch (err) {
+                console.error('Error stopping scanner:', err);
+            }
+        }
+    }
+    
+    async function onScanSuccess(decodedText, decodedResult) {
+        // Stop scanner temporarily to process
+        const ilhaId = ilhaSelect.value;
+        
+        try {
+            const response = await fetch(`${API_BASE}/validar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Token-Portaria': TOKEN
+                },
+                body: JSON.stringify({
+                    qrcode_hash: decodedText,
+                    ilha_id: ilhaId
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.status === 'OK') {
+                // Success
+                successCount++;
+                document.getElementById('successCount').textContent = successCount;
+                showFeedback(true, 'ACESSO PERMITIDO', `${data.participante_nome}\n${data.tipo_ingresso}`);
+                
+                // Show last scan info
+                document.getElementById('lastScanInfo').style.display = 'block';
+                document.getElementById('lastScanDetails').innerHTML = `
+                    <p class="text-glass mb-1"><strong>Status:</strong> <span class="text-success">✓ Permitido</span></p>
+                    <p class="text-glass mb-1"><strong>Participante:</strong> ${data.participante_nome}</p>
+                    <p class="text-glass mb-0"><strong>Tipo:</strong> ${data.tipo_ingresso}</p>
+                `;
+            } else {
+                // Denied
+                deniedCount++;
+                document.getElementById('deniedCount').textContent = deniedCount;
+                showFeedback(false, 'ACESSO NEGADO', data.mensagem || 'Ingresso inválido ou sem permissão');
+                
+                // Show last scan info
+                document.getElementById('lastScanInfo').style.display = 'block';
+                document.getElementById('lastScanDetails').innerHTML = `
+                    <p class="text-glass mb-1"><strong>Status:</strong> <span class="text-danger">✗ Negado</span></p>
+                    <p class="text-glass mb-0"><strong>Motivo:</strong> ${data.mensagem || 'Acesso não autorizado'}</p>
+                `;
+            }
+            
+        } catch (error) {
+            console.error('Validation error:', error);
+            deniedCount++;
+            document.getElementById('deniedCount').textContent = deniedCount;
+            showFeedback(false, 'ERRO', 'Erro ao validar acesso');
+        }
+    }
+    
+    function onScanError(errorMessage) {
+        // Ignore scan errors (they happen constantly while scanning)
+    }
+    
+    function showFeedback(success, message, details) {
+        const feedbackScreen = document.getElementById('feedbackScreen');
+        const feedbackIcon = document.getElementById('feedbackIcon');
+        const feedbackMessage = document.getElementById('feedbackMessage');
+        const feedbackDetails = document.getElementById('feedbackDetails');
+        
+        if (success) {
+            feedbackScreen.classList.remove('danger');
+            feedbackScreen.classList.add('success');
+            feedbackIcon.textContent = '✓';
+        } else {
+            feedbackScreen.classList.remove('success');
+            feedbackScreen.classList.add('danger');
+            feedbackIcon.textContent = '✗';
+        }
+        
+        feedbackMessage.textContent = message;
+        feedbackDetails.textContent = details;
+        
+        feedbackScreen.classList.add('active');
+        
+        // Hide after 3 seconds
+        setTimeout(() => {
+            feedbackScreen.classList.remove('active');
+        }, 3000);
+    }
+    
+    // Initialize icons
+    lucide.createIcons();
+</script>
+{% endblock %}
