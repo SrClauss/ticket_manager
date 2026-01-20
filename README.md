@@ -143,7 +143,63 @@ O sistema utiliza autenticação moderna com múltiplas camadas de segurança:
 - Permite: validação de QR codes e controle de acesso
 - Acesso via URL: `/portaria/controle?token=TOKEN`
 
-## 🔌 Módulos e Endpoints
+## � Gerenciamento de Administradores
+
+O sistema permite criar múltiplos usuários administradores com controle de acesso completo:
+
+### Funcionalidades
+- **Criação de Administradores**: Adicione novos usuários com username, email e senha
+- **Autenticação Segura**: Senhas hasheadas com bcrypt
+- **Controle de Ativos**: Ative/desative contas de administradores
+- **Rastreamento de Login**: Último login registrado automaticamente
+- **Admin Inicial**: Criado automaticamente na primeira execução
+
+### Endpoints da API
+
+**Listar Administradores**
+```bash
+GET /api/admin/admins
+Authorization: Bearer <JWT_TOKEN>
+```
+
+**Criar Administrador**
+```bash
+POST /api/admin/admins
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/json
+
+{
+  "username": "novo_admin",
+  "email": "admin@example.com",
+  "nome": "Novo Administrador",
+  "password": "senha_segura_123"
+}
+```
+
+**Atualizar Administrador**
+```bash
+PUT /api/admin/admins/{admin_id}
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/json
+
+{
+  "nome": "Nome Atualizado",
+  "ativo": true
+}
+```
+
+**Remover Administrador**
+```bash
+DELETE /api/admin/admins/{admin_id}
+Authorization: Bearer <JWT_TOKEN>
+```
+
+### Primeiro Acesso
+- **Username**: `admin`
+- **Password**: `admin_key_change_in_production`
+- Após login, crie novos administradores e desative o padrão
+
+## �🔌 Módulos e Endpoints
 
 ### 🌐 Interface Web Administrativa (`/admin`)
 

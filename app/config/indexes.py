@@ -25,4 +25,9 @@ async def create_indexes():
     # Índice para interações de leads
     await db.lead_interacoes.create_index([("evento_id", 1), ("data_interacao", -1)])
     
+    # Índices para administradores
+    await db.administradores.create_index("username", unique=True)
+    await db.administradores.create_index("email", unique=True)
+    await db.administradores.create_index("ativo")
+    
     print("Índices criados com sucesso")

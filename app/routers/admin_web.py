@@ -12,6 +12,7 @@ from app.config.auth import (
     create_access_token,
     verify_jwt_token
 )
+from app.models.admin import Admin
 from PIL import Image
 import base64
 import io
@@ -54,10 +55,11 @@ async def admin_login(
     password: str = Form(...)
 ):
     """Process admin login with JWT"""
-    if verify_admin_credentials(username, password):
+    admin = await verify_admin_credentials(username, password)
+    if admin:
         # Create JWT token
         access_token = create_access_token(
-            data={"sub": username, "role": "admin"},
+            data={"sub": admin.username, "role": "admin", "admin_id": admin.id},
             expires_delta=timedelta(hours=24)
         )
         
