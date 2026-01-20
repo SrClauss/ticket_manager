@@ -72,7 +72,7 @@ async def get_admin_by_username(username: str) -> Optional[Admin]:
     db = get_database()
     admin_data = await db.administradores.find_one({"username": username, "ativo": True})
     if admin_data:
-        return Admin(**admin_data)
+        return Admin.from_mongo(admin_data)
     return None
 
 
@@ -81,7 +81,7 @@ async def get_admin_by_id(admin_id: str) -> Optional[Admin]:
     db = get_database()
     admin_data = await db.administradores.find_one({"_id": ObjectId(admin_id), "ativo": True})
     if admin_data:
-        return Admin(**admin_data)
+        return Admin.from_mongo(admin_data)
     return None
 
 
@@ -89,7 +89,7 @@ async def get_all_admins() -> List[Admin]:
     """Get all active admins"""
     db = get_database()
     admins_data = await db.administradores.find({"ativo": True}).to_list(length=None)
-    return [Admin(**admin) for admin in admins_data]
+    return [Admin.from_mongo(admin) for admin in admins_data]
 
 
 async def create_admin(admin_data: AdminCreate) -> Admin:
@@ -119,7 +119,7 @@ async def create_admin(admin_data: AdminCreate) -> Admin:
     result = await db.administradores.insert_one(admin_dict)
     admin_dict["_id"] = str(result.inserted_id)
 
-    return Admin(**admin_dict)
+    return Admin.from_mongo(admin_dict)
 
 
 async def update_admin(admin_id: str, admin_data: AdminUpdate) -> Admin:

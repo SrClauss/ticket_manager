@@ -47,3 +47,10 @@ class Admin(AdminBase):
                 "ultimo_login": "2024-01-20T15:30:00"
             }
         }
+
+    @classmethod
+    def from_mongo(cls, data: dict):
+        """Cria instância a partir de dados do MongoDB"""
+        if "_id" in data and isinstance(data["_id"], ObjectId):
+            data["_id"] = str(data["_id"])
+        return cls(**data)
