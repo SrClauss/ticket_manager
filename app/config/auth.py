@@ -22,13 +22,8 @@ if not JWT_SECRET_KEY or JWT_SECRET_KEY == "your-secret-key-change-in-production
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
-# Password hashing
-try:
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-except Exception as e:
-    # Fallback to pbkdf2 if bcrypt fails
-    print(f"Bcrypt failed, using pbkdf2: {e}")
-    pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+# Password hashing - using pbkdf2_sha256 for better compatibility
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 # Admin credentials (fallback for legacy compatibility)
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
@@ -62,11 +57,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 # Password utilities
 def hash_password(password: str) -> str:
-    """Hash a password (bcrypt has 72 byte limit)"""
-    # Truncate password to 72 bytes to comply with bcrypt limit
-    password_bytes = password.encode('utf-8')[:72]
-    truncated_password = password_bytes.decode('utf-8', errors='ignore')
-    return pwd_context.hash(truncated_password)
+    """Hash a password"""
+    return pwd_context.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
