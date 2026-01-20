@@ -186,8 +186,9 @@
             // Simulate API call delay
             await new Promise(resolve => setTimeout(resolve, 1500));
             
-            // Show success
-            showSuccess('Fulano de Tal');
+            // In production, this would call the API and get the actual participant name
+            // For now, we'll simulate success
+            showSuccess('[Modo Simulação - Nome será obtido do QR Code]');
             
             // Simulate printing
             await simulatePrinting();

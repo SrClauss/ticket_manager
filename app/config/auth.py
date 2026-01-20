@@ -1,7 +1,7 @@
 import secrets
 import hashlib
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import Header, HTTPException, status, Depends, Cookie
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -10,7 +10,13 @@ from app.config.database import get_database
 from bson import ObjectId
 
 # JWT Configuration
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not JWT_SECRET_KEY or JWT_SECRET_KEY == "your-secret-key-change-in-production":
+    # In development, generate a random key; in production, raise an error
+    if os.getenv("ENVIRONMENT", "development") == "production":
+        raise ValueError("JWT_SECRET_KEY must be set in production environment")
+    JWT_SECRET_KEY = secrets.token_urlsafe(32)
+    
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
@@ -36,9 +42,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     """Cria um token JWT de acesso"""
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
     return encoded_jwt

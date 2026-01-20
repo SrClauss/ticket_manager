@@ -229,12 +229,30 @@
 <script>
     const EVENTO_ID = "{{ evento.id }}";
     const API_BASE = "/api/admin";
-    const ADMIN_KEY = "{{ evento.token_bilheteria }}"; // TODO: Get actual admin key
+    
+    // Get admin JWT from cookie
+    function getAdminJWT() {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'admin_jwt') {
+                return value;
+            }
+        }
+        return null;
+    }
     
     async function addIlha() {
         const form = document.getElementById('addIlhaForm');
         if (!form.checkValidity()) {
             form.reportValidity();
+            return;
+        }
+        
+        const jwt = getAdminJWT();
+        if (!jwt) {
+            alert('Sessão expirada. Por favor, faça login novamente.');
+            window.location.href = '/admin/login';
             return;
         }
         
@@ -249,7 +267,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Admin-Key': ADMIN_KEY
+                    'Authorization': `Bearer ${jwt}`
                 },
                 body: JSON.stringify(data)
             });
@@ -273,6 +291,13 @@
             return;
         }
         
+        const jwt = getAdminJWT();
+        if (!jwt) {
+            alert('Sessão expirada. Por favor, faça login novamente.');
+            window.location.href = '/admin/login';
+            return;
+        }
+        
         // Get selected ilhas
         const permissoes = [];
         document.querySelectorAll('[id^="ilha_"]:checked').forEach(checkbox => {
@@ -291,7 +316,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Admin-Key': ADMIN_KEY
+                    'Authorization': `Bearer ${jwt}`
                 },
                 body: JSON.stringify(data)
             });
