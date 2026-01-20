@@ -8,13 +8,15 @@ class EventoBase(BaseModel):
     nome: str = Field(..., min_length=1, max_length=200)
     descricao: str = Field(..., min_length=1)
     data_evento: datetime
+    logo_base64: Optional[str] = None
+    ativo: bool = Field(default=True)
     layout_ingresso: Dict[str, Any] = Field(
         default={
-            "canvas": {"width": 80, "unit": "mm"},
+            "canvas": {"width": 80, "height": 120, "unit": "mm"},
             "elements": [
-                {"type": "text", "value": "{participante_nome}", "x": 10, "y": 5, "size": 12},
+                {"type": "text", "value": "{NOME}", "x": 10, "y": 5, "size": 12},
                 {"type": "qrcode", "value": "{qrcode_hash}", "x": 10, "y": 20, "size": 40},
-                {"type": "text", "value": "{tipo_ingresso}", "x": 10, "y": 65, "size": 10}
+                {"type": "text", "value": "{TIPO_INGRESSO}", "x": 10, "y": 65, "size": 10}
             ]
         }
     )
@@ -30,6 +32,8 @@ class EventoUpdate(BaseModel):
     nome: Optional[str] = Field(None, min_length=1, max_length=200)
     descricao: Optional[str] = Field(None, min_length=1)
     data_evento: Optional[datetime] = None
+    logo_base64: Optional[str] = None
+    ativo: Optional[bool] = None
     layout_ingresso: Optional[Dict[str, Any]] = None
 
 

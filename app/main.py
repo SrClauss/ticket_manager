@@ -1,14 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.config.database import connect_to_mongo, close_mongo_connection
 from app.config.indexes import create_indexes
-from app.routers import admin, bilheteria, portaria, leads
+from app.routers import admin, bilheteria, portaria, leads, admin_web
 
 app = FastAPI(
     title="EventMaster API",
     description="Sistema de gerenciamento de eventos com controle de acesso e emissão de ingressos",
     version="1.0.0"
 )
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Configure CORS
 app.add_middleware(
@@ -30,6 +34,7 @@ async def shutdown_db_client():
     await close_mongo_connection()
 
 # Include routers
+app.include_router(admin_web.router, prefix="/admin", tags=["Admin Web UI"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Administrativo"])
 app.include_router(bilheteria.router, prefix="/api/bilheteria", tags=["Bilheteria"])
 app.include_router(portaria.router, prefix="/api/portaria", tags=["Portaria/Controle de Acesso"])
