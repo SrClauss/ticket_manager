@@ -2,12 +2,15 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies (including image libraries for Pillow)
+# Install system dependencies (including image libraries for Pillow and bcrypt)
 RUN apt-get update && apt-get install -y \
     gcc \
     libjpeg-dev \
     zlib1g-dev \
     libpng-dev \
+    rustc \
+    cargo \
+    libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
