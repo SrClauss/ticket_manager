@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: ticket_manager_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-password}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-ticket_manager}
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - ticket_manager_network
+
+  fastapi:
+    build: .
+    container_name: ticket_manager_api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://${MONGO_USERNAME:-admin}:${MONGO_PASSWORD:-password}@mongodb:27017
+      - DATABASE_NAME=${MONGO_DATABASE:-ticket_manager}
+    depends_on:
+      - mongodb
+    networks:
+      - ticket_manager_network
+    volumes:
+      - ./app:/app/app
+
+volumes:
+  mongodb_data:
+
+networks:
+  ticket_manager_network:
+    driver: bridge
