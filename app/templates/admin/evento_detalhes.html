@@ -21,15 +21,15 @@
 </div>
 
 <!-- Event Info -->
-<div class="row mb-4">
-    <div class="col-md-4">
+<div class="row mb-4 gy-4">
+    <div class="col-md-3">
         <div class="glass-card p-3 text-center">
             <i data-lucide="calendar" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>
             <h6 class="text-glass-muted mb-1">Data do Evento</h6>
             <h5 class="text-glass">{{ evento.data_evento.strftime('%d/%m/%Y %H:%M') }}</h5>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="glass-card p-3 text-center">
             <i data-lucide="key" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>
             <h6 class="text-glass-muted mb-1">Token Bilheteria</h6>
@@ -41,7 +41,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="glass-card p-3 text-center">
             <i data-lucide="shield" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>
             <h6 class="text-glass-muted mb-1">Token Portaria</h6>
@@ -53,13 +53,32 @@
             </div>
         </div>
     </div>
+    <div class="col-md-3">
+                <div class="glass-card p-3 text-center">
+            <i data-lucide="ticket-plus" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>
+            <h6 class="text-glass-muted mb-1">Pagina de Cadastro do Evento</h6>
+            <div class="d-flex justify-content-center align-items-center gap-2">
+                <div>dia</div>
+
+            </div>
+        </div>
+    </div>
+ 
 </div>
 
-<!-- Quick Actions (layout removido; agora é por Tipo de Ingresso) -->
+<!-- Quick Actions (removidos links de abertura de bilheteria/portaria) -->
 <div class="row mb-4">
     <div class="col-12">
-        <!-- Nota: layout por ingresso (Tipo de Ingresso). -->
-        <!-- Botões de layout do evento foram removidos -->
+        <div class="glass-card p-3">
+            <div class="row g-2">
+                <div class="col-12 col-md-4 mx-auto">
+                    <a href="/admin/eventos/layout/{{ evento.id }}" class="btn btn-gradient w-100">
+                        <i data-lucide="layout" style="width: 20px; height: 20px;"></i>
+                        Editor de Layout
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -116,7 +135,6 @@
                             <th>Descrição</th>
                             <th>Valor</th>
                             <th>Permissões</th>
-                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -126,11 +144,6 @@
                             <td>R$ {{ "%.2f"|format(tipo.valor) }}</td>
                             <td>
                                 <span class="badge bg-primary">{{ tipo.permissoes|length }} ilha(s)</span>
-                            </td>
-                            <td>
-                                <a href="/admin/tipos/layout/{{ tipo.id }}" class="btn btn-sm btn-glass">
-                                    <i data-lucide="layout" style="width:14px;height:14px;"></i>
-                                </a>
                             </td>
                         </tr>
                         {% endfor %}
