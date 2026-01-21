@@ -28,7 +28,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - MONGODB_URL=mongodb://${MONGO_USERNAME:-admin}:${MONGO_PASSWORD:-password}@mongodb:27017
+      - MONGODB_URL=mongodb://${MONGO_USERNAME:-admin}:${MONGO_PASSWORD:-password}@mongodb:27017/?authSource=admin
       - DATABASE_NAME=${MONGO_DATABASE:-ticket_manager}
     depends_on:
       mongodb:
