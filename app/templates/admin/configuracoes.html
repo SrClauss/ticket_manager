@@ -1,0 +1,300 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Configurações - Administradores{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="glass-card p-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="text-glass mb-0">Configurações</h1>
+                <p class="text-glass-muted mb-0">Gerenciamento de administradores</p>
+            </div>
+            <div>
+                <button class="btn btn-gradient" data-bs-toggle="modal" data-bs-target="#addAdminModal">
+                    <i data-lucide="user-plus" style="width:18px;height:18px;"></i>
+                    Novo Administrador
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="glass-card p-4">
+            <h5 class="text-glass mb-3">Administradores</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr class="text-glass-muted">
+                            <th>Usuário</th>
+                            <th>Email</th>
+                            <th>Nome</th>
+                            <th>Ativo</th>
+                            <th>Último Login</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminsTableBody">
+                        <!-- preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Admin Modal -->
+<div class="modal fade" id="addAdminModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content glass-card">
+      <div class="modal-header border-0">
+        <h5 class="modal-title text-glass">Novo Administrador</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addAdminForm">
+          <div class="mb-3">
+            <label class="form-label text-glass">Usuário</label>
+            <input id="add_username" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-glass">Email</label>
+            <input id="add_email" type="email" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-glass">Nome</label>
+            <input id="add_nome" class="form-control" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-glass">Senha</label>
+            <input id="add_password" type="password" class="form-control" required />
+          </div>
+          <div class="mb-3 form-check">
+            <input id="add_ativo" type="checkbox" class="form-check-input" checked />
+            <label class="form-check-label text-glass" for="add_ativo">Ativo</label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-gradient" onclick="createAdmin()">Criar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Admin Modal -->
+<div class="modal fade" id="editAdminModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content glass-card">
+      <div class="modal-header border-0">
+        <h5 class="modal-title text-glass">Editar Administrador</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editAdminForm">
+          <input type="hidden" id="edit_id" />
+          <div class="mb-3">
+            <label class="form-label text-glass">Usuário</label>
+            <input id="edit_username" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-glass">Email</label>
+            <input id="edit_email" type="email" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-glass">Nome</label>
+            <input id="edit_nome" class="form-control" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-glass">Nova Senha (opcional)</label>
+            <input id="edit_password" type="password" class="form-control" />
+          </div>
+          <div class="mb-3 form-check">
+            <input id="edit_ativo" type="checkbox" class="form-check-input" />
+            <label class="form-check-label text-glass" for="edit_ativo">Ativo</label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-gradient" onclick="updateAdmin()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const API_ADM_BASE = '/api/admin';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        function getAdminJWT() {
+            const cookies = document.cookie.split(';');
+            console.log('Todos os cookies:', document.cookie);
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                console.log('Cookie encontrado:', name, '=', value ? value.substring(0, 20) + '...' : 'vazio');
+                if (name === 'admin_jwt') return value;
+            }
+            console.warn('Cookie admin_jwt não encontrado');
+            return null;
+        }
+
+        function showToast(message) {
+            const container = document.querySelector('.toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast align-items-center show';
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close me-2 ms-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>`;
+            container.appendChild(toast);
+            setTimeout(() => { try { toast.remove(); } catch(e){} }, 3000);
+        }
+
+        async function loadAdmins() {
+            const jwt = getAdminJWT();
+            console.log('JWT encontrado:', jwt ? 'SIM' : 'NÃO');
+            if (!jwt) {
+                console.error('JWT não encontrado, redirecionando para login');
+                setTimeout(() => window.location.href = '/admin/login', 100);
+                return;
+            }
+            try {
+                const res = await fetch(`${API_ADM_BASE}/admins`, { headers: { 'Authorization': `Bearer ${jwt}` } });
+                if (!res.ok) throw new Error('Falha ao obter administradores');
+                const admins = await res.json();
+                const tbody = document.getElementById('adminsTableBody');
+                tbody.innerHTML = '';
+                admins.forEach(a => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="text-glass">${a.username}</td>
+                        <td class="text-glass-muted">${a.email || ''}</td>
+                        <td class="text-glass">${a.nome || ''}</td>
+                        <td class="text-glass-muted">${a.ativo ? 'Sim' : 'Não'}</td>
+                        <td class="text-glass-muted">${a.ultimo_login || '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-glass me-1" onclick='openEditModal(${JSON.stringify(a)})'>
+                                <i data-lucide="edit" style="width:14px;height:14px;"></i>
+                            </button>
+                            <button class="btn btn-sm btn-glass" onclick='confirmDelete("${a.id}", "${a.username}")'>
+                                <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+                            </button>
+                        </td>`;
+                    tbody.appendChild(tr);
+                });
+                lucide.createIcons();
+            } catch (err) {
+                console.error(err);
+                showToast('Erro ao carregar administradores');
+            }
+        }
+
+        window.createAdmin = async function() { // Expor no escopo global para onclick
+            const jwt = getAdminJWT();
+            if (!jwt) return (window.location.href = '/admin/login');
+            const data = {
+                username: document.getElementById('add_username').value,
+                email: document.getElementById('add_email').value,
+                nome: document.getElementById('add_nome').value,
+                password: document.getElementById('add_password').value,
+                ativo: document.getElementById('add_ativo').checked
+            };
+            try {
+                const res = await fetch(`${API_ADM_BASE}/admins`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwt}` },
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Erro ao criar admin');
+                }
+                showToast('Administrador criado');
+                var modalEl = document.getElementById('addAdminModal');
+                var modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+                loadAdmins();
+            } catch (err) {
+                console.error(err);
+                showToast(err.message || 'Erro ao criar administrador');
+            }
+        };
+
+        window.openEditModal = function(admin) { // Expor no escopo global para onclick
+            document.getElementById('edit_id').value = admin.id;
+            document.getElementById('edit_username').value = admin.username;
+            document.getElementById('edit_email').value = admin.email || '';
+            document.getElementById('edit_nome').value = admin.nome || '';
+            document.getElementById('edit_password').value = '';
+            document.getElementById('edit_ativo').checked = !!admin.ativo;
+            var modal = new bootstrap.Modal(document.getElementById('editAdminModal'));
+            modal.show();
+            lucide.createIcons();
+        };
+
+        window.updateAdmin = async function() { // Expor no escopo global para onclick
+            const jwt = getAdminJWT();
+            if (!jwt) return (window.location.href = '/admin/login');
+            const id = document.getElementById('edit_id').value;
+            const data = {
+                username: document.getElementById('edit_username').value,
+                email: document.getElementById('edit_email').value,
+                nome: document.getElementById('edit_nome').value,
+                ativo: document.getElementById('edit_ativo').checked
+            };
+            const pwd = document.getElementById('edit_password').value;
+            if (pwd) data.password = pwd;
+            try {
+                const res = await fetch(`${API_ADM_BASE}/admins/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwt}` },
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Erro ao atualizar admin');
+                }
+                showToast('Administrador atualizado');
+                var modalEl = document.getElementById('editAdminModal');
+                var modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+                loadAdmins();
+            } catch (err) {
+                console.error(err);
+                showToast(err.message || 'Erro ao atualizar administrador');
+            }
+        };
+
+        window.confirmDelete = function(id, username) { // Expor no escopo global para onclick
+            if (!confirm(`Remover administrador ${username}?`)) return;
+            deleteAdmin(id);
+        };
+
+        window.deleteAdmin = async function(id) { // Expor no escopo global para onclick
+            const jwt = getAdminJWT();
+            if (!jwt) return (window.location.href = '/admin/login');
+            try {
+                const res = await fetch(`${API_ADM_BASE}/admins/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${jwt}` }
+                });
+                if (!res.ok) throw new Error('Erro ao remover administrador');
+                showToast('Administrador removido');
+                loadAdmins();
+            } catch (err) {
+                console.error(err);
+                showToast('Erro ao remover administrador');
+            }
+        };
+
+        loadAdmins();
+        lucide.createIcons();
+    });
+</script>
+{% endblock %}

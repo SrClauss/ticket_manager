@@ -67,7 +67,7 @@ async def admin_login(
         response.set_cookie(
             key="admin_jwt", 
             value=access_token, 
-            httponly=True,
+            httponly=False, # Alterado para False para permitir leitura via JS
             max_age=86400,  # 24 hours
             samesite="lax"
         )
@@ -371,7 +371,7 @@ async def admin_evento_layout_salvar(
     request: Request,
     dependencies=[Depends(verify_admin_access)]
 ):
-    """Save ticket layout"""
+    """Save ticket layout on event (legacy)"""
     db = get_database()
     
     try:
@@ -383,6 +383,13 @@ async def admin_evento_layout_salvar(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Layout inválido"
             )
+        # Server-side validation: ensure canvas dimensions don't exceed printer limits (62x90 mm)
+        canvas = layout_ingresso.get('canvas', {})
+        unit = canvas.get('unit', 'mm')
+        width = canvas.get('width', 0)
+        height = canvas.get('height', 0)
+        if unit == 'mm' and (width > 62 or height > 90):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Dimensões do canvas excedem o máximo permitido (62x90 mm)')
         
         result = await db.eventos.update_one(
             {"_id": ObjectId(evento_id)},
@@ -392,6 +399,61 @@ async def admin_evento_layout_salvar(
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Evento não encontrado")
         
+        return {"message": "Layout salvo com sucesso"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/tipos/layout/{tipo_id}", response_class=HTMLResponse)
+async def admin_tipo_layout_page(request: Request, tipo_id: str):
+    """Ticket layout editor for a specific ticket type"""
+    redirect = check_admin_session(request)
+    if redirect:
+        return redirect
+    
+    db = get_database()
+    try:
+        tipo = await db.tipos_ingresso.find_one({"_id": ObjectId(tipo_id)})
+        if not tipo:
+            raise HTTPException(status_code=404, detail="Tipo de ingresso não encontrado")
+        tipo["_id"] = str(tipo["_id"])
+        tipo["id"] = tipo["_id"]
+        # get related event for context
+        evento = await db.eventos.find_one({"_id": ObjectId(tipo["evento_id"])})
+        if evento:
+            evento["_id"] = str(evento["_id"])
+            evento["id"] = evento["_id"]
+        return templates.TemplateResponse(
+            "admin/ticket_layout.html",
+            {"request": request, "active_page": "eventos", "tipo": tipo, "evento": evento}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/tipos/layout/{tipo_id}")
+async def admin_tipo_layout_salvar(
+    tipo_id: str,
+    request: Request,
+    dependencies=[Depends(verify_admin_access)]
+):
+    """Save ticket layout for a ticket type"""
+    db = get_database()
+    try:
+        data = await request.json()
+        layout_ingresso = data.get("layout_ingresso")
+        if not layout_ingresso:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Layout inválido")
+        # Validate canvas sizes
+        canvas = layout_ingresso.get('canvas', {})
+        unit = canvas.get('unit', 'mm')
+        width = canvas.get('width', 0)
+        height = canvas.get('height', 0)
+        if unit == 'mm' and (width > 62 or height > 90):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Dimensões do canvas excedem o máximo permitido (62x90 mm)')
+        result = await db.tipos_ingresso.update_one({"_id": ObjectId(tipo_id)}, {"$set": {"layout_ingresso": layout_ingresso}})
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Tipo de ingresso não encontrado")
         return {"message": "Layout salvo com sucesso"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -445,13 +507,13 @@ async def admin_logout(request: Request):
 
 @router.get("/configuracoes", response_class=HTMLResponse)
 async def admin_configuracoes(request: Request):
-    """Settings page (placeholder)"""
+    """Settings page with administrators management"""
     redirect = check_admin_session(request)
     if redirect:
         return redirect
     
     return templates.TemplateResponse(
-        "admin/base.html",
+        "admin/configuracoes.html",
         {
             "request": request,
             "active_page": "configuracoes"

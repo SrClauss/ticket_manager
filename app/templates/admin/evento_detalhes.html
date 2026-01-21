@@ -33,43 +33,33 @@
         <div class="glass-card p-3 text-center">
             <i data-lucide="key" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>
             <h6 class="text-glass-muted mb-1">Token Bilheteria</h6>
-            <code class="text-glass small">{{ evento.token_bilheteria[:20] }}...</code>
+            <div class="d-flex justify-content-center align-items-center gap-2">
+                <code class="text-glass small" id="token-bilheteria">{{ evento.token_bilheteria[:20] }}...</code>
+                <button type="button" class="btn btn-sm btn-glass copy-token-btn" data-token="{{ evento.token_bilheteria }}" title="Copiar token da bilheteria">
+                    <i data-lucide="copy" style="width:16px;height:16px;"></i>
+                </button>
+            </div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="glass-card p-3 text-center">
             <i data-lucide="shield" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>
             <h6 class="text-glass-muted mb-1">Token Portaria</h6>
-            <code class="text-glass small">{{ evento.token_portaria[:20] }}...</code>
+            <div class="d-flex justify-content-center align-items-center gap-2">
+                <code class="text-glass small" id="token-portaria">{{ evento.token_portaria[:20] }}...</code>
+                <button type="button" class="btn btn-sm btn-glass copy-token-btn" data-token="{{ evento.token_portaria }}" title="Copiar token da portaria">
+                    <i data-lucide="copy" style="width:16px;height:16px;"></i>
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Quick Actions -->
+<!-- Quick Actions (layout removido; agora é por Tipo de Ingresso) -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="glass-card p-3">
-            <div class="row g-2">
-                <div class="col-md-4">
-                    <a href="/admin/eventos/layout/{{ evento.id }}" class="btn btn-gradient w-100">
-                        <i data-lucide="layout" style="width: 20px; height: 20px;"></i>
-                        Editor de Layout
-                    </a>
-                </div>
-                <div class="col-md-4">
-                    <a href="/bilheteria/credenciamento?token={{ evento.token_bilheteria }}" class="btn btn-glass w-100" target="_blank">
-                        <i data-lucide="users" style="width: 20px; height: 20px;"></i>
-                        Abrir Bilheteria
-                    </a>
-                </div>
-                <div class="col-md-4">
-                    <a href="/portaria/controle?token={{ evento.token_portaria }}" class="btn btn-glass w-100" target="_blank">
-                        <i data-lucide="door-open" style="width: 20px; height: 20px;"></i>
-                        Abrir Portaria
-                    </a>
-                </div>
-            </div>
-        </div>
+        <!-- Nota: layout por ingresso (Tipo de Ingresso). -->
+        <!-- Botões de layout do evento foram removidos -->
     </div>
 </div>
 
@@ -126,6 +116,7 @@
                             <th>Descrição</th>
                             <th>Valor</th>
                             <th>Permissões</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -135,6 +126,11 @@
                             <td>R$ {{ "%.2f"|format(tipo.valor) }}</td>
                             <td>
                                 <span class="badge bg-primary">{{ tipo.permissoes|length }} ilha(s)</span>
+                            </td>
+                            <td>
+                                <a href="/admin/tipos/layout/{{ tipo.id }}" class="btn btn-sm btn-glass">
+                                    <i data-lucide="layout" style="width:14px;height:14px;"></i>
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -333,7 +329,39 @@
         }
     }
     
-    // Initialize icons
-    lucide.createIcons();
+    // Copy token helper + toast
+    function showToast(message) {
+        const container = document.querySelector('.toast-container');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = 'toast align-items-center show';
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close me-2 ms-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>`;
+        container.appendChild(toast);
+        // Auto-remove
+        setTimeout(() => { try { toast.remove(); } catch(e){} }, 3000);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Attach copy handlers
+        document.querySelectorAll('.copy-token-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const token = this.dataset.token || '';
+                try {
+                    await navigator.clipboard.writeText(token);
+                    showToast('Token copiado para a área de transferência');
+                    this.classList.add('active');
+                    setTimeout(()=> this.classList.remove('active'), 800);
+                } catch (err) {
+                    console.error('Clipboard error', err);
+                    showToast('Falha ao copiar token');
+                }
+            });
+        });
+
+        // Re-init icons for any dynamically added copy icons
+        lucide.createIcons();
+    });
+
 </script>
 {% endblock %}

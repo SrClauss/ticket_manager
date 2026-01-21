@@ -11,93 +11,25 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Custom Glassmorphism Styles -->
+    <!-- Custom Dark Neon Theme -->
+    <link rel="stylesheet" href="/static/css/admin-styles.css">
+    
     <style>
-        :root {
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            --danger-gradient: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
-        }
-        
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            background-attachment: fixed;
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        /* Glassmorphism Cards */
-        .glass-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 15px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        }
-        
-        /* Buttons */
-        .btn-glass {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            color: white;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-glass:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            transform: translateY(-2px);
-        }
-        
-        .btn-gradient {
-            background: var(--primary-gradient);
-            border: none;
-            color: white;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-gradient:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
-            color: white;
-        }
-        
+        /* Specific operational overrides */
         .btn-success-gradient {
-            background: var(--success-gradient);
-            border: none;
-            color: white;
+            background: linear-gradient(135deg, #00ff88 0%, #00ffff 100%);
+            border: 2px solid var(--neon-green);
+            color: #000;
+            font-weight: 900;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.8);
         }
         
         .btn-danger-gradient {
-            background: var(--danger-gradient);
-            border: none;
-            color: white;
-        }
-        
-        /* Forms */
-        .form-control, .form-select {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            background: white;
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        
-        /* Text colors */
-        .text-glass {
-            color: rgba(255, 255, 255, 0.95);
-        }
-        
-        .text-glass-muted {
-            color: rgba(255, 255, 255, 0.7);
+            background: linear-gradient(135deg, #ff0055 0%, #ff00ff 100%);
+            border: 2px solid #ff0055;
+            color: #fff;
+            font-weight: 900;
+            text-shadow: 0 0 10px rgba(255, 0, 85, 0.8);
         }
         
         /* Full screen feedback */
@@ -115,11 +47,11 @@
         }
         
         .fullscreen-feedback.success {
-            background: var(--success-gradient);
+            background: linear-gradient(135deg, #00ff88 0%, #00ffff 100%);
         }
         
         .fullscreen-feedback.danger {
-            background: var(--danger-gradient);
+            background: linear-gradient(135deg, #ff0055 0%, #ff00ff 100%);
         }
         
         .fullscreen-feedback.active {
@@ -131,6 +63,10 @@
             color: white;
             margin-bottom: 20px;
             animation: pulse 0.5s ease-in-out;
+            text-shadow: 
+                0 0 20px currentColor,
+                0 0 40px currentColor,
+                0 0 60px currentColor;
         }
         
         @keyframes pulse {

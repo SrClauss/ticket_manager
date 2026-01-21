@@ -11,144 +11,8 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Custom Glassmorphism Styles -->
-    <style>
-        :root {
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            background-attachment: fixed;
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding-bottom: 80px;
-        }
-        
-        /* Glassmorphism Cards */
-        .glass-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 15px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        }
-        
-        .glass-nav {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-top: 1px solid var(--glass-border);
-            box-shadow: 0 -8px 32px 0 rgba(31, 38, 135, 0.37);
-        }
-        
-        /* Bottom Navigation */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            padding: 10px 0;
-        }
-        
-        .bottom-nav .nav-link {
-            color: rgba(255, 255, 255, 0.8);
-            text-align: center;
-            padding: 8px 12px;
-            transition: all 0.3s ease;
-            border-radius: 10px;
-            text-decoration: none;
-        }
-        
-        .bottom-nav .nav-link:hover,
-        .bottom-nav .nav-link.active {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .bottom-nav .nav-link i {
-            display: block;
-            margin: 0 auto 4px;
-        }
-        
-        .bottom-nav .nav-link span {
-            display: block;
-            font-size: 0.7rem;
-        }
-        
-        /* Buttons */
-        .btn-glass {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            color: white;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-glass:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            transform: translateY(-2px);
-        }
-        
-        .btn-gradient {
-            background: var(--primary-gradient);
-            border: none;
-            color: white;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-gradient:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
-            color: white;
-        }
-        
-        /* Forms */
-        .form-control, .form-select {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            background: white;
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        
-        /* Text colors */
-        .text-glass {
-            color: rgba(255, 255, 255, 0.95);
-        }
-        
-        .text-glass-muted {
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        /* Toast Container */
-        .toast-container {
-            z-index: 1050;
-        }
-        
-        .toast {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            color: white;
-        }
-        
-        /* Content container */
-        .content-container {
-            padding-top: 20px;
-            padding-bottom: 20px;
-        }
-    </style>
+    <!-- Custom Dark Neon Theme -->
+    <link rel="stylesheet" href="/static/css/admin-styles.css">
     
     {% block extra_css %}{% endblock %}
 </head>
@@ -177,12 +41,6 @@
                     <a href="/admin/eventos" class="nav-link {% if active_page == 'eventos' %}active{% endif %}">
                         <i data-lucide="calendar"></i>
                         <span>Eventos</span>
-                    </a>
-                </div>
-                <div class="col">
-                    <a href="/admin/financeiro" class="nav-link {% if active_page == 'financeiro' %}active{% endif %}">
-                        <i data-lucide="trending-up"></i>
-                        <span>Financeiro</span>
                     </a>
                 </div>
                 <div class="col">

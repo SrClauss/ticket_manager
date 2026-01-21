@@ -1,6 +1,6 @@
 {% extends "admin/base.html" %}
 
-{% block title %}Editor de Layout - {{ evento.nome }}{% endblock %}
+{% block title %}Editor de Layout - {{ tipo.descricao if tipo else evento.nome }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -27,12 +27,19 @@
     }
     
     .draggable-element:hover {
-        background: rgba(102, 126, 234, 0.2);
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        background: rgba(102, 126, 234, 0.08);
+        box-shadow: 6px 6px 12px rgba(163,177,198,0.5), -6px -6px 12px rgba(255,255,255,0.5);
     }
     
     .draggable-element.active {
         box-shadow: 0 0 0 2px #667eea;
+    }
+
+    /* Selected element visual */
+    .draggable-element.selected {
+        outline: 3px dashed var(--primary);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
     }
     
     .element-text {
@@ -96,7 +103,7 @@
                     <h1 class="text-glass mb-0">Editor de Layout</h1>
                     <p class="text-glass-muted mb-0">{{ evento.nome }}</p>
                 </div>
-                <a href="/admin/eventos" class="btn btn-glass">
+                <a href="{% if evento %}/admin/eventos/{{ evento.id }}{% else %}/admin/eventos{% endif %}" class="btn btn-glass">
                     <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
                     Voltar
                 </a>
@@ -146,13 +153,40 @@
                 <label class="form-label text-glass">Tamanho da Fonte</label>
                 <input type="number" class="form-control" id="fontSize" value="12" min="8" max="72">
             </div>
+
+            <!-- Canvas dimensions -->
+            <div class="mb-3">
+                <label class="form-label text-glass">Dimensões do Ingresso (mm) — largura x altura</label>
+                <div class="d-flex gap-2">
+                    <input type="number" id="canvasWidth" class="form-control" min="10" max="62" step="1" placeholder="Largura (mm)">
+                    <input type="number" id="canvasHeight" class="form-control" min="10" max="90" step="1" placeholder="Altura (mm)">
+                </div>
+                <small class="text-glass-muted">Largura máxima 62mm (Brother QL-820NWB). Altura máxima 90mm.</small>
+            </div>
             
             <!-- Add Button -->
             <button type="button" class="btn btn-gradient w-100 mb-3" id="addElementBtn">
                 <i data-lucide="plus" style="width: 20px; height: 20px;"></i>
                 Adicionar ao Layout
             </button>
-            
+
+            <!-- Selected element controls -->
+            <div id="selectedControls" style="display:none;" class="mb-3">
+                <h6 class="text-glass">Elemento selecionado</h6>
+                <div class="mb-2">
+                    <label class="form-label text-glass">Conteúdo</label>
+                    <input type="text" id="selectedContent" class="form-control" placeholder="Conteúdo do elemento">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label text-glass">Tamanho da Fonte</label>
+                    <input type="number" id="selectedSize" class="form-control" min="8" max="120">
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-glass flex-fill" id="updateSelectedBtn">Atualizar</button>
+                    <button type="button" class="btn btn-danger flex-fill" id="deleteSelectedBtn">Excluir</button>
+                </div>
+            </div>
+
             <hr class="border-light">
             
             <!-- Elements List -->
@@ -174,9 +208,9 @@
     <!-- Frame B: Ticket Canvas -->
     <div class="col-lg-8">
         <div class="glass-card p-4">
-            <h5 class="text-glass mb-3 text-center">Canvas do Ingresso (80mm x 120mm)</h5>
+            <h5 class="text-glass mb-3 text-center">Canvas do Ingresso <span id="canvasSizeLabel">(---)</span></h5>
             
-            <div class="canvas-container" id="ticketCanvas">
+            <div class="canvas-container" id="ticketCanvas" style="width: 300px; height: 450px;">
                 <!-- Elements will be added here dynamically -->
             </div>
             
@@ -191,7 +225,9 @@
 </div>
 
 <!-- Hidden input to store layout JSON -->
-<input type="hidden" id="layoutJson" value='{{ evento.layout_ingresso | tojson }}'>
+<input type="hidden" id="layoutJson" value='{{ (tipo.layout_ingresso if tipo else evento.layout_ingresso) | tojson }}'>
+<!-- Hidden input: target save URL -->
+<input type="hidden" id="saveTarget" value='{{ ("/tipos/layout/" ~ tipo.id) if tipo else ("/eventos/layout/" ~ evento.id) }}'>
 {% endblock %}
 
 {% block extra_js %}
@@ -204,6 +240,29 @@
     
     // Load existing layout
     const existingLayout = JSON.parse(document.getElementById('layoutJson').value);
+    const saveTarget = document.getElementById('saveTarget').value;
+
+    // Set canvas size from layout
+    const ticketCanvas = document.getElementById('ticketCanvas');
+    const canvasSizeLabel = document.getElementById('canvasSizeLabel');
+    const canvasWidthInput = document.getElementById('canvasWidth');
+    const canvasHeightInput = document.getElementById('canvasHeight');
+
+    function applyCanvasSize(layout) {
+        if (!layout || !layout.canvas) return;
+        const w = layout.canvas.width || 80;
+        const h = layout.canvas.height || 120;
+        const unit = layout.canvas.unit || 'mm';
+        // Update inline styles (using mm units)
+        ticketCanvas.style.width = w + unit;
+        ticketCanvas.style.height = h + unit;
+        canvasSizeLabel.textContent = `(${w}${unit} x ${h}${unit})`;
+        canvasWidthInput.value = w;
+        canvasHeightInput.value = h;
+    }
+
+    applyCanvasSize(existingLayout);
+
     if (existingLayout && existingLayout.elements) {
         existingLayout.elements.forEach(el => {
             addElementToCanvas(el.type, el.value, el.x, el.y, el.size);
@@ -239,6 +298,21 @@
             const input = document.getElementById('elementContent');
             input.value += tagValue;
         });
+    });
+
+    // Canvas size change handlers
+    document.getElementById('canvasWidth').addEventListener('change', function() {
+        let w = parseInt(this.value) || 0;
+        if (w > 62) { w = 62; this.value = 62; showToast('Largura máxima: 62mm'); }
+        if (w < 10) { w = 10; this.value = 10; }
+        applyCanvasSize({canvas: {width: w, height: parseInt(document.getElementById('canvasHeight').value) || 0, unit: 'mm'}});
+    });
+
+    document.getElementById('canvasHeight').addEventListener('change', function() {
+        let h = parseInt(this.value) || 0;
+        if (h > 90) { h = 90; this.value = 90; showToast('Altura máxima: 90mm'); }
+        if (h < 10) { h = 10; this.value = 10; }
+        applyCanvasSize({canvas: {width: parseInt(document.getElementById('canvasWidth').value) || 0, height: h, unit: 'mm'}});
     });
     
     // Add element button
@@ -299,16 +373,95 @@
             }
         });
         
-        // Add delete button
-        element.addEventListener('dblclick', function() {
+        // Click to select element
+        element.addEventListener('click', function(e) {
+            e.stopPropagation();
+            selectElement(elementId);
+        });
+
+        // Double-click to remove as before
+        element.addEventListener('dblclick', function(e) {
+            e.stopPropagation();
             if (confirm('Deseja remover este elemento?')) {
                 element.remove();
+                clearSelection();
                 updateElementsList();
             }
         });
         
         updateElementsList();
     }
+
+    // Select / edit helpers
+    let selectedElementId = null;
+
+    function selectElement(id) {
+        clearSelection();
+        const el = document.getElementById(id);
+        if (!el) return;
+        selectedElementId = id;
+        el.classList.add('selected');
+        // Populate controls
+        document.getElementById('selectedControls').style.display = 'block';
+        document.getElementById('selectedContent').value = el.getAttribute('data-value') || '';
+        document.getElementById('selectedSize').value = el.getAttribute('data-size') || 12;
+    }
+
+    function clearSelection() {
+        if (selectedElementId) {
+            const prev = document.getElementById(selectedElementId);
+            if (prev) prev.classList.remove('selected');
+        }
+        selectedElementId = null;
+        document.getElementById('selectedControls').style.display = 'none';
+    }
+
+    document.getElementById('deleteSelectedBtn').addEventListener('click', function() {
+        if (!selectedElementId) return;
+        const el = document.getElementById(selectedElementId);
+        if (el && confirm('Deseja remover o elemento selecionado?')) {
+            el.remove();
+            clearSelection();
+            updateElementsList();
+        }
+    });
+
+    document.getElementById('updateSelectedBtn').addEventListener('click', function() {
+        if (!selectedElementId) return;
+        const el = document.getElementById(selectedElementId);
+        if (!el) return;
+        const newVal = document.getElementById('selectedContent').value;
+        const newSize = parseInt(document.getElementById('selectedSize').value) || 12;
+        el.setAttribute('data-value', newVal);
+        el.setAttribute('data-size', newSize);
+        // Update inner html depending on type
+        const type = el.getAttribute('data-type');
+        if (type === 'text') {
+            el.innerHTML = `<span class="element-text" style="font-size: ${newSize}px">${newVal}</span>`;
+        } else if (type === 'qrcode') {
+            el.setAttribute('data-value', '{qrcode_hash}');
+            el.innerHTML = '<div class="element-qrcode">QR CODE</div>';
+        }
+        updateElementsList();
+    });
+
+    // Clear selection when clicking outside
+    document.getElementById('ticketCanvas').addEventListener('click', function() {
+        clearSelection();
+    });
+
+    // Delete with Delete/Backspace key
+    document.addEventListener('keydown', function(e) {
+        if (!selectedElementId) return;
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            const el = document.getElementById(selectedElementId);
+            if (el && confirm('Deseja remover o elemento selecionado?')) {
+                el.remove();
+                clearSelection();
+                updateElementsList();
+            }
+        }
+    });
     
     function dragMoveListener(event) {
         var target = event.target;
@@ -354,10 +507,22 @@
         const canvasRect = canvas.getBoundingClientRect();
         const elements = canvas.querySelectorAll('.draggable-element');
         
+        // Read canvas dimensions from inputs
+        const w = parseInt(document.getElementById('canvasWidth').value) || 0;
+        const h = parseInt(document.getElementById('canvasHeight').value) || 0;
+        if (w <= 0 || h <= 0) {
+            showToast('Defina as dimensões do ingresso antes de salvar', 'warning');
+            return;
+        }
+        if (w > 62 || h > 90) {
+            showToast('Dimensões excedem o máximo permitido (62x90mm)', 'warning');
+            return;
+        }
+
         const layout = {
             canvas: {
-                width: 80,
-                height: 120,
+                width: w,
+                height: h,
                 unit: 'mm'
             },
             elements: []
@@ -381,9 +546,9 @@
             });
         });
         
-        // Send to backend
+        // Send to backend to the dynamic save target
         try {
-            const response = await fetch('/admin/eventos/layout/{{ evento.id }}', {
+            const response = await fetch(saveTarget, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

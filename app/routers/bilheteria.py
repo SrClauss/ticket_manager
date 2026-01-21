@@ -118,9 +118,12 @@ async def emitir_ingresso(
     created_ingresso = await db.ingressos_emitidos.find_one({"_id": result.inserted_id})
     created_ingresso["_id"] = str(created_ingresso["_id"])
     
+    # Escolhe o layout do tipo de ingresso se existir, senão usa o layout do evento
+    layout_source = tipo_ingresso.get("layout_ingresso") if tipo_ingresso and tipo_ingresso.get("layout_ingresso") else evento.get("layout_ingresso")
+
     # Preenche o layout com os dados
     layout_preenchido = preencher_layout(
-        evento["layout_ingresso"],
+        layout_source,
         {
             "participante_nome": participante["nome"],
             "qrcode_hash": qrcode_hash,
@@ -276,9 +279,12 @@ async def reimprimir_ingresso(
             detail="Erro ao buscar dados do ingresso"
         )
     
+    # Escolhe layout do tipo se existir, senão usa o do evento
+    layout_source = tipo_ingresso.get("layout_ingresso") if tipo_ingresso and tipo_ingresso.get("layout_ingresso") else evento.get("layout_ingresso")
+
     # Preenche o layout
     layout_preenchido = preencher_layout(
-        evento["layout_ingresso"],
+        layout_source,
         {
             "participante_nome": participante["nome"],
             "qrcode_hash": ingresso["qrcode_hash"],

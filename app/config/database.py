@@ -1,5 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 import os
 
 
@@ -7,8 +8,10 @@ class Settings(BaseSettings):
     mongodb_url: str = "mongodb://admin:password@localhost:27017"
     database_name: str = "ticket_manager"
     
-    class Config:
-        env_file = ".env"
+    # Ler variáveis de ambiente do arquivo `.env` (se existir)
+    # e ignorar entradas extras para evitar erros quando outras
+    # variáveis (JWT, ADMIN, etc.) estiverem presentes no .env
+    model_config = ConfigDict(env_file=".env", extra="ignore")
 
 
 settings = Settings()
