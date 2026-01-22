@@ -12,10 +12,37 @@ O EventMaster API é uma solução backend para gestão de eventos que oferece:
 - **Editor Visual de Ingressos**: Criador drag-and-drop de layouts de ingressos
 - **Controle de Acesso por Setores (Ilhas)**: Defina áreas e permissões de acesso
 - **Tipos de Ingresso Flexíveis**: Configure diferentes categorias com permissões específicas
-- **Bilheteria Digital**: Emissão de ingressos com QR Code único
-- **Validação de Acesso**: Sistema de portaria com verificação de permissões
+- **API Mobile para Bilheteria**: Emissão de ingressos com QR Code único via aplicativo mobile
+- **API Mobile para Portaria**: Sistema de validação com leitor de QR Code via aplicativo mobile
 - **Coleta de Leads**: Rastreie interações de participantes durante o evento
 - **Relatórios e Exportação**: Análise de vendas e exportação de leads
+
+## 📱 Arquitetura Mobile-First
+
+**Bilheteria e Portaria foram migrados para aplicativo mobile**. As interfaces web foram removidas e substituídas por APIs REST para consumo mobile.
+
+### Módulos Mobile
+
+#### 🎫 Módulo Bilheteria (Box Office)
+Aplicativo mobile para emissão e impressão de ingressos:
+- Autenticação via token de bilheteria
+- Busca de participantes por CPF ou nome
+- Cadastro rápido de participantes
+- Emissão de ingressos com QR Code
+- Impressão de etiquetas (integração com TicketPrinterApp)
+- Reimpressão de credenciais
+
+#### 🚪 Módulo Portaria (Gate Control)
+Aplicativo mobile para controle de acesso:
+- Autenticação via token de portaria
+- Leitor de QR Code integrado com câmera
+- Validação em tempo real de ingressos
+- Feedback visual (verde/vermelho) de permissão
+- Exibição de informações do participante
+- Controle de acesso por setores (ilhas)
+
+### Configuração de Impressora (TicketPrinterApp)
+O submodulo [TicketPrinterApp](https://github.com/SrClauss/TicketPrinterApp) foi adaptado para ser uma tela de configuração e teste de impressoras Brother, acessível via menu de configurações do app mobile.
 
 ## 🏗️ Arquitetura de Dados
 
@@ -135,13 +162,121 @@ O sistema utiliza autenticação moderna com múltiplas camadas de segurança:
 - Header: `X-Token-Bilheteria`
 - Gerado automaticamente ao criar um evento
 - Permite: cadastro de participantes, emissão de ingressos
-- Acesso via URL: `/bilheteria/credenciamento?token=TOKEN`
+- **Uso**: Aplicativo mobile de bilheteria
 
 ### 3. Token de Portaria
 - Header: `X-Token-Portaria`
 - Gerado automaticamente ao criar um evento
 - Permite: validação de QR codes e controle de acesso
-- Acesso via URL: `/portaria/controle?token=TOKEN`
+- **Uso**: Aplicativo mobile de portaria
+
+## 📱 API para Aplicativo Mobile
+
+### 🎫 Endpoints de Bilheteria (`/api/bilheteria`)
+
+Todos os endpoints requerem header `X-Token-Bilheteria`
+
+**Informações do Evento**
+```bash
+GET /api/bilheteria/evento
+# Retorna: evento_id, nome, descrição, data_evento, tipos_ingresso[]
+```
+
+**Buscar Participantes**
+```bash
+GET /api/bilheteria/participantes/buscar?nome=João&cpf=12345678900
+# Busca por nome, email ou CPF
+# Retorna: lista de participantes
+```
+
+**Obter Participante**
+```bash
+GET /api/bilheteria/participante/{participante_id}
+# Retorna: dados completos do participante
+```
+
+**Cadastrar Participante**
+```bash
+POST /api/bilheteria/participantes
+Content-Type: application/json
+
+{
+  "nome": "João Silva",
+  "email": "joao@example.com",
+  "cpf": "12345678900",
+  "telefone": "(11) 99999-9999",
+  "empresa": "Empresa XYZ",
+  "cargo": "Gerente"
+}
+```
+
+**Emitir Ingresso**
+```bash
+POST /api/bilheteria/emitir
+Content-Type: application/json
+
+{
+  "tipo_ingresso_id": "507f1f77bcf86cd799439011",
+  "participante_id": "507f191e810c19729de860ea"
+}
+# Retorna: ingresso com qrcode_hash e layout_preenchido para impressão
+```
+
+**Reimprimir Ingresso**
+```bash
+POST /api/bilheteria/reimprimir/{ingresso_id}
+# Retorna: dados do ingresso e layout para impressão
+```
+
+**Buscar Credenciamento**
+```bash
+GET /api/bilheteria/busca-credenciamento?nome=João&email=joao@example.com
+# Busca otimizada para reimpressão
+# Retorna: participantes com seus ingressos
+```
+
+### 🚪 Endpoints de Portaria (`/api/portaria`)
+
+Todos os endpoints requerem header `X-Token-Portaria`
+
+**Informações do Evento**
+```bash
+GET /api/portaria/evento
+# Retorna: evento_id, nome, descrição, data_evento
+```
+
+**Listar Ilhas (Setores)**
+```bash
+GET /api/portaria/ilhas
+# Retorna: lista de setores/áreas do evento
+```
+
+**Obter Ingresso por QR Code**
+```bash
+GET /api/portaria/ingresso/{qrcode_hash}
+# Busca ingresso pelo hash do QR code
+# Retorna: dados do participante, tipo de ingresso, status, permissões
+```
+
+**Validar Acesso**
+```bash
+POST /api/portaria/validar
+Content-Type: application/json
+
+{
+  "qrcode_hash": "abc123def456",
+  "ilha_id": "507f1f77bcf86cd799439011"
+}
+# Retorna: status (OK/NEGADO), mensagem, participante_nome, tipo_ingresso
+# Status HTTP 200 = Acesso Permitido (Verde)
+# Status HTTP 403 = Acesso Negado (Vermelho)
+```
+
+**Estatísticas**
+```bash
+GET /api/portaria/estatisticas
+# Retorna: total de validações, validações por ilha, últimas validações
+```
 
 ## � Gerenciamento de Administradores
 

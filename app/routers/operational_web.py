@@ -1,7 +1,8 @@
 """
-Operational Web Interfaces for Box Office, Gate, Lead Collector, and Self-Service
+Operational Web Interfaces for Lead Collector and Self-Service
+Note: Box Office and Gate interfaces have been migrated to mobile app
 """
-from fastapi import APIRouter, Request, HTTPException, status, Query
+from fastapi import APIRouter, Request, Query
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
@@ -10,97 +11,6 @@ from app.config.database import get_database
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
-
-
-# ==================== BOX OFFICE / CREDENTIALING ====================
-
-@router.get("/bilheteria/credenciamento", response_class=HTMLResponse)
-async def bilheteria_credenciamento_page(
-    request: Request,
-    token: Optional[str] = Query(None, description="Token de bilheteria")
-):
-    """Box Office/Credentialing interface"""
-    if not token:
-        return templates.TemplateResponse(
-            "operational/token_required.html",
-            {
-                "request": request,
-                "module_name": "Bilheteria",
-                "module_description": "Credenciamento e Emissão de Ingressos"
-            }
-        )
-    
-    # Verify token and get event
-    db = get_database()
-    evento = await db.eventos.find_one({"token_bilheteria": token})
-    
-    if not evento:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token de bilheteria inválido"
-        )
-    
-    evento["_id"] = str(evento["_id"])
-    evento["id"] = evento["_id"]
-    
-    return templates.TemplateResponse(
-        "operational/bilheteria_credenciamento.html",
-        {
-            "request": request,
-            "evento": evento,
-            "token": token
-        }
-    )
-
-
-# ==================== GATE / ACCESS CONTROL ====================
-
-@router.get("/portaria/controle", response_class=HTMLResponse)
-async def portaria_controle_page(
-    request: Request,
-    token: Optional[str] = Query(None, description="Token de portaria")
-):
-    """Gate/Access Control interface with QR scanner"""
-    if not token:
-        return templates.TemplateResponse(
-            "operational/token_required.html",
-            {
-                "request": request,
-                "module_name": "Portaria",
-                "module_description": "Controle de Acesso"
-            }
-        )
-    
-    # Verify token and get event
-    db = get_database()
-    evento = await db.eventos.find_one({"token_portaria": token})
-    
-    if not evento:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token de portaria inválido"
-        )
-    
-    evento["_id"] = str(evento["_id"])
-    evento["id"] = evento["_id"]
-    
-    # Get ilhas for this event
-    ilhas = []
-    cursor = db.ilhas.find({"evento_id": evento["id"]})
-    async for ilha in cursor:
-        ilha["_id"] = str(ilha["_id"])
-        ilha["id"] = ilha["_id"]
-        ilhas.append(ilha)
-    
-    return templates.TemplateResponse(
-        "operational/portaria_controle.html",
-        {
-            "request": request,
-            "evento": evento,
-            "ilhas": ilhas,
-            "token": token
-        }
-    )
 
 
 # ==================== LEAD COLLECTOR ====================
