@@ -16,6 +16,8 @@ from app.models.admin import Admin
 from PIL import Image
 import base64
 import io
+import secrets
+from app.utils.validations import normalize_event_name
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -287,6 +289,11 @@ async def admin_evento_criar(
             "elements": []
         }
     }
+    # Normalize event name for public slug
+    try:
+        evento_dict["nome_normalizado"] = normalize_event_name(nome)
+    except Exception:
+        evento_dict["nome_normalizado"] = None
     
     if logo_base64:
         evento_dict["logo_base64"] = logo_base64
@@ -405,6 +412,58 @@ async def admin_evento_planilhas(request: Request, evento_id: str):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.get("/eventos/{evento_id}/planilhas/empresas", response_class=HTMLResponse)
+async def admin_evento_planilhas_empresas(request: Request, evento_id: str):
+    """Manage company upload links for an event"""
+    redirect = check_admin_session(request)
+    if redirect:
+        return redirect
+    db = get_database()
+    try:
+        evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+        if not evento:
+            raise HTTPException(status_code=404, detail="Evento não encontrado")
+        evento["_id"] = str(evento["_id"])
+        evento["id"] = evento["_id"]
+
+        # list existing links
+        links_cursor = db.planilha_upload_links.find({"evento_id": evento["id"]})
+        links = []
+        async for l in links_cursor:
+            links.append({"token": l.get("token"), "created": l.get("created_at_display", str(l.get("created_at")) )})
+
+        url_root = request.url.scheme + "://" + request.client.host
+
+        return templates.TemplateResponse(
+            "admin/evento_upload_links.html",
+            {"request": request, "active_page": "eventos", "evento": evento, "links": links, "url_root": url_root}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/eventos/{evento_id}/planilhas/empresas/generate")
+async def admin_evento_planilhas_empresas_generate(request: Request, evento_id: str):
+    redirect = check_admin_session(request)
+    if redirect:
+        return redirect
+    db = get_database()
+    try:
+        object_id = ObjectId(evento_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID de evento inválido")
+    evento = await db.eventos.find_one({"_id": object_id})
+    if not evento:
+        raise HTTPException(status_code=404, detail="Evento não encontrado")
+
+    form = await request.form()
+    descricao = form.get('descricao')
+    token = secrets.token_urlsafe(20)
+    link_doc = {"evento_id": str(object_id), "token": token, "descricao": descricao, "created_at": datetime.now(timezone.utc)}
+    await db.planilha_upload_links.insert_one(link_doc)
+    return RedirectResponse(url=f"/admin/eventos/{evento_id}/planilhas/empresas", status_code=status.HTTP_303_SEE_OTHER)
+
+
 @router.post("/eventos/{evento_id}/planilhas/campos")
 async def admin_evento_planilhas_salvar_campos(request: Request, evento_id: str):
     """Atualiza campos obrigatórios de planilha para o evento."""
@@ -444,6 +503,43 @@ async def admin_evento_planilhas_salvar_campos(request: Request, evento_id: str)
         url=f"/admin/eventos/{evento_id}/planilhas?saved=1",
         status_code=status.HTTP_303_SEE_OTHER
     )
+
+
+@router.post("/eventos/{evento_id}/planilhas/inscricoes")
+async def admin_evento_planilhas_inscricoes(request: Request, evento_id: str):
+    """Atualiza ativação de inscrições públicas e token de inscrição"""
+    redirect = check_admin_session(request)
+    if redirect:
+        return redirect
+
+    db = get_database()
+    try:
+        object_id = ObjectId(evento_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID de evento inválido")
+
+    evento = await db.eventos.find_one({"_id": object_id})
+    if not evento:
+        raise HTTPException(status_code=404, detail="Evento não encontrado")
+
+    form = await request.form()
+    aceita = 'aceita_inscricoes' in form
+    regenerate = form.get('regenerate') == '1'
+
+    campos = evento.get("campos_obrigatorios_planilha") or []
+    required = set(PLANILHA_BASE_FIELDS)
+    if aceita and not required.issubset(set(campos)):
+        # Não pode ativar inscrições públicas sem os campos base
+        return RedirectResponse(url=f"/admin/eventos/{evento_id}/planilhas?insc_error=1", status_code=status.HTTP_303_SEE_OTHER)
+
+    updates = {"aceita_inscricoes": aceita}
+    if regenerate or (aceita and not evento.get("token_inscricao")):
+        token = secrets.token_urlsafe(24)
+        updates["token_inscricao"] = token
+
+    await db.eventos.update_one({"_id": object_id}, {"$set": updates})
+
+    return RedirectResponse(url=f"/admin/eventos/{evento_id}/planilhas?insc_saved=1", status_code=status.HTTP_303_SEE_OTHER)
 
 
 def _format_planilha_datetime(value):

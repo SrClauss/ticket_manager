@@ -97,6 +97,11 @@
 {% if saved %}
   <div class="alert-success">Campos obrigatórios atualizados com sucesso.</div>
 {% endif %}
+{% if request.query_params.get('insc_saved') == '1' %}
+  <div class="alert-success">Configurações de inscrição atualizadas com sucesso.</div>
+{% elif request.query_params.get('insc_error') == '1' %}
+  <div class="alert-success" style="background:#ffe1e1;color:#b3261e;border-color:#f5c6cb">Não é possível ativar inscrições públicas: inclua Nome, Email e CPF nos campos obrigatórios.</div>
+{% endif %}
 
 <div class="planilha-grid">
   <div class="planilha-card">
@@ -128,13 +133,34 @@
   </div>
 
   <div class="planilha-card">
-    <h3>Upload de planilha</h3>
-    <p>Arquivos aceitos: .xlsx ou .csv. O sistema valida CPF, email, campos obrigatórios e tipos de ingresso.</p>
-    <div class="upload-area">
-      <input type="file" id="planilhaFile" accept=".xlsx,.csv" />
-      <button class="btn" id="uploadBtn" type="button">Enviar</button>
+    <h3>Inscrições públicas</h3>
+    <p>Ative inscrições públicas e gere o token público para o formulário de inscrição.</p>
+    <form method="post" action="/admin/eventos/{{ evento.id }}/planilhas/inscricoes">
+      <label class="campo-item">
+        <input type="checkbox" name="aceita_inscricoes" {% if evento.aceita_inscricoes %}checked{% endif %}>
+        Aceitar inscrições públicas
+      </label>
+      <div style="margin-top:0.75rem;">
+        <button class="btn" type="submit">Salvar</button>
+        <button class="btn" type="submit" name="regenerate" value="1">Gerar/Regenerar token</button>
+      </div>
+    </form>
+    <div style="margin-top:1rem;">
+      {% if evento.token_inscricao %}
+        <div>Link público: <a href="/inscricao/{{ evento.nome_normalizado or evento.id }}" target="_blank">/inscricao/{{ evento.nome_normalizado or evento.id }}</a></div>
+        <div>Token público: <code>{{ evento.token_inscricao }}</code></div>
+      {% else %}
+        <div>Token não gerado.</div>
+      {% endif %}
     </div>
-    <pre id="uploadResult"></pre>
+  </div>
+
+  <div class="planilha-card">
+    <h3>Upload por empresas</h3>
+    <p>Empresas parceiras podem enviar planilhas através de um link público dedicado. Gere links de upload e compartilhe com as empresas responsáveis.</p>
+    <div>
+      <a class="btn" href="/admin/eventos/{{ evento.id }}/planilhas/empresas">Gerenciar links de upload</a>
+    </div>
   </div>
 </div>
 

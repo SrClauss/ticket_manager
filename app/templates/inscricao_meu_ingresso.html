@@ -22,7 +22,8 @@ async function buscar() {
   const div = document.getElementById('result');
   if(resp.ok) {
     const ingresso_id = txt.ingresso_id;
-    div.innerHTML = `<p>Ingresso encontrado. <a href="/ingresso/${ingresso_id}">Ver ingresso</a></p>`;
+    // Redirect to ingresso view page showing the rendered image
+    window.location.href = `/ingresso/${ingresso_id}`;
   } else {
     div.innerHTML = `<div class="text-danger">Erro: ${txt.detail || JSON.stringify(txt)}</div>`;
   }

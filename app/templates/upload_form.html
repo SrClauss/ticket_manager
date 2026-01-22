@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Upload de Planilha</title>
+  <link rel="stylesheet" href="/static/css/admin-styles.css">
+</head>
+<body>
+  <div class="container mt-4">
+    <div class="glass-card p-4">
+      <h3>Upload de Planilha para Evento: {{ evento.nome }}</h3>
+      <p>Envie arquivo .xlsx ou .csv. O sistema validará e processará a importação.</p>
+      <form method="post" enctype="multipart/form-data" action="/upload/{{ token }}">
+        <div class="mb-3">
+          <input type="file" name="file" accept=".xlsx,.csv" required />
+        </div>
+        <button class="btn btn-gradient" type="submit">Enviar Planilha</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

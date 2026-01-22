@@ -1,0 +1,45 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+<div class="glass-card p-4">
+  <h2>Links de Upload - {{ evento.nome }}</h2>
+  <p>Gere links públicos para que empresas possam enviar planilhas para este evento.</p>
+
+  <form method="post" action="/admin/eventos/{{ evento.id }}/planilhas/empresas/generate" style="margin-bottom:1rem;">
+    <label class="form-label">Descrição do link (opcional)</label>
+    <input type="text" name="descricao" class="form-control" />
+    <button class="btn btn-gradient mt-2">Gerar link de upload</button>
+  </form>
+
+  {% if links %}
+    <table class="table">
+      <thead><tr><th>Token</th><th>Link</th><th>Criado em</th><th>Ações</th></tr></thead>
+      <tbody>
+        {% for l in links %}
+        <tr>
+          <td><code>{{ l.token[:12] }}...</code></td>
+          <td><code style="max-width:320px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ url_root }}/upload/{{ l.token }}</code></td>
+          <td>{{ l.created }}</td>
+          <td><button class="btn btn-sm btn-glass copy-link-btn" data-link="{{ url_root }}/upload/{{ l.token }}">Copiar</button></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>Nenhum link gerado ainda.</p>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('.copy-link-btn').forEach(btn => {
+      btn.addEventListener('click', async function(){
+        const link = this.dataset.link;
+        try{ await navigator.clipboard.writeText(link); alert('Link copiado'); }catch(e){ alert('Falha ao copiar'); }
+      });
+    });
+  });
+</script>
+{% endblock %}

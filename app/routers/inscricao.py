@@ -15,11 +15,29 @@ templates = Jinja2Templates(directory='app/templates')
 
 
 
+async def _find_evento_by_slug(evento_slug: str):
+    db = get_database()
+    # Try normalized name first
+    evento = await db.eventos.find_one({"nome_normalizado": evento_slug})
+    if evento:
+        return evento
+    # Try by ObjectId string
+    try:
+        oid = ObjectId(evento_slug)
+        evento = await db.eventos.find_one({"_id": oid})
+        if evento:
+            return evento
+    except Exception:
+        pass
+    # Try matching stringified _id stored as field (fallback)
+    evento = await db.eventos.find_one({"_id": evento_slug})
+    return evento
+
+
 @router.get("/{evento_slug}")
 async def get_inscricao_form(evento_slug: str):
     """Retorna metadados do evento para o formulário público de inscrição"""
-    db = get_database()
-    evento = await db.eventos.find_one({"nome_normalizado": evento_slug})
+    evento = await _find_evento_by_slug(evento_slug)
     if not evento:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evento não encontrado")
 
@@ -42,8 +60,7 @@ async def get_inscricao_form(evento_slug: str):
 
 @router.get("/{evento_slug}/meu-ingresso")
 async def minha_pagina_meu_ingresso(request: Request, evento_slug: str):
-    db = get_database()
-    evento = await db.eventos.find_one({"nome_normalizado": evento_slug})
+    evento = await _find_evento_by_slug(evento_slug)
     if not evento:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evento não encontrado")
     evento["_id"] = str(evento.get("_id"))
@@ -66,11 +83,11 @@ async def buscar_ingresso_api(evento_slug: str, payload: dict):
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    db = get_database()
-    evento = await db.eventos.find_one({"nome_normalizado": evento_slug})
+    evento = await _find_evento_by_slug(evento_slug)
     if not evento:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evento não encontrado")
 
+    db = get_database()
     participant = await db.participantes.find_one({"cpf": cpf_digits})
     if not participant:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Participante não encontrado")
@@ -85,8 +102,7 @@ async def buscar_ingresso_api(evento_slug: str, payload: dict):
 @router.post("/{evento_slug}", status_code=status.HTTP_201_CREATED)
 async def post_inscricao(evento_slug: str, participante: ParticipanteCreate):
     """Processa inscrição pública pelo nome normalizado do evento"""
-    db = get_database()
-    evento = await db.eventos.find_one({"nome_normalizado": evento_slug})
+    evento = await _find_evento_by_slug(evento_slug)
     if not evento:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evento não encontrado")
 
@@ -99,6 +115,7 @@ async def post_inscricao(evento_slug: str, participante: ParticipanteCreate):
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
+    db = get_database()
     # Verifica se participante com este CPF já tem ingresso para este evento
     existing_part = await db.participantes.find_one({"cpf": cpf_digits})
     if existing_part:
