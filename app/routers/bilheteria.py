@@ -2,11 +2,12 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List, Dict, Any
 from datetime import datetime, timezone
 from bson import ObjectId
+from bson.errors import InvalidId
 from app.models.participante import Participante, ParticipanteCreate
 from app.models.ingresso_emitido import IngressoEmitido, IngressoEmitidoCreate
 from app.config.database import get_database
 from app.config.auth import verify_token_bilheteria, generate_qrcode_hash
-from app.utils.validations import validate_cpf
+from app.utils.validations import validate_cpf, format_datetime_display
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -67,7 +68,7 @@ async def get_evento_info(
         evento_id=str(evento["_id"]),
         nome=evento["nome"],
         descricao=evento.get("descricao"),
-        data_evento=evento["data_evento"].strftime("%d/%m/%Y %H:%M") if isinstance(evento["data_evento"], datetime) else str(evento["data_evento"]),
+        data_evento=format_datetime_display(evento["data_evento"]),
         tipos_ingresso=tipos_ingresso
     )
 
@@ -118,13 +119,11 @@ async def emitir_ingresso(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Tipo de ingresso não encontrado para este evento"
             )
-    except Exception as e:
-        if "not a valid ObjectId" in str(e):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="ID de tipo de ingresso inválido"
-            )
-        raise
+    except InvalidId:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="ID de tipo de ingresso inválido"
+        )
     
     # Verifica se o participante existe
     try:
@@ -134,13 +133,11 @@ async def emitir_ingresso(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Participante não encontrado"
             )
-    except Exception as e:
-        if "not a valid ObjectId" in str(e):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="ID de participante inválido"
-            )
-        raise
+    except InvalidId:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="ID de participante inválido"
+        )
     
     participante_cpf = await _ensure_participante_cpf_unico(
         db,
@@ -186,7 +183,7 @@ async def emitir_ingresso(
             "qrcode_hash": qrcode_hash,
             "tipo_ingresso": tipo_ingresso["descricao"],
             "evento_nome": evento["nome"],
-            "data_evento": evento["data_evento"].strftime("%d/%m/%Y %H:%M") if isinstance(evento["data_evento"], datetime) else str(evento["data_evento"])
+            "data_evento": format_datetime_display(evento["data_evento"])
         }
     )
     
@@ -228,13 +225,11 @@ async def get_participante(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Participante não encontrado"
             )
-    except Exception as e:
-        if "not a valid ObjectId" in str(e):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="ID de participante inválido"
-            )
-        raise
+    except InvalidId:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="ID de participante inválido"
+        )
     
     participante["_id"] = str(participante["_id"])
     return Participante(**participante)
@@ -350,13 +345,11 @@ async def reimprimir_ingresso(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Ingresso não encontrado para este evento"
             )
-    except Exception as e:
-        if "not a valid ObjectId" in str(e):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="ID de ingresso inválido"
-            )
-        raise
+    except InvalidId:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="ID de ingresso inválido"
+        )
     
     # Busca dados relacionados
     participante = await db.participantes.find_one({"_id": ObjectId(ingresso["participante_id"])})
@@ -380,7 +373,7 @@ async def reimprimir_ingresso(
             "qrcode_hash": ingresso["qrcode_hash"],
             "tipo_ingresso": tipo_ingresso["descricao"],
             "evento_nome": evento["nome"],
-            "data_evento": evento["data_evento"].strftime("%d/%m/%Y %H:%M") if isinstance(evento["data_evento"], datetime) else str(evento["data_evento"])
+            "data_evento": format_datetime_display(evento["data_evento"])
         }
     )
     

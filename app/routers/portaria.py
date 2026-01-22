@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from bson import ObjectId
+from bson.errors import InvalidId
 from app.config.database import get_database
 from app.config.auth import verify_token_portaria
+from app.utils.validations import format_datetime_display
 from pydantic import BaseModel
 from datetime import datetime, timezone
 from typing import Optional
@@ -64,7 +66,7 @@ async def get_evento_info(
         evento_id=str(evento["_id"]),
         nome=evento["nome"],
         descricao=evento.get("descricao"),
-        data_evento=evento["data_evento"].strftime("%d/%m/%Y %H:%M") if isinstance(evento["data_evento"], datetime) else str(evento["data_evento"])
+        data_evento=format_datetime_display(evento["data_evento"])
     )
 
 
@@ -98,17 +100,11 @@ async def get_ingresso_by_qrcode(
         )
     
     # Busca dados relacionados
-    try:
-        participante = await db.participantes.find_one({"_id": ObjectId(ingresso["participante_id"])})
-        tipo_ingresso = await db.tipos_ingresso.find_one({"_id": ObjectId(ingresso["tipo_ingresso_id"])})
-        evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
-        
-        if not all([participante, tipo_ingresso, evento]):
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Erro ao buscar dados do ingresso"
-            )
-    except Exception as e:
+    participante = await db.participantes.find_one({"_id": ObjectId(ingresso["participante_id"])})
+    tipo_ingresso = await db.tipos_ingresso.find_one({"_id": ObjectId(ingresso["tipo_ingresso_id"])})
+    evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+    
+    if not all([participante, tipo_ingresso, evento]):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erro ao buscar dados do ingresso"
