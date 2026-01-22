@@ -18,6 +18,10 @@ class EmissaoIngressoRequest(BaseModel):
     participante_id: str
 
 
+# Backwards compatibility alias
+EmissaoRequest = EmissaoIngressoRequest
+
+
 class EmissaoIngressoResponse(BaseModel):
     """Response com ingresso emitido e layout preenchido"""
     ingresso: IngressoEmitido
