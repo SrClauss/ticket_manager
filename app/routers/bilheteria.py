@@ -2,11 +2,12 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List, Dict, Any
 from datetime import datetime, timezone
 from bson import ObjectId
+from bson.errors import InvalidId
 from app.models.participante import Participante, ParticipanteCreate
 from app.models.ingresso_emitido import IngressoEmitido, IngressoEmitidoCreate
 from app.config.database import get_database
 from app.config.auth import verify_token_bilheteria, generate_qrcode_hash
-from app.utils.validations import validate_cpf
+from app.utils.validations import validate_cpf, format_datetime_display
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -18,10 +19,58 @@ class EmissaoIngressoRequest(BaseModel):
     participante_id: str
 
 
+# Backwards compatibility alias
+EmissaoRequest = EmissaoIngressoRequest
+
+
 class EmissaoIngressoResponse(BaseModel):
     """Response com ingresso emitido e layout preenchido"""
     ingresso: IngressoEmitido
     layout_preenchido: Dict[str, Any]
+
+
+class EventoInfo(BaseModel):
+    """Informações do evento para o módulo bilheteria"""
+    evento_id: str
+    nome: str
+    descricao: str = None
+    data_evento: str
+    tipos_ingresso: List[Dict[str, Any]]
+
+
+@router.get("/evento", response_model=EventoInfo)
+async def get_evento_info(
+    evento_id: str = Depends(verify_token_bilheteria)
+):
+    """Retorna informações do evento e tipos de ingresso disponíveis"""
+    db = get_database()
+    
+    # Busca o evento
+    evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+    if not evento:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Evento não encontrado"
+        )
+    
+    # Busca tipos de ingresso do evento
+    tipos_ingresso = []
+    cursor = db.tipos_ingresso.find({"evento_id": evento_id})
+    async for tipo in cursor:
+        tipos_ingresso.append({
+            "tipo_ingresso_id": str(tipo["_id"]),
+            "descricao": tipo["descricao"],
+            "valor": tipo.get("valor", 0),
+            "permissoes": tipo.get("permissoes", [])
+        })
+    
+    return EventoInfo(
+        evento_id=str(evento["_id"]),
+        nome=evento["nome"],
+        descricao=evento.get("descricao"),
+        data_evento=format_datetime_display(evento["data_evento"]),
+        tipos_ingresso=tipos_ingresso
+    )
 
 
 @router.post("/participantes", response_model=Participante, status_code=status.HTTP_201_CREATED)
@@ -70,13 +119,11 @@ async def emitir_ingresso(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Tipo de ingresso não encontrado para este evento"
             )
-    except Exception as e:
-        if "not a valid ObjectId" in str(e):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="ID de tipo de ingresso inválido"
-            )
-        raise
+    except InvalidId:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="ID de tipo de ingresso inválido"
+        )
     
     # Verifica se o participante existe
     try:
@@ -86,13 +133,11 @@ async def emitir_ingresso(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Participante não encontrado"
             )
-    except Exception as e:
-        if "not a valid ObjectId" in str(e):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="ID de participante inválido"
-            )
-        raise
+    except InvalidId:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="ID de participante inválido"
+        )
     
     participante_cpf = await _ensure_participante_cpf_unico(
         db,
@@ -138,7 +183,7 @@ async def emitir_ingresso(
             "qrcode_hash": qrcode_hash,
             "tipo_ingresso": tipo_ingresso["descricao"],
             "evento_nome": evento["nome"],
-            "data_evento": evento["data_evento"].strftime("%d/%m/%Y %H:%M") if isinstance(evento["data_evento"], datetime) else str(evento["data_evento"])
+            "data_evento": format_datetime_display(evento["data_evento"])
         }
     )
     
@@ -165,6 +210,31 @@ def preencher_layout(layout: Dict[str, Any], dados: Dict[str, str]) -> Dict[str,
     return json.loads(layout_str)
 
 
+@router.get("/participante/{participante_id}", response_model=Participante)
+async def get_participante(
+    participante_id: str,
+    evento_id: str = Depends(verify_token_bilheteria)
+):
+    """Obtém um participante específico por ID"""
+    db = get_database()
+    
+    try:
+        participante = await db.participantes.find_one({"_id": ObjectId(participante_id)})
+        if not participante:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Participante não encontrado"
+            )
+    except InvalidId:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="ID de participante inválido"
+        )
+    
+    participante["_id"] = str(participante["_id"])
+    return Participante(**participante)
+
+
 @router.get("/participantes/buscar", response_model=List[Participante])
 async def buscar_participantes(
     nome: str = None,
@@ -172,7 +242,7 @@ async def buscar_participantes(
     cpf: str = None,
     evento_id: str = Depends(verify_token_bilheteria)
 ):
-    """Busca participantes por filtros"""
+    """Busca participantes por filtros (nome, email ou CPF)"""
     db = get_database()
     
     query = {}
@@ -275,13 +345,11 @@ async def reimprimir_ingresso(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Ingresso não encontrado para este evento"
             )
-    except Exception as e:
-        if "not a valid ObjectId" in str(e):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="ID de ingresso inválido"
-            )
-        raise
+    except InvalidId:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="ID de ingresso inválido"
+        )
     
     # Busca dados relacionados
     participante = await db.participantes.find_one({"_id": ObjectId(ingresso["participante_id"])})
@@ -305,7 +373,7 @@ async def reimprimir_ingresso(
             "qrcode_hash": ingresso["qrcode_hash"],
             "tipo_ingresso": tipo_ingresso["descricao"],
             "evento_nome": evento["nome"],
-            "data_evento": evento["data_evento"].strftime("%d/%m/%Y %H:%M") if isinstance(evento["data_evento"], datetime) else str(evento["data_evento"])
+            "data_evento": format_datetime_display(evento["data_evento"])
         }
     )
     

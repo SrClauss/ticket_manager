@@ -47,6 +47,20 @@ def normalize_event_name(name: str) -> str:
     return cleaned.lower()
 
 
+def format_datetime_display(dt) -> str:
+    """Formata um datetime para exibição.
+    
+    Args:
+        dt: datetime object ou string
+        
+    Returns:
+        String formatada como "DD/MM/YYYY HH:MM" ou a string original se não for datetime
+    """
+    if isinstance(dt, datetime):
+        return dt.strftime("%d/%m/%Y %H:%M")
+    return str(dt)
+
+
 async def ensure_cpf_unique(db, evento_id: str, participante_id: str = None, cpf_raw: str = None) -> str:
     """Valida e normaliza o CPF e garante que não exista ingresso para este CPF no evento.
     Retorna o CPF normalizado (11 dígitos) ou levanta HTTPException (400/409).
