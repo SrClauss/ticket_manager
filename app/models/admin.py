@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from typing import Optional
 from datetime import datetime
 from bson import ObjectId
@@ -33,9 +33,9 @@ class Admin(AdminBase):
     data_criacao: datetime
     ultimo_login: Optional[datetime] = None
 
-    class Config:
-        populate_by_name = True
-        json_schema_extra = {
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_schema_extra={
             "example": {
                 "_id": "507f1f77bcf86cd799439011",
                 "username": "admin",
@@ -47,6 +47,7 @@ class Admin(AdminBase):
                 "ultimo_login": "2024-01-20T15:30:00"
             }
         }
+    )
 
     @classmethod
     def from_mongo(cls, data: dict):

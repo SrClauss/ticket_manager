@@ -4,7 +4,7 @@ Objetivo: Reimplementar, de forma simples e fiel ao especificado, as funcionalid
 
 ---
 
-## Fase 1 — Modelos e Validações (Prioridade Alta)
+~~## Fase 1 — Modelos e Validações (Prioridade Alta) — COMPLETED nesta sessão em 2026-01-22T11:54:03Z~~
 - Participante
   - Remover campo `cargo`.
   - Adicionar `cpf` (string, obrigatório) e `nacionalidade` (string, opcional).
@@ -24,7 +24,7 @@ Objetivo: Reimplementar, de forma simples e fiel ao especificado, as funcionalid
 
 ---
 
-## Fase 2 — Índices no MongoDB (Prioridade Alta)
+~~## Fase 2 — Índices no MongoDB (Prioridade Alta) — COMPLETED nesta sessão em 2026-01-22T12:09:58.675Z~~
 - Criar índices únicos:
   - `eventos.token_inscricao` (unique)
   - `tipos_ingresso` composto: `(evento_id, numero)` unique
@@ -35,7 +35,7 @@ Objetivo: Reimplementar, de forma simples e fiel ao especificado, as funcionalid
 
 ---
 
-## Fase 3 — Sequência e Regras de Tipo de Ingresso (Prioridade Média)
+~~## Fase 3 — Sequência e Regras de Tipo de Ingresso (Prioridade Média) — COMPLETED nesta sessão em 2026-01-22T15:06:59.527Z~~
 - Ao criar `TipoIngresso`:
   - Calcular `numero` como `max(numero)` + 1 dentro do evento (ou `1` se nenhum existir).
   - Se for o primeiro tipo do evento, setar `padrao=True`.
@@ -45,34 +45,41 @@ Objetivo: Reimplementar, de forma simples e fiel ao especificado, as funcionalid
 
 ---
 
-## Fase 4 — Inscrição Pública (Prioridade Alta)
-- Endpoint público: `GET /inscricao/{token_inscricao}` (formulário) e `POST /inscricao/{token_inscricao}` (envio)
-- Fluxo:
-  - Recupera `evento` pelo `token_inscricao`.
-  - Formulário exige `nome`, `email`, `cpf` (outros campos conforme `campos_obrigatorios_planilha`).
-  - Valida CPF único no evento.
-  - Encontra `TipoIngresso` com `padrao=True` naquele evento; vincula automaticamente.
-  - Cria `Participante` (ou reusa existente) e cria `IngressoEmitido`.
+~~## Fase 4 — Inscrição Pública (Prioridade Alta) — COMPLETED nesta sessão em 2026-01-22T13:40:20.118Z~~
+- Endpoint público: `GET /inscricao/{nome_normalizado}` (formulário) e `POST /inscricao/{nome_normalizado}` (envio)
+- Fluxo e regras atualizadas:
+  - Recupera `evento` pelo campo `nome_normalizado` (adicionado ao modelo de Evento). Ex.: "Show Do Gustavo Lima Limeira 2025" -> `showgustavolimalimeira2025`.
+  - Índice único em `eventos.nome_normalizado` garante unicidade do slug usado na URL.
+  - Novo campo no modelo Evento: `aceita_inscricoes: bool` (default `false`). O endpoint público só está disponível se `aceita_inscricoes` for `true`.
+  - Regra de negócio: o administrador só pode ativar `aceita_inscricoes=True` se `campos_obrigatorios_planilha` incluir obrigatoriamente `Nome`, `Email` e `CPF` — caso contrário, a ativação falha com 400.
+  - O formulário público retornado por GET inclui apenas os campos marcados como obrigatórios no evento (mas sempre garante `Nome`, `Email`, `CPF`).
+  - POST valida CPF (formato + dígito verificador), normaliza para dígitos e verifica unicidade por evento; retorna 409 em caso de duplicação.
+  - Encontra `TipoIngresso` com `padrao=True` para o evento e vincula automaticamente.
+  - Cria `Participante` (ou reusa existente) e `IngressoEmitido` com `qrcode_hash`.
+  - Ao ativar `aceita_inscricoes`, o sistema gera automaticamente uma planilha modelo estilizada (.xlsx) usando openpyxl e salva em `app/static/planilhas/{nome_normalizado}_modelo.xlsx`.
+- Observação: o campo `token_inscricao` permanece no modelo mas não é usado pelo endpoint público conforme pedido do cliente.
 - Simplicidade: processamento síncrono; não enfileirar.
 
-**Critério de aceitação:** página funcional e API que retorna sucesso + ingresso gerado.
+**Critério de aceitação:** formulário público limitado aos campos obrigatórios do evento, validação de CPF e regra de ativação de inscrições aplicadas; geração automática de planilha modelo estilizada ao ativar inscrições; testes automatizados cobrindo formulário, inscrição e conflito por CPF (implementados).
 
 ---
 
-## Fase 5 — Geração de Planilha Modelo (Prioridade Média)
+## Fase 5 — Geração de Planilha Modelo (Prioridade Média) — COMPLETED nesta sessão em 2026-01-22T13:43:38.905Z
 - Endpoint: `GET /api/admin/eventos/{evento_id}/planilha-modelo`
 - Gera `.xlsx` com colunas:
   - Obrigatórias: `Nome`, `Email`, `CPF` (+ quaisquer `campos_obrigatorios_planilha`).
   - Opcionais: `Empresa`, `Telefone`, `Nacionalidade`, `Tipo Ingresso` (número inteiro).
-- Aba `Legenda`: relação `numero -> descrição` dos tipos de ingresso.
-- Incluir instruções e fórmula VLOOKUP para conveniência.
-- Implementação usando `openpyxl`.
+- Aba `Legenda`: relação `numero -> descrição` dos tipos de ingresso (populada a partir de `tipos_ingresso`).
+- Inclui uma coluna auxiliar `Tipo Ingresso Descricao` com fórmula VLOOKUP para facilitar o preenchimento a partir da aba `Legenda`.
+- Aba `Instrucao`: instruções básicas sobre preenchimento e uso.
+- Implementação usando `openpyxl` e retorno como download (StreamingResponse).
 
-**Critério de aceitação:** arquivo `.xlsx` baixável e testado localmente.
+**Critério de aceitação:** arquivo `.xlsx` baixável e testado localmente; endpoint criado e integrado ao router administrativo; VLOOKUP incluído para conveniência.
+
 
 ---
 
-## Fase 6 — Upload e Validação de Planilha (Prioridade Alta)
+~~## Fase 6 — Upload e Validação de Planilha (Prioridade Alta) — COMPLETED nesta sessão em 2026-01-22T15:06:59.527Z~~
 - Endpoint: `POST /api/admin/eventos/{evento_id}/planilha-upload`
 - Aceita `.xlsx` e `.csv`.
 - Validações por linha:
@@ -91,7 +98,7 @@ Objetivo: Reimplementar, de forma simples e fiel ao especificado, as funcionalid
 
 ---
 
-## Fase 7 — Tela Administrativa de Planilhas (Prioridade Média)
+~~## Fase 7 — Tela Administrativa de Planilhas (Prioridade Média) — COMPLETED nesta sessão em 2026-01-22T15:06:59.527Z~~
 - Página: `/admin/eventos/{evento_id}/planilhas`
 - Funcionalidades:
   - Botão `Gerar Modelo de Planilha` (download).
@@ -103,7 +110,7 @@ Objetivo: Reimplementar, de forma simples e fiel ao especificado, as funcionalid
 
 ---
 
-## Fase 8 — Validações no Fluxo de Emissão (Prioridade Alta)
+~~## Fase 8 — Validações no Fluxo de Emissão (Prioridade Alta) — COMPLETED nesta sessão em 2026-01-22T15:09:29.192Z~~
 - Emissão via bilheteria e admin devem validar CPF único por evento antes de criar ingresso.
 - Mensagens de erro claras (conflict 409 quando duplicado).
 
@@ -141,6 +148,36 @@ PYTHONPATH=$(pwd) venv/bin/pytest -q
 
 ---
 
-## Próximo passo sugerido
-- Confirmar se aceita este plano faseado; após sua confirmação eu implemento Fase 1 (modelos e validações) e atualizo o `todo list`. 
+## Fase Final — Exibição de Ingresso e Captura (Prioridade Baixa)
+- Objetivo: permitir que participantes recuperem um ingresso já emitido via CPF, vejam o ingresso na tela (renderizado a partir do layout do tipo de ingresso / layout do evento) e capturem uma imagem (screenshot/foto) do ingresso para validar/mostrar no dia do evento.
 
+- Requisitos funcionais:
+  - Página pública: `/inscricao/{nome_normalizado}/meu-ingresso` que aceita CPF e, se um ingresso existir, redireciona para `GET /ingresso/{ingresso_id}` (página de visualização do ingresso).
+  - Página de visualização do ingresso (`/ingresso/{ingresso_id}`) deve mostrar o ingresso renderizado em alta qualidade e oferecer um botão `Baixar JPG` e um botão `Capturar imagem` que ativa a câmera do dispositivo (via API Web) para tirar/registrar uma foto do ingresso em exibição.
+  - Endpoint backend para gerar imagem a partir do layout: `GET /api/eventos/{evento_id}/ingresso/{ingresso_id}/render.jpg` — recebe o layout (do tipo de ingresso ou evento), aplica os dados do ingresso (nome, tipo, qrcode, data) nas posições definidas e retorna um JPG com as dimensões corretas (ex.: mm convertidos para px com DPI configurável).
+  - O endpoint deve garantir que apenas ingressos realmente emitidos para o participante/ID sejam renderizados (validação de evento/ingresso).
+  - O JPG deve incluir QR code embutido (renderizado) para validação rápida na portaria.
+  - A página deve permitir ao usuário salvar/baixar o JPG; o botão `Capturar imagem` deve permitir salvar a cópia feita pelo usuário (ex.: upload opcional para armazenamento se desejado no futuro).
+
+- Requisitos não funcionais/operacionais:
+  - A renderização pode ser feita usando PIL/Pillow e uma biblioteca de QR code (já presente). Converter medidas mm->px assumindo 300 DPI por padrão.
+  - Garantir cacheamento (HTTP cache headers) para evitar regeneração excessiva.
+  - Logs de acesso/visualização podem ser registrados para auditoria.
+
+- Prompt estruturado para implementação futura (para o dev/AI):
+  """
+  Implementar página pública de recuperação de ingresso e endpoint de renderização JPG:
+  1. Criar rota GET /inscricao/{nome_normalizado}/meu-ingresso com formulário que pede CPF; ao submeter, chama API POST /api/inscricao/{nome_normalizado}/buscar-ingresso que retorna ingresso_id se encontrado, ou 404/409 conforme o caso.
+  2. Criar página /ingresso/{ingresso_id} que consome /api/eventos/{evento_id}/ingresso/{ingresso_id}/render.jpg na tag <img> e mostra metadados (nome, tipo, data). Incluir botões: "Baixar JPG" (link direto) e "Capturar imagem" (JS que ativa câmera e permite salvar imagem localmente ou enviar para /api/ingresso/{ingresso_id}/capture).
+  3. Backend: implementar GET /api/eventos/{evento_id}/ingresso/{ingresso_id}/render.jpg que:
+     - Verifica existência do ingresso e carrega tipo_ingresso e evento.
+     - Calcula dimensões a partir do layout (mm->px) e cria imagem PIL RGB com fundo branco.
+     - Renderiza textos, QR code (usar qrcode lib) e quaisquer elementos do layout, seguindo posições e fontes básicas.
+     - Retorna imagem em formato JPEG com qualidade configurável.
+  4. Escrever testes unitários que mockem DB e verifiquem que o endpoint retorna um bytes object com header image/jpeg e que erros 404/403 são respeitados.
+  """
+
+- Observação: não será implementado nesta iteração; planejar como fase final no roadmap.
+
+## Próximo passo sugerido
+- Prosseguir com Fase 5 (Geração de planilha modelo) e validar download e conteúdo gerado. 

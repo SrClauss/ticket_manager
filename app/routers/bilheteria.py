@@ -1,11 +1,12 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 from app.models.participante import Participante, ParticipanteCreate
 from app.models.ingresso_emitido import IngressoEmitido, IngressoEmitidoCreate
 from app.config.database import get_database
 from app.config.auth import verify_token_bilheteria, generate_qrcode_hash
+from app.utils.validations import validate_cpf
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -93,6 +94,13 @@ async def emitir_ingresso(
             )
         raise
     
+    participante_cpf = await _ensure_participante_cpf_unico(
+        db,
+        evento_id,
+        emissao.participante_id,
+        participante
+    )
+    
     # Busca o evento para pegar o layout
     evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
     if not evento:
@@ -108,9 +116,10 @@ async def emitir_ingresso(
         "evento_id": evento_id,
         "tipo_ingresso_id": emissao.tipo_ingresso_id,
         "participante_id": emissao.participante_id,
+        "participante_cpf": participante_cpf,
         "status": "Ativo",
         "qrcode_hash": qrcode_hash,
-        "data_emissao": datetime.utcnow()
+        "data_emissao": datetime.now(timezone.utc)
     }
     
     result = await db.ingressos_emitidos.insert_one(ingresso_dict)
@@ -137,6 +146,12 @@ async def emitir_ingresso(
         ingresso=IngressoEmitido(**created_ingresso),
         layout_preenchido=layout_preenchido
     )
+
+
+async def _ensure_participante_cpf_unico(db, evento_id: str, participante_id: str, participante: dict) -> str:
+    from app.utils.validations import ensure_cpf_unique
+    cpf_raw = participante.get('cpf')
+    return await ensure_cpf_unique(db, evento_id, participante_id=participante_id, cpf_raw=cpf_raw)
 
 
 def preencher_layout(layout: Dict[str, Any], dados: Dict[str, str]) -> Dict[str, Any]:

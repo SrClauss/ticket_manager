@@ -1,0 +1,268 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+<style>
+  .planilha-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .planilha-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    background: #fff;
+  }
+  .planilha-card h3 {
+    margin-top: 0;
+  }
+  .campos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.5rem 1rem;
+    margin: 1rem 0;
+  }
+  .campo-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.95rem;
+  }
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    text-transform: capitalize;
+  }
+  .status-completed { background: #d1f5e3; color: #126e3a; }
+  .status-partial { background: #fff4d7; color: #8c6d1d; }
+  .status-failed { background: #ffe1e1; color: #b3261e; }
+  .status-pending { background: #e0e0e0; color: #424242; }
+  .upload-area {
+    border: 1px dashed #bbb;
+    padding: 1rem;
+    border-radius: 8px;
+    background: #fafafa;
+  }
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .history-table th,
+  .history-table td {
+    border-bottom: 1px solid #e0e0e0;
+    padding: 0.75rem;
+    text-align: left;
+    vertical-align: top;
+  }
+  .history-table th {
+    background: #f5f5f5;
+  }
+  .relatorio-viewer {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    background: #111;
+    color: #0f0;
+    max-height: 260px;
+    overflow: auto;
+  }
+  .alert-success {
+    background: #d1f5e3;
+    color: #0f5132;
+    border: 1px solid #a3e4c5;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+  }
+  .btn-link {
+    background: none;
+    border: none;
+    color: #1a73e8;
+    cursor: pointer;
+    padding: 0;
+  }
+  .btn-link:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<div class="page-header">
+  <h1>Planilhas – {{ evento.nome }}</h1>
+  <p>Configure os campos obrigatórios, gere o modelo, importe participantes e acompanhe o histórico.</p>
+</div>
+
+{% if saved %}
+  <div class="alert-success">Campos obrigatórios atualizados com sucesso.</div>
+{% endif %}
+
+<div class="planilha-grid">
+  <div class="planilha-card">
+    <h3>Modelo oficial</h3>
+    <p>Faça download do modelo atualizado contendo as colunas obrigatórias do evento.</p>
+    <a class="btn" href="/api/admin/eventos/{{ evento.id }}/planilha-modelo">Baixar modelo (.xlsx)</a>
+  </div>
+
+  <div class="planilha-card">
+    <h3>Campos obrigatórios da planilha</h3>
+    <form method="post" action="/admin/eventos/{{ evento.id }}/planilhas/campos">
+      <div class="campos-grid">
+        {% for campo in campos_base %}
+          <label class="campo-item">
+            <input type="checkbox" checked disabled>
+            {{ campo }} (fixo)
+          </label>
+        {% endfor %}
+
+        {% for campo in campos_opcionais %}
+          <label class="campo-item">
+            <input type="checkbox" name="campos" value="{{ campo }}" {% if campo in campos_atual %}checked{% endif %}>
+            {{ campo }}
+          </label>
+        {% endfor %}
+      </div>
+      <button class="btn" type="submit">Salvar campos</button>
+    </form>
+  </div>
+
+  <div class="planilha-card">
+    <h3>Upload de planilha</h3>
+    <p>Arquivos aceitos: .xlsx ou .csv. O sistema valida CPF, email, campos obrigatórios e tipos de ingresso.</p>
+    <div class="upload-area">
+      <input type="file" id="planilhaFile" accept=".xlsx,.csv" />
+      <button class="btn" id="uploadBtn" type="button">Enviar</button>
+    </div>
+    <pre id="uploadResult"></pre>
+  </div>
+</div>
+
+<div class="planilha-card">
+  <h3>Histórico de importações</h3>
+  {% if importacoes %}
+    <div class="table-responsive">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Arquivo</th>
+            <th>Status</th>
+            <th>Resumo</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in importacoes %}
+            <tr>
+              <td>{{ item.created_at_display }}</td>
+              <td>{{ item.filename }}</td>
+              <td>
+                <span class="status-chip status-{{ item.status|lower }}">{{ item.status }}</span>
+              </td>
+              <td>
+                <div>Total linhas: <strong>{{ item.stats.total }}</strong></div>
+                <div>Ingressos criados: <strong>{{ item.stats.criados }}</strong></div>
+                <div>Participantes criados: <strong>{{ item.stats.participantes }}</strong></div>
+                <div>Erros: <strong>{{ item.stats.erros }}</strong></div>
+              </td>
+              <td>
+                <button class="btn-link" type="button" data-import-id="{{ item.id }}" onclick="showReport(this)">Ver relatório</button><br/>
+                <button class="btn-link" type="button" data-import-id="{{ item.id }}" onclick="downloadReport(this)">Baixar JSON</button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p>Nenhum upload registrado para este evento.</p>
+  {% endif %}
+
+  <pre id="relatorioViewer" class="relatorio-viewer" hidden></pre>
+</div>
+
+<script>
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+window.planilhaHistorico = {{ importacoes | tojson }};
+
+async function handleUpload() {
+  const fileInput = document.getElementById('planilhaFile');
+  const output = document.getElementById('uploadResult');
+  output.textContent = '';
+
+  if (!fileInput.files.length) {
+    alert('Selecione um arquivo');
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const form = new FormData();
+  form.append('file', file);
+
+  const token = getCookie('admin_jwt');
+  const headers = {};
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+
+  const resp = await fetch(`/api/admin/eventos/{{ evento.id }}/planilha-upload`, {
+    method: 'POST',
+    body: form,
+    headers
+  });
+
+  const data = await resp.json();
+  output.textContent = JSON.stringify(data, null, 2);
+
+  if (resp.ok) {
+    setTimeout(() => window.location.reload(), 1500);
+  }
+}
+
+function findReport(importId) {
+  return window.planilhaHistorico.find(item => item.id === importId);
+}
+
+function showReport(button) {
+  const importId = button.dataset.importId;
+  const viewer = document.getElementById('relatorioViewer');
+  const registro = findReport(importId);
+
+  if (!registro) {
+    viewer.hidden = false;
+    viewer.textContent = 'Relatório não encontrado.';
+    return;
+  }
+
+  viewer.hidden = false;
+  viewer.textContent = JSON.stringify(registro.relatorio, null, 2);
+  viewer.scrollIntoView({ behavior: 'smooth' });
+}
+
+function downloadReport(button) {
+  const importId = button.dataset.importId;
+  const registro = findReport(importId);
+  if (!registro) {
+    alert('Relatório não encontrado.');
+    return;
+  }
+
+  const blob = new Blob([JSON.stringify(registro.relatorio, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const sanitizedName = (registro.filename || 'planilha').replace(/\s+/g, '_');
+  link.href = url;
+  link.download = `relatorio_${sanitizedName}_${importId}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('uploadBtn').addEventListener('click', handleUpload);
+</script>
+{% endblock %}

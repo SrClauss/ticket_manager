@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from datetime import datetime
 from enum import Enum
@@ -15,6 +15,7 @@ class IngressoEmitidoBase(BaseModel):
     evento_id: str
     tipo_ingresso_id: str
     participante_id: str
+    participante_cpf: Optional[str] = None
     status: StatusIngresso = StatusIngresso.ATIVO
 
 
@@ -34,9 +35,9 @@ class IngressoEmitido(IngressoEmitidoBase):
     qrcode_hash: str
     data_emissao: datetime
     
-    class Config:
-        populate_by_name = True
-        json_schema_extra = {
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_schema_extra={
             "example": {
                 "_id": "507f1f77bcf86cd799439016",
                 "evento_id": "507f1f77bcf86cd799439011",
@@ -47,3 +48,4 @@ class IngressoEmitido(IngressoEmitidoBase):
                 "data_emissao": "2024-01-20T14:30:00"
             }
         }
+    )

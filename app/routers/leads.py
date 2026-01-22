@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from bson import ObjectId
 from app.config.database import get_database
 from app.models.lead_interacao import LeadInteracao, LeadInteracaoCreate
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -38,7 +38,7 @@ async def coletar_lead(interacao: LeadInteracaoCreate):
         "evento_id": ingresso["evento_id"],
         "participante_id": ingresso["participante_id"],
         "qrcode_hash": interacao.qrcode_hash,
-        "data_interacao": datetime.utcnow(),
+        "data_interacao": datetime.now(timezone.utc),
         "origem": interacao.origem
     }
     

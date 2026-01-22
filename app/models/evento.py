@@ -1,11 +1,12 @@
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional, Dict, Any, List
 from datetime import datetime
 
 
 class EventoBase(BaseModel):
     """Modelo base de Evento"""
     nome: str = Field(..., min_length=1, max_length=200)
+    nome_normalizado: Optional[str] = Field(None, max_length=300)
     descricao: str = Field(..., min_length=1)
     data_evento: datetime
     logo_base64: Optional[str] = None
@@ -20,6 +21,9 @@ class EventoBase(BaseModel):
             ]
         }
     )
+    campos_obrigatorios_planilha: List[str] = Field(default_factory=list)
+    token_inscricao: Optional[str] = None
+    aceita_inscricoes: bool = Field(default=False)
 
 
 class EventoCreate(EventoBase):
@@ -35,6 +39,8 @@ class EventoUpdate(BaseModel):
     logo_base64: Optional[str] = None
     ativo: Optional[bool] = None
     layout_ingresso: Optional[Dict[str, Any]] = None
+    campos_obrigatorios_planilha: Optional[List[str]] = None
+    token_inscricao: Optional[str] = None
 
 
 class Evento(EventoBase):
@@ -44,9 +50,9 @@ class Evento(EventoBase):
     token_bilheteria: str
     token_portaria: str
     
-    class Config:
-        populate_by_name = True
-        json_schema_extra = {
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_schema_extra={
             "example": {
                 "_id": "507f1f77bcf86cd799439011",
                 "nome": "Tech Conference 2024",
@@ -55,9 +61,12 @@ class Evento(EventoBase):
                 "data_evento": "2024-06-15T09:00:00",
                 "token_bilheteria": "abc123def456",
                 "token_portaria": "xyz789uvw012",
+                "token_inscricao": "publictoken123",
+                "campos_obrigatorios_planilha": ["Nome", "Email", "CPF"],
                 "layout_ingresso": {
                     "canvas": {"width": 80, "unit": "mm"},
                     "elements": []
                 }
             }
         }
+    )

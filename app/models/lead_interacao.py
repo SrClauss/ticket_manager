@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 
 
@@ -11,9 +11,9 @@ class LeadInteracao(BaseModel):
     data_interacao: datetime
     origem: str  # De onde veio a coleta (ex: "stand_x", "scanner_portaria")
     
-    class Config:
-        populate_by_name = True
-        json_schema_extra = {
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_schema_extra={
             "example": {
                 "_id": "507f1f77bcf86cd799439017",
                 "evento_id": "507f1f77bcf86cd799439011",
@@ -23,6 +23,7 @@ class LeadInteracao(BaseModel):
                 "origem": "stand_patrocinador_1"
             }
         }
+    )
 
 
 class LeadInteracaoCreate(BaseModel):

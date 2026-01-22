@@ -3,7 +3,7 @@ from bson import ObjectId
 from app.config.database import get_database
 from app.config.auth import verify_token_portaria
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -106,7 +106,7 @@ async def validar_acesso(
         "evento_id": evento_id,
         "ilha_id": validacao.ilha_id,
         "participante_id": ingresso["participante_id"],
-        "data_validacao": datetime.utcnow(),
+        "data_validacao": datetime.now(timezone.utc),
         "status": "OK"
     })
     

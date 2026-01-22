@@ -1,0 +1,33 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+<div class="glass-card p-4">
+  <h2>Recuperar meu ingresso - {{ evento.nome }}</h2>
+  <p>Digite seu CPF para localizar seu ingresso.</p>
+  <div>
+    <input id="cpfInput" placeholder="CPF (somente dígitos ou formatado)" class="form-control" />
+    <button id="buscarBtn" class="btn btn-gradient mt-2">Buscar ingresso</button>
+  </div>
+  <div id="result" class="mt-3"></div>
+</div>
+<script>
+async function buscar() {
+  const cpf = document.getElementById('cpfInput').value;
+  if(!cpf) { alert('Informe o CPF'); return; }
+  const resp = await fetch('/api/inscricao/{{ evento.nome_normalizado }}/buscar-ingresso', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({cpf})
+  });
+  const txt = await resp.json();
+  const div = document.getElementById('result');
+  if(resp.ok) {
+    const ingresso_id = txt.ingresso_id;
+    div.innerHTML = `<p>Ingresso encontrado. <a href="/ingresso/${ingresso_id}">Ver ingresso</a></p>`;
+  } else {
+    div.innerHTML = `<div class="text-danger">Erro: ${txt.detail || JSON.stringify(txt)}</div>`;
+  }
+}
+
+document.getElementById('buscarBtn').addEventListener('click', buscar);
+</script>
+{% endblock %}

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, HTTPException, status, Depends, Form, Up
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 from app.models.evento import EventoUpdate
 from app.config.database import get_database
@@ -19,6 +19,9 @@ import io
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
+
+PLANILHA_BASE_FIELDS = ["Nome", "Email", "CPF"]
+PLANILHA_OPTIONAL_FIELDS = ["Telefone", "Empresa", "Nacionalidade", "Tipo Ingresso"]
 
 # Simple session storage (in production, use proper session management)
 admin_sessions = set()
@@ -116,7 +119,7 @@ async def admin_dashboard(request: Request):
     # Get upcoming events
     proximos_eventos = []
     cursor = db.eventos.find(
-        {"data_evento": {"$gte": datetime.utcnow()}, "ativo": True}
+        {"data_evento": {"$gte": datetime.now(timezone.utc)}, "ativo": True}
     ).sort("data_evento", 1).limit(5)
     
     async for doc in cursor:
@@ -166,9 +169,9 @@ async def admin_eventos_list(
         query["ativo"] = False
     
     if periodo == "futuros":
-        query["data_evento"] = {"$gte": datetime.utcnow()}
+        query["data_evento"] = {"$gte": datetime.now(timezone.utc)}
     elif periodo == "passados":
-        query["data_evento"] = {"$lt": datetime.utcnow()}
+        query["data_evento"] = {"$lt": datetime.now(timezone.utc)}
     
     # Get events
     eventos = []
@@ -276,9 +279,9 @@ async def admin_evento_criar(
         "descricao": descricao,
         "data_evento": datetime.fromisoformat(data_evento),
         "ativo": ativo == "on",
-        "data_criacao": datetime.utcnow(),
-        "token_bilheteria": base64.b64encode(f"bilheteria_{nome}_{datetime.utcnow()}".encode()).decode()[:32],
-        "token_portaria": base64.b64encode(f"portaria_{nome}_{datetime.utcnow()}".encode()).decode()[:32],
+        "data_criacao": datetime.now(timezone.utc),
+        "token_bilheteria": base64.b64encode(f"bilheteria_{nome}_{datetime.now(timezone.utc).isoformat()}".encode()).decode()[:32],
+        "token_portaria": base64.b64encode(f"portaria_{nome}_{datetime.now(timezone.utc).isoformat()}".encode()).decode()[:32],
         "layout_ingresso": {
             "canvas": {"width": 80, "height": 120, "unit": "mm"},
             "elements": []
@@ -338,6 +341,115 @@ async def admin_evento_detalhes(request: Request, evento_id: str):
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/eventos/{evento_id}/planilhas", response_class=HTMLResponse)
+async def admin_evento_planilhas(request: Request, evento_id: str):
+    """Admin page para geração e upload de planilhas"""
+    redirect = check_admin_session(request)
+    if redirect:
+        return redirect
+
+    db = get_database()
+    try:
+        evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+        if not evento:
+            raise HTTPException(status_code=404, detail="Evento não encontrado")
+        evento["_id"] = str(evento["_id"])
+        evento["id"] = evento["_id"]
+
+        campos_brutos = evento.get("campos_obrigatorios_planilha") or []
+        campos_atual = PLANILHA_BASE_FIELDS.copy()
+        for campo in campos_brutos:
+            campo_norm = (campo or "").strip()
+            if campo_norm and campo_norm not in campos_atual:
+                campos_atual.append(campo_norm)
+
+        campos_opcionais = PLANILHA_OPTIONAL_FIELDS.copy()
+        for campo in campos_atual:
+            if campo not in PLANILHA_BASE_FIELDS and campo not in campos_opcionais:
+                campos_opcionais.append(campo)
+
+        importacoes = []
+        cursor = db.planilha_importacoes.find({"evento_id": evento["id"]}).sort("created_at", -1).limit(20)
+        async for doc in cursor:
+            relatorio = doc.get("relatorio") or {}
+            importacoes.append({
+                "id": str(doc["_id"]),
+                "filename": doc.get("filename") or "arquivo",
+                "status": doc.get("status", "pending"),
+                "created_at_display": _format_planilha_datetime(doc.get("created_at")),
+                "relatorio": relatorio,
+                "stats": {
+                    "total": relatorio.get("total", 0),
+                    "criados": relatorio.get("created_ingressos", 0),
+                    "participantes": relatorio.get("created_participants", 0),
+                    "erros": len(relatorio.get("errors", []))
+                }
+            })
+
+        return templates.TemplateResponse(
+            "admin/evento_planilhas.html",
+            {
+                "request": request,
+                "active_page": "eventos",
+                "evento": evento,
+                "campos_base": PLANILHA_BASE_FIELDS,
+                "campos_opcionais": campos_opcionais,
+                "campos_atual": campos_atual,
+                "importacoes": importacoes,
+                "saved": request.query_params.get("saved") == "1"
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/eventos/{evento_id}/planilhas/campos")
+async def admin_evento_planilhas_salvar_campos(request: Request, evento_id: str):
+    """Atualiza campos obrigatórios de planilha para o evento."""
+    redirect = check_admin_session(request)
+    if redirect:
+        return redirect
+
+    db = get_database()
+    try:
+        object_id = ObjectId(evento_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID de evento inválido")
+
+    evento = await db.eventos.find_one({"_id": object_id})
+    if not evento:
+        raise HTTPException(status_code=404, detail="Evento não encontrado")
+
+    form = await request.form()
+    selecionados = form.getlist("campos")
+
+    novos_campos = []
+    for campo in PLANILHA_BASE_FIELDS:
+        if campo not in novos_campos:
+            novos_campos.append(campo)
+
+    for campo in selecionados:
+        campo_norm = (campo or "").strip()
+        if campo_norm and campo_norm not in novos_campos:
+            novos_campos.append(campo_norm)
+
+    await db.eventos.update_one(
+        {"_id": object_id},
+        {"$set": {"campos_obrigatorios_planilha": novos_campos}}
+    )
+
+    return RedirectResponse(
+        url=f"/admin/eventos/{evento_id}/planilhas?saved=1",
+        status_code=status.HTTP_303_SEE_OTHER
+    )
+
+
+def _format_planilha_datetime(value):
+    if isinstance(value, datetime):
+        return value.astimezone(timezone.utc).strftime("%d/%m/%Y %H:%M UTC")
+    return "--"
 
 
 @router.get("/eventos/layout/{evento_id}", response_class=HTMLResponse)

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 
 
@@ -24,9 +24,9 @@ class Ilha(IlhaBase):
     id: str = Field(..., alias="_id")
     evento_id: str
     
-    class Config:
-        populate_by_name = True
-        json_schema_extra = {
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_schema_extra={
             "example": {
                 "_id": "507f1f77bcf86cd799439012",
                 "evento_id": "507f1f77bcf86cd799439011",
@@ -34,3 +34,4 @@ class Ilha(IlhaBase):
                 "capacidade_maxima": 100
             }
         }
+    )

@@ -566,3 +566,11 @@ O sistema cria automaticamente os seguintes índices para performance:
 ## 📄 Licença
 
 Este projeto é um scaffolding para desenvolvimento de sistemas de gestão de eventos.
+## Novas rotas implementadas (Resumo)
+
+- GET /api/eventos/{evento_id}/ingresso/{ingresso_id}/render.jpg  — renderiza JPG do ingresso (suporta ETag; retorna 304 se não modificado).
+- POST /api/eventos/{evento_id}/ingresso/{ingresso_id}/capture — aceita upload de foto (form-data) e salva em app/static/ingressos/.
+- GET /ingresso/{ingresso_id} — página web para visualizar/baixar ingresso.
+- POST /api/inscricao/{nome_normalizado}/buscar-ingresso — busca ingresso por CPF e retorna ingresso_id.
+- POST /api/admin/emitir — emissão administrativa (valida CPF único por evento).
+
