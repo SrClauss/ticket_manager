@@ -133,4 +133,7 @@ Thumbs.db
 app/static/uploads/*
 !app/static/uploads/.gitkeep
 uploads_dev/
-app/static/ingressos
+
+# Generated ticket images (but keep the directory)
+app/static/ingressos/*
+!app/static/ingressos/.gitkeep
