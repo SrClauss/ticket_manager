@@ -207,25 +207,63 @@
 <script>
     let elements = [];
     let elementCounter = 0;
-    
-    // Load existing layout
-    const existingLayout = JSON.parse(document.getElementById('layoutJson').value);
+    let selectedElement = null;
+    let longPressTimer = null;
+    const LONG_PRESS_MS = 500;
+
+    // Read existing layout JSON
+    const existingLayout = JSON.parse(document.getElementById('layoutJson').value || '{}');
     console.log('Loading existing layout from DB:', existingLayout);
-    if (existingLayout && existingLayout.elements) {
+
+    // Default canvas padding (mm) and border
+    const defaultPadding = (existingLayout && existingLayout.canvas && existingLayout.canvas.padding_mm) ? existingLayout.canvas.padding_mm : 5;
+    const defaultBorder = (existingLayout && existingLayout.canvas && existingLayout.canvas.border) ? existingLayout.canvas.border : false;
+
+    // Create controls for padding and border in the UI
+    const controlPanel = document.querySelector('.control-panel');
+    const padHtml = `
+        <div class="mb-3">
+            <label class="form-label text-glass">Padding do Canvas (mm)</label>
+            <input type="number" class="form-control" id="canvasPadding" value="${defaultPadding}" min="0" step="0.5">
+        </div>
+        <div class="mb-3 form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="canvasBorder" ${defaultBorder ? 'checked' : ''}>
+            <label class="form-check-label text-glass" for="canvasBorder">Mostrar borda do ingresso</label>
+        </div>
+        <div class="mb-3" id="selectedControls" style="display:none;">
+            <label class="form-label text-glass">Margin do elemento (mm)</label>
+            <input type="number" class="form-control" id="elementMargin" value="0" min="0" step="0.5">
+        </div>
+    `;
+    controlPanel.insertAdjacentHTML('afterbegin', padHtml);
+
+    // Apply canvas border visual
+    function applyCanvasBorder() {
+        const canvas = document.getElementById('ticketCanvas');
+        const show = document.getElementById('canvasBorder').checked;
+        if (show) {
+            canvas.style.border = '2px solid #333';
+        } else {
+            canvas.style.border = '2px dashed #667eea';
+        }
+    }
+    applyCanvasBorder();
+    document.getElementById('canvasBorder').addEventListener('change', applyCanvasBorder);
+
+    // Load existing elements (if any)
+    if (existingLayout && Array.isArray(existingLayout.elements)) {
         existingLayout.elements.forEach(el => {
-            console.log(`Loading element: type=${el.type}, x=${el.x}mm, y=${el.y}mm, value=${el.value}`);
-            // Now passing coordinates in mm (not percentage)
-            addElementToCanvas(el.type, el.value, el.x, el.y, el.size);
+            addElementToCanvas(el.type, el.value, el.x || 40, el.y || 60, el.size || 12, el.margin_mm || 0);
         });
     }
-    
-    // Update UI based on element type
+
+    // Element type change handler
     document.getElementById('elementType').addEventListener('change', function() {
         const type = this.value;
         const contentField = document.getElementById('contentField');
         const fontSizeField = document.getElementById('fontSizeField');
         const elementContent = document.getElementById('elementContent');
-        
+
         if (type === 'text') {
             contentField.style.display = 'block';
             fontSizeField.style.display = 'block';
@@ -240,7 +278,7 @@
             fontSizeField.style.display = 'none';
         }
     });
-    
+
     // Template tags click
     document.querySelectorAll('.template-tag').forEach(tag => {
         tag.addEventListener('click', function() {
@@ -249,37 +287,54 @@
             input.value += tagValue;
         });
     });
-    
+
     // Add element button
     document.getElementById('addElementBtn').addEventListener('click', function() {
         const type = document.getElementById('elementType').value;
         const content = document.getElementById('elementContent').value;
         const fontSize = document.getElementById('fontSize').value;
-        
+
         if (type !== 'logo' && !content) {
             showToast('Por favor, insira o conteúdo do elemento', 'warning');
             return;
         }
-        
-        // Add to center of canvas (40mm x 60mm in an 80mm x 120mm canvas)
+
         addElementToCanvas(type, content, 40, 60, parseInt(fontSize));
-        
-        // Clear form
         document.getElementById('elementContent').value = '';
     });
-    
-    function addElementToCanvas(type, value, xMm, yMm, size) {
+
+    // Create toolbar element (hidden) for long-press actions
+    const toolbar = document.createElement('div');
+    toolbar.id = 'elementToolbar';
+    toolbar.style.position = 'absolute';
+    toolbar.style.display = 'none';
+    toolbar.style.zIndex = 9999;
+    toolbar.style.background = 'rgba(0,0,0,0.8)';
+    toolbar.style.color = 'white';
+    toolbar.style.padding = '6px';
+    toolbar.style.borderRadius = '6px';
+    toolbar.innerHTML = `
+        <button class="btn btn-sm btn-light me-1" data-action="align-left">L</button>
+        <button class="btn btn-sm btn-light me-1" data-action="align-center">C</button>
+        <button class="btn btn-sm btn-light me-1" data-action="align-right">R</button>
+        <button class="btn btn-sm btn-danger" data-action="delete">Del</button>
+    `;
+    document.body.appendChild(toolbar);
+
+    // Add element to canvas
+    function addElementToCanvas(type, value, xMm, yMm, size, marginMm) {
         const canvas = document.getElementById('ticketCanvas');
         const canvasRect = canvas.getBoundingClientRect();
         const elementId = `element-${elementCounter++}`;
-        
+
         const element = document.createElement('div');
         element.id = elementId;
         element.className = 'draggable-element';
         element.setAttribute('data-type', type);
         element.setAttribute('data-value', value || '');
         element.setAttribute('data-size', size || 12);
-        
+        element.setAttribute('data-margin-mm', marginMm || 0);
+
         if (type === 'text') {
             element.innerHTML = `<span class="element-text" style="font-size: ${size}px">${value}</span>`;
         } else if (type === 'qrcode') {
@@ -287,76 +342,156 @@
         } else if (type === 'logo') {
             element.innerHTML = '<div class="element-logo">LOGO</div>';
         }
-        
-        // Convert mm to pixels for initial positioning
-        // Canvas is 80mm x 120mm displayed in canvasRect.width x canvasRect.height pixels
-        const xPx = (xMm / 80) * canvasRect.width;
-        const yPx = (yMm / 120) * canvasRect.height;
-        
-        // Clamp to canvas bounds (in pixels)
-        const clampedX = Math.max(0, Math.min(xPx, canvasRect.width - 50)); // -50 for element width estimate
-        const clampedY = Math.max(0, Math.min(yPx, canvasRect.height - 30)); // -30 for element height estimate
-        
-        element.style.left = clampedX + 'px';
-        element.style.top = clampedY + 'px';
+
+        // Position using mm -> px conversion
+        const canvasW = canvasRect.width;
+        const canvasH = canvasRect.height;
+        const leftPx = (xMm / 80) * canvasW;
+        const topPx = (yMm / 120) * canvasH;
+
+        element.style.left = Math.max(0, Math.min(leftPx, canvasW - 10)) + 'px';
+        element.style.top = Math.max(0, Math.min(topPx, canvasH - 10)) + 'px';
+        element.style.transform = 'translate(0px, 0px)';
         element.setAttribute('data-x', 0);
         element.setAttribute('data-y', 0);
-        
-        canvas.appendChild(element);
-        
-        // Make it draggable
-        interact(`#${elementId}`).draggable({
-            inertia: true,
-            modifiers: [
-                interact.modifiers.restrictRect({
-                    restriction: 'parent',
-                    endOnly: true
-                })
-            ],
-            autoScroll: true,
-            listeners: {
-                move: dragMoveListener,
-            }
+
+        // Click selects element
+        element.addEventListener('click', function(e) {
+            e.stopPropagation();
+            selectElement(element);
         });
-        
-        // Add delete button
+
+        // Long-press to show toolbar
+        element.addEventListener('pointerdown', function(e) {
+            longPressTimer = setTimeout(() => {
+                showToolbarForElement(element, e.clientX, e.clientY);
+            }, LONG_PRESS_MS);
+        });
+        element.addEventListener('pointerup', function() { clearLongPress(); });
+        element.addEventListener('pointerleave', function() { clearLongPress(); });
+
+        // Double-click to delete
         element.addEventListener('dblclick', function() {
             if (confirm('Deseja remover este elemento?')) {
                 element.remove();
+                if (selectedElement === element) selectedElement = null;
                 updateElementsList();
             }
         });
-        
+
+        canvas.appendChild(element);
+
+        // Make draggable
+        interact(element).draggable({
+            inertia: true,
+            modifiers: [
+                interact.modifiers.restrictRect({ restriction: 'parent', endOnly: true })
+            ],
+            listeners: { move: dragMoveListener }
+        });
+
         updateElementsList();
     }
-    
+
+    function clearLongPress() {
+        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+    }
+
+    function showToolbarForElement(el, clientX, clientY) {
+        toolbar.style.left = (clientX + 8) + 'px';
+        toolbar.style.top = (clientY + 8) + 'px';
+        toolbar.style.display = 'block';
+        // Attach actions
+        toolbar.querySelectorAll('button').forEach(btn => {
+            btn.onclick = function(ev) {
+                const action = this.getAttribute('data-action');
+                handleToolbarAction(el, action);
+                toolbar.style.display = 'none';
+            };
+        });
+    }
+
+    // Hide toolbar when clicking elsewhere
+    document.addEventListener('click', () => { toolbar.style.display = 'none'; selectElement(null); });
+
+    function handleToolbarAction(el, action) {
+        const canvas = document.getElementById('ticketCanvas');
+        const canvasRect = canvas.getBoundingClientRect();
+        const paddingMm = parseFloat(document.getElementById('canvasPadding').value || '5');
+        const paddingPx = (paddingMm / 80) * canvasRect.width;
+        const elRect = el.getBoundingClientRect();
+        const elW = elRect.width;
+
+        if (action === 'delete') {
+            if (confirm('Remover este elemento?')) { el.remove(); updateElementsList(); }
+            return;
+        }
+
+        // Compute new left in px
+        let newLeftPx = parseFloat(el.style.left || 0);
+        if (action === 'align-left') {
+            newLeftPx = paddingPx;
+        } else if (action === 'align-center') {
+            newLeftPx = (canvasRect.width - elW) / 2;
+        } else if (action === 'align-right') {
+            newLeftPx = canvasRect.width - paddingPx - elW;
+        }
+
+        // Apply position and reset transform/data-x
+        el.style.left = Math.max(0, Math.min(newLeftPx, canvasRect.width - elW)) + 'px';
+        el.style.transform = 'translate(0px, 0px)';
+        el.setAttribute('data-x', 0);
+        el.setAttribute('data-y', 0);
+
+        updateElementsList();
+    }
+
+    function selectElement(el) {
+        // Deselect previous
+        if (selectedElement) selectedElement.classList.remove('active');
+        selectedElement = el;
+        const selControls = document.getElementById('selectedControls');
+        if (!el) {
+            selControls.style.display = 'none';
+            return;
+        }
+        el.classList.add('active');
+        selControls.style.display = 'block';
+        document.getElementById('elementMargin').value = el.getAttribute('data-margin-mm') || 0;
+
+        // When margin changed, update element dataset
+        document.getElementById('elementMargin').onchange = function() {
+            el.setAttribute('data-margin-mm', this.value);
+        };
+    }
+
     function dragMoveListener(event) {
         var target = event.target;
         var x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
         var y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-        
+
         target.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
-        
         target.setAttribute('data-x', x);
         target.setAttribute('data-y', y);
     }
-    
+
     function updateElementsList() {
         const canvas = document.getElementById('ticketCanvas');
         const listDiv = document.getElementById('elementsList');
-        const elements = canvas.querySelectorAll('.draggable-element');
-        
-        if (elements.length === 0) {
+        const elems = canvas.querySelectorAll('.draggable-element');
+
+        if (elems.length === 0) {
             listDiv.innerHTML = '<small>Nenhum elemento adicionado</small>';
             return;
         }
-        
+
         let html = '<div class="list-group">';
-        elements.forEach((el, index) => {
+        elems.forEach((el, index) => {
             const type = el.getAttribute('data-type');
             const value = el.getAttribute('data-value');
+            const id = el.id;
             html += `
-                <div class="list-group-item glass-card mb-2 p-2">
+                <div class="list-group-item glass-card mb-2 p-2" data-el-id="${id}">
                     <small>
                         <strong>${type.toUpperCase()}</strong><br>
                         ${value ? value.substring(0, 30) : 'Logo'}
@@ -366,80 +501,69 @@
         });
         html += '</div>';
         listDiv.innerHTML = html;
+
+        // Attach click to select from list
+        listDiv.querySelectorAll('[data-el-id]').forEach(node => {
+            node.onclick = function(e) {
+                e.stopPropagation();
+                const elId = this.getAttribute('data-el-id');
+                const el = document.getElementById(elId);
+                if (el) selectElement(el);
+            };
+        });
     }
-    
-    // Save layout
+
+    // Save layout (includes canvas padding and border state, element margins)
     document.getElementById('saveLayoutBtn').addEventListener('click', async function() {
         const canvas = document.getElementById('ticketCanvas');
         const canvasRect = canvas.getBoundingClientRect();
-        const elements = canvas.querySelectorAll('.draggable-element');
-        
+        const elems = canvas.querySelectorAll('.draggable-element');
+
         const layout = {
             canvas: {
                 width: 80,
                 height: 120,
-                unit: 'mm'
+                unit: 'mm',
+                padding_mm: parseFloat(document.getElementById('canvasPadding').value || '5'),
+                border: document.getElementById('canvasBorder').checked
             },
             elements: []
         };
-        
-        // Canvas dimensions in mm
-        const canvasWidthMm = 80;
-        const canvasHeightMm = 120;
-        
-        elements.forEach(el => {
-            const rect = el.getBoundingClientRect();
-            const translateX = parseFloat(el.getAttribute('data-x')) || 0;
-            const translateY = parseFloat(el.getAttribute('data-y')) || 0;
-            
-            // Get element's position relative to canvas (in pixels)
-            const leftPx = rect.left - canvasRect.left;
-            const topPx = rect.top - canvasRect.top;
-            
-            // Convert pixels to mm (relative to canvas size)
-            // Ensure coordinates are >= 0 and within canvas bounds
-            let xMm = Math.max(0, (leftPx / canvasRect.width) * canvasWidthMm);
-            let yMm = Math.max(0, (topPx / canvasRect.height) * canvasHeightMm);
-            
-            // Clamp to canvas bounds
-            xMm = Math.min(xMm, canvasWidthMm);
-            yMm = Math.min(yMm, canvasHeightMm);
-            
+
+        elems.forEach(el => {
+            // Compute element position in pixels relative to canvas left/top
+            const elRect = el.getBoundingClientRect();
+            const leftPx = elRect.left - canvasRect.left;
+            const topPx = elRect.top - canvasRect.top;
+
+            // Convert px->mm
+            const xMm = Math.max(0, (leftPx / canvasRect.width) * layout.canvas.width);
+            const yMm = Math.max(0, (topPx / canvasRect.height) * layout.canvas.height);
+
             layout.elements.push({
                 type: el.getAttribute('data-type'),
                 value: el.getAttribute('data-value'),
-                x: Math.round(xMm * 10) / 10,  // Round to 1 decimal (mm)
-                y: Math.round(yMm * 10) / 10,  // Round to 1 decimal (mm)
-                size: parseInt(el.getAttribute('data-size')) || 12
+                x: Math.round(xMm * 10) / 10,
+                y: Math.round(yMm * 10) / 10,
+                size: parseInt(el.getAttribute('data-size')) || 12,
+                margin_mm: parseFloat(el.getAttribute('data-margin-mm')) || 0
             });
         });
-        
-        console.log('Saving layout with mm coordinates:', layout);
-        
-        // Send to backend
+
+        console.log('Saving layout with mm coordinates and canvas padding:', layout);
+
         try {
             const response = await fetch('/admin/eventos/layout/{{ evento.id }}', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
                 body: JSON.stringify({ layout_ingresso: layout })
             });
-            
-            if (response.ok) {
-                showToast('Layout salvo com sucesso!', 'success');
-            } else {
-                const errorText = await response.text();
-                console.error('Save failed:', errorText);
-                showToast('Erro ao salvar layout', 'danger');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showToast('Erro ao salvar layout', 'danger');
-        }
+            if (response.ok) showToast('Layout salvo com sucesso!', 'success');
+            else { console.error('Save failed', await response.text()); showToast('Erro ao salvar layout', 'danger'); }
+        } catch (err) { console.error(err); showToast('Erro ao salvar layout', 'danger'); }
     });
-    
+
     // Clear all elements
     document.getElementById('clearLayoutBtn').addEventListener('click', function() {
         if (confirm('Deseja remover TODOS os elementos do layout?')) {
@@ -449,19 +573,18 @@
             showToast('Layout limpo', 'success');
         }
     });
-    
+
     function showToast(message, type) {
         const toastHtml = `
             <div class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
                 <div class="d-flex">
-                    <div class="toast-body">
-                        ${message}
-                    </div>
+                    <div class="toast-body">${message}</div>
                     <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                 </div>
             </div>
         `;
         const container = document.querySelector('.toast-container');
+        if (!container) return;
         container.innerHTML = toastHtml;
         const toastEl = container.querySelector('.toast');
         const toast = new bootstrap.Toast(toastEl);
