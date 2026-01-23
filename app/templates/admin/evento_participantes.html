@@ -91,6 +91,13 @@
                 <i data-lucide="users" class="text-glass mb-3" style="width: 64px; height: 64px;"></i>
                 <h4 class="text-glass">Nenhum participante encontrado</h4>
                 <p class="text-glass-muted">{% if busca %}Tente ajustar os filtros de busca{% else %}Os participantes aparecerão aqui quando forem cadastrados{% endif %}</p>
+                {% if debug_info %}
+                <div class="mt-3 text-start small text-danger">
+                    <strong>DEBUG:</strong>
+                    <div>Participantes obtidos: {{ debug_info.participants }}</div>
+                    <div>Participante IDs encontrados em ingressos_emitidos: {{ debug_info.pids_found }}</div>
+                </div>
+                {% endif %}
             </div>
             {% endif %}
         </div>
