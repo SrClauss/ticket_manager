@@ -57,30 +57,49 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
     draw = ImageDraw.Draw(img)
     
     elements = layout.get("elements", [])
+    # honor optional canvas padding and border
+    canvas_padding_mm = float(canvas.get('padding_mm', 0))
+    canvas_border = bool(canvas.get('border', False))
+    if canvas_border and canvas_padding_mm >= 0:
+        try:
+            pad_px = _mm_to_px(canvas_padding_mm, dpi)
+            draw.rectangle([pad_px, pad_px, width_px - pad_px - 1, height_px - pad_px - 1], outline='black', width=2)
+        except Exception:
+            pass
+
     for el in elements:
         etype = el.get("type")
         x_mm = float(el.get('x', 0))
         y_mm = float(el.get('y', 0))
+        el_margin_mm = float(el.get('margin_mm', 0) or 0)
+        
+        # convert margin to pixels
+        margin_px = _mm_to_px(el_margin_mm, dpi) if el_margin_mm else 0
         
         if etype == "text":
             text = str(el.get("value", ""))
             size = int(el.get("size", 12))
             font = _get_font(size)
             
-            x = _mm_to_px(x_mm, dpi)
-            y = _mm_to_px(y_mm, dpi)
+            x = _mm_to_px(x_mm, dpi) + margin_px
+            y = _mm_to_px(y_mm, dpi) + margin_px
             draw.text((x, y), text, fill='black', font=font)
             
         elif etype == "qrcode":
             qr_text = str(el.get("value", ""))
             size_mm = float(el.get("size", 30))
-            size_px = _mm_to_px(size_mm, dpi)
+            # reduce QR size by margin on both sides
+            try:
+                adj_size_mm = max(1, size_mm - (el_margin_mm * 2))
+            except Exception:
+                adj_size_mm = size_mm
+            size_px = _mm_to_px(adj_size_mm, dpi)
             
             qr = qrcode.make(qr_text)
             qr = qr.resize((size_px, size_px))
             
-            x = _mm_to_px(x_mm, dpi)
-            y = _mm_to_px(y_mm, dpi)
+            x = _mm_to_px(x_mm, dpi) + margin_px
+            y = _mm_to_px(y_mm, dpi) + margin_px
             img.paste(qr, (x, y))
     
     return img
