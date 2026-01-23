@@ -33,11 +33,28 @@
 
 {% block extra_js %}
 <script>
+  async function copyToClipboard(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try { await navigator.clipboard.writeText(text); return true; } catch (e) { /* fallback below */ }
+      }
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+        return true;
+      } catch (e) { return false; }
+    }
+
   document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('.copy-link-btn').forEach(btn => {
       btn.addEventListener('click', async function(){
         const link = this.dataset.link;
-        try{ await navigator.clipboard.writeText(link); alert('Link copiado'); }catch(e){ alert('Falha ao copiar'); }
+        try{ const ok = await copyToClipboard(link); if (ok) { alert('Link copiado'); } else { alert('Falha ao copiar'); } }catch(e){ alert('Falha ao copiar'); }
       });
     });
   });

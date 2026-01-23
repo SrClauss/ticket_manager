@@ -379,13 +379,30 @@
         setTimeout(() => { try { toast.remove(); } catch(e){} }, 3000);
     }
 
+    async function copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            try { await navigator.clipboard.writeText(text); return true; } catch (e) { /* fallback below */ }
+        }
+        try {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            textarea.remove();
+            return true;
+        } catch (e) { return false; }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         // Attach copy handlers for tokens
         document.querySelectorAll('.copy-token-btn').forEach(btn => {
             btn.addEventListener('click', async function() {
                 const token = this.dataset.token || '';
                 try {
-                    await navigator.clipboard.writeText(token);
+                    await copyToClipboard(token);
                     showToast('Token copiado para a área de transferência');
                     this.classList.add('active');
                     setTimeout(()=> this.classList.remove('active'), 800);
@@ -402,7 +419,7 @@
                 const path = this.dataset.link || '';
                 const full = window.location.origin + path;
                 try {
-                    await navigator.clipboard.writeText(full);
+                    await copyToClipboard(full);
                     showToast('Link público copiado');
                     this.classList.add('active');
                     setTimeout(()=> this.classList.remove('active'), 800);
