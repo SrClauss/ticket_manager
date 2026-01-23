@@ -16,13 +16,13 @@ def embed_layout(layout_template: Dict[str, Any], participante: Dict[str, Any], 
 
     layout = copy.deepcopy(layout_template)
 
-    # derive replacement values
-    nome = (participante.get("nome") if participante else "")
-    cpf = (participante.get("cpf") if participante else "")
-    email = (participante.get("email") if participante else "")
-    qrcode = ingresso.get("qrcode_hash", "") if ingresso else ""
-    tipo_desc = tipo.get("descricao", "") if tipo else ""
-    evento_nome = evento.get("nome", "") if evento else ""
+    # derive replacement values (ensure all are strings)
+    nome = str(participante.get("nome", "") if participante else "")
+    cpf = str(participante.get("cpf", "") if participante else "")
+    email = str(participante.get("email", "") if participante else "")
+    qrcode = str(ingresso.get("qrcode_hash", "") if ingresso else "")
+    tipo_desc = str(tipo.get("descricao", "") if tipo else "")
+    evento_nome = str(evento.get("nome", "") if evento else "")
     data_evento_str = ""
     de = evento.get("data_evento") if evento else None
     if de:
