@@ -703,7 +703,52 @@ async def admin_evento_participantes(request: Request, evento_id: str, busca: Op
                 "cpf": doc.get("cpf", ""),
                 "ingressos_count": ingressos_count
             })
-        
+
+        # Diagnostics: log how many found; if none, try legacy collection ingressos_emitidos as fallback
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"admin_evento_participantes: found {len(participantes)} participants for evento {evento_id}")
+
+        if not participantes:
+            logger.info("No participants in participantes collection; checking ingressos_emitidos fallback")
+            pids = set()
+            try:
+                cursor_ing = db.ingressos_emitidos.find({"evento_id": evento["id"]})
+                async for ing in cursor_ing:
+                    pid = ing.get("participante_id")
+                    if pid:
+                        pids.add(pid)
+            except Exception:
+                pass
+            try:
+                cursor_ing = db.ingressos_emitidos.find({"evento_id": ObjectId(evento_id)})
+                async for ing in cursor_ing:
+                    pid = ing.get("participante_id")
+                    if pid:
+                        pids.add(pid)
+            except Exception:
+                pass
+
+            for pid in pids:
+                try:
+                    part_doc = await db.participantes.find_one({"_id": ObjectId(pid)})
+                except Exception:
+                    part_doc = await db.participantes.find_one({"_id": pid})
+                if not part_doc:
+                    continue
+                ingressos_count = 0
+                for ing in part_doc.get("ingressos", []):
+                    if ing.get("evento_id") == evento["id"] or ing.get("evento_id") == ObjectId(evento_id):
+                        ingressos_count += 1
+                participantes.append({
+                    "id": str(part_doc["_id"]),
+                    "nome": part_doc.get("nome", ""),
+                    "email": part_doc.get("email", ""),
+                    "cpf": part_doc.get("cpf", ""),
+                    "ingressos_count": ingressos_count
+                })
+            logger.info(f"admin_evento_participantes: fallback added {len(participantes)} participants from ingressos_emitidos")
+
         return templates.TemplateResponse(
             "admin/evento_participantes.html",
             {
