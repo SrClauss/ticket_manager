@@ -314,12 +314,14 @@
     toolbar.style.padding = '6px';
     toolbar.style.borderRadius = '6px';
     toolbar.innerHTML = `
-        <button class="btn btn-sm btn-light me-1" data-action="align-left">L</button>
-        <button class="btn btn-sm btn-light me-1" data-action="align-center">C</button>
-        <button class="btn btn-sm btn-light me-1" data-action="align-right">R</button>
-        <button class="btn btn-sm btn-danger" data-action="delete">Del</button>
+        <button class="btn btn-sm btn-light me-1" data-action="align-left" title="Alinhar à esquerda"><i data-lucide="align-left" style="width:16px;height:16px"></i></button>
+        <button class="btn btn-sm btn-light me-1" data-action="align-center" title="Centralizar"><i data-lucide="align-center" style="width:16px;height:16px"></i></button>
+        <button class="btn btn-sm btn-light me-1" data-action="align-right" title="Alinhar à direita"><i data-lucide="align-right" style="width:16px;height:16px"></i></button>
+        <button class="btn btn-sm btn-danger" data-action="delete" title="Excluir"><i data-lucide="trash-2" style="width:16px;height:16px"></i></button>
     `;
     document.body.appendChild(toolbar);
+    // initialize lucide icons in the injected toolbar
+    try { if (window && window.lucide && typeof window.lucide.replace === 'function') { window.lucide.replace(); } } catch (e) {}
 
     // Add element to canvas
     function addElementToCanvas(type, value, xMm, yMm, size, marginMm) {
