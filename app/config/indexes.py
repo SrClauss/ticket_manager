@@ -8,7 +8,7 @@ async def create_indexes():
     # Eventos: tokens únicos e nome normalizado único (endpoint baseado no nome)
     await db.eventos.create_index("token_bilheteria", unique=True)
     await db.eventos.create_index("token_portaria", unique=True)
-    await db.eventos.create_index("token_inscricao", unique=True, partialFilterExpression={"token_inscricao": {"$exists": True, "$ne": None}})
+    await db.eventos.create_index("token_inscricao", unique=True, partialFilterExpression={"token_inscricao": {"$exists": True}})
     await db.eventos.create_index("nome_normalizado", unique=True, sparse=True)
 
     # Tipos de ingresso: número sequencial único por evento
