@@ -2610,7 +2610,7 @@
         function ensurePrintStyle(pageW,pageH){
           var style = document.getElementById('qlPrintStyle');
           if(!style){ style = document.createElement('style'); style.id='qlPrintStyle'; document.head.appendChild(style); }
-          style.innerHTML = '@page{size: '+pageW+'mm '+pageH+'mm; margin: 0;} @media print{ body{margin:0;} .md-container{padding:0;} }';
+          style.innerHTML = '@page{size: '+pageW+'mm '+pageH+'mm; margin: 0;} .ql-print-area{width: '+pageW+'mm;} @media print{ body{margin:0;} .md-container{padding:0;} .no-print{display:none !important;} }';
         }
         document.addEventListener('DOMContentLoaded', function(){
           var btn = document.getElementById('qlPrintBtn');
@@ -2629,6 +2629,8 @@
                 var tmp = pageW; pageW = pageH; pageH = tmp;
               }
               ensurePrintStyle(pageW,pageH);
+              // set visible print area width for preview
+              try{ var area = document.getElementById('qlPrintArea'); if(area) area.style.width = pageW + 'mm'; }catch(e){}
               // small delay to allow style to apply
               setTimeout(function(){ window.print(); }, 200);
             }catch(e){ console.error('Print error', e); window.print(); }
