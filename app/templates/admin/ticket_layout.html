@@ -658,8 +658,22 @@
                 credentials: 'include',
                 body: JSON.stringify({ layout_ingresso: layout })
             });
-            if (response.ok) showToast('Layout salvo com sucesso!', 'success');
-            else { console.error('Save failed', await response.text()); showToast('Erro ao salvar layout', 'danger'); }
+            if (response.ok) {
+                // attempt to read JSON with redirect instruction
+                try {
+                    const payload = await response.json();
+                    if (payload && payload.redirect) {
+                        window.location.href = payload.redirect;
+                        return;
+                    }
+                } catch (e) {
+                    // not JSON or parse failed
+                }
+                showToast('Layout salvo com sucesso!', 'success');
+            } else {
+                console.error('Save failed', await response.text());
+                showToast('Erro ao salvar layout', 'danger');
+            }
         } catch (err) { console.error(err); showToast('Erro ao salvar layout', 'danger'); }
     });
 
