@@ -650,6 +650,97 @@ async def admin_evento_deletar(request: Request, evento_id: str):
         pass
     return RedirectResponse(url="/admin/eventos", status_code=status.HTTP_303_SEE_OTHER)
 
+
+@router.get("/eventos/{evento_id}/participantes", response_class=HTMLResponse)
+async def admin_evento_participantes(request: Request, evento_id: str, busca: Optional[str] = None):
+    """Lista participantes de um evento com possibilidade de exclusão."""
+    redirect = check_admin_session(request)
+    if redirect:
+        return redirect
+    
+    db = get_database()
+    
+    try:
+        evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+        if not evento:
+            raise HTTPException(status_code=404, detail="Evento não encontrado")
+        
+        evento["_id"] = str(evento["_id"])
+        evento["id"] = evento["_id"]
+        
+        # Build query para buscar participantes com ingressos deste evento
+        query = {"ingressos": {"$elemMatch": {"evento_id": evento["id"]}}}
+        
+        if busca:
+            query["$or"] = [
+                {"nome": {"$regex": busca, "$options": "i"}},
+                {"email": {"$regex": busca, "$options": "i"}},
+                {"cpf": {"$regex": busca, "$options": "i"}}
+            ]
+        
+        participantes = []
+        cursor = db.participantes.find(query)
+        
+        async for doc in cursor:
+            # Contar ingressos deste evento
+            ingressos_count = sum(1 for ing in doc.get("ingressos", []) if ing.get("evento_id") == evento["id"])
+            
+            participantes.append({
+                "id": str(doc["_id"]),
+                "nome": doc.get("nome", ""),
+                "email": doc.get("email", ""),
+                "cpf": doc.get("cpf", ""),
+                "ingressos_count": ingressos_count
+            })
+        
+        return templates.TemplateResponse(
+            "admin/evento_participantes.html",
+            {
+                "request": request,
+                "active_page": "eventos",
+                "evento": evento,
+                "participantes": participantes,
+                "total_participantes": len(participantes),
+                "busca": busca or ""
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# TEMPORARY COMPONENT: Exclusão de participantes via UI administrativa
+@router.post("/eventos/{evento_id}/participantes/{participante_id}/delete")
+async def admin_participante_deletar(request: Request, evento_id: str, participante_id: str):
+    """Deleta um participante e todos seus ingressos do evento."""
+    redirect = check_admin_session(request)
+    if redirect:
+        return redirect
+    
+    db = get_database()
+    
+    try:
+        part_oid = ObjectId(participante_id)
+    except Exception:
+        return RedirectResponse(
+            url=f"/admin/eventos/{evento_id}/participantes",
+            status_code=status.HTTP_303_SEE_OTHER
+        )
+    
+    try:
+        # Remove participante completamente
+        await db.participantes.delete_one({"_id": part_oid})
+        
+        # Remove ingressos da coleção legada se existirem
+        await db.ingressos_emitidos.delete_many({"participante_id": participante_id})
+    except Exception:
+        pass
+    
+    return RedirectResponse(
+        url=f"/admin/eventos/{evento_id}/participantes",
+        status_code=status.HTTP_303_SEE_OTHER
+    )
+
+
 @router.get("/financeiro", response_class=HTMLResponse)
 async def admin_financeiro(request: Request):
     """Financial page (placeholder)"""

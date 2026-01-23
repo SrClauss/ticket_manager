@@ -91,14 +91,18 @@
     <div class="col-12">
         <div class="glass-card p-3">
             <div class="row g-2">
-                <div class="col-12 col-md-4 mx-auto d-flex gap-2">
-                    <a href="/admin/eventos/layout/{{ evento.id }}" class="btn btn-gradient w-100">
+                <div class="col-12 d-flex gap-2 justify-content-center flex-wrap">
+                    <a href="/admin/eventos/layout/{{ evento.id }}" class="btn btn-gradient">
                         <i data-lucide="layout" style="width: 20px; height: 20px;"></i>
                         Editor de Layout
                     </a>
-                    <a href="/admin/eventos/{{ evento.id }}/planilhas" class="btn btn-outline w-100" title="Configurar campos obrigatórios da planilha/inscrições">
+                    <a href="/admin/eventos/{{ evento.id }}/planilhas" class="btn btn-outline" title="Configurar campos obrigatórios da planilha/inscrições">
                         <i data-lucide="file-text" style="width: 20px; height: 20px;"></i>
                         Configurar Campos
+                    </a>
+                    <a href="/admin/eventos/{{ evento.id }}/participantes" class="btn btn-outline">
+                        <i data-lucide="users" style="width: 20px; height: 20px;"></i>
+                        Gerenciar Participantes
                     </a>
                 </div>
             </div>
