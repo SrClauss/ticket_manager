@@ -192,6 +192,14 @@
                     Arraste os elementos para posicioná-los no ingresso
                 </small>
             </div>
+
+            <!-- Fixed toolbar below canvas -->
+            <div id="elementToolbarFixed" class="d-flex gap-2 justify-content-center mt-3" style="display:none;">
+                <button class="btn btn-sm btn-light" data-action="align-left" title="Alinhar à esquerda"><i data-lucide="align-left" style="width:18px;height:18px"></i></button>
+                <button class="btn btn-sm btn-light" data-action="align-center" title="Centralizar"><i data-lucide="align-center" style="width:18px;height:18px"></i></button>
+                <button class="btn btn-sm btn-light" data-action="align-right" title="Alinhar à direita"><i data-lucide="align-right" style="width:18px;height:18px"></i></button>
+                <button class="btn btn-sm btn-danger" data-action="delete" title="Excluir"><i data-lucide="trash-2" style="width:18px;height:18px"></i></button>
+            </div>
         </div>
     </div>
 </div>
@@ -263,19 +271,25 @@
         const contentField = document.getElementById('contentField');
         const fontSizeField = document.getElementById('fontSizeField');
         const elementContent = document.getElementById('elementContent');
+        const templateTags = document.getElementById('templateTags');
 
         if (type === 'text') {
             contentField.style.display = 'block';
             fontSizeField.style.display = 'block';
             elementContent.placeholder = 'Digite o texto';
+            elementContent.readOnly = false;
+            templateTags.style.display = 'block';
         } else if (type === 'qrcode') {
             contentField.style.display = 'block';
             fontSizeField.style.display = 'none';
-            elementContent.placeholder = 'Use {qrcode_hash} para QR Code';
+            elementContent.placeholder = 'Usa apenas {qrcode_hash}';
             elementContent.value = '{qrcode_hash}';
+            elementContent.readOnly = true; // force QR content
+            templateTags.style.display = 'none';
         } else if (type === 'logo') {
             contentField.style.display = 'none';
             fontSizeField.style.display = 'none';
+            templateTags.style.display = 'none';
         }
     });
 
@@ -303,24 +317,9 @@
         document.getElementById('elementContent').value = '';
     });
 
-    // Create toolbar element (hidden) for long-press actions
-    const toolbar = document.createElement('div');
-    toolbar.id = 'elementToolbar';
-    toolbar.style.position = 'absolute';
-    toolbar.style.display = 'none';
-    toolbar.style.zIndex = 9999;
-    toolbar.style.background = 'rgba(0,0,0,0.8)';
-    toolbar.style.color = 'white';
-    toolbar.style.padding = '6px';
-    toolbar.style.borderRadius = '6px';
-    toolbar.innerHTML = `
-        <button class="btn btn-sm btn-light me-1" data-action="align-left" title="Alinhar à esquerda"><i data-lucide="align-left" style="width:16px;height:16px"></i></button>
-        <button class="btn btn-sm btn-light me-1" data-action="align-center" title="Centralizar"><i data-lucide="align-center" style="width:16px;height:16px"></i></button>
-        <button class="btn btn-sm btn-light me-1" data-action="align-right" title="Alinhar à direita"><i data-lucide="align-right" style="width:16px;height:16px"></i></button>
-        <button class="btn btn-sm btn-danger" data-action="delete" title="Excluir"><i data-lucide="trash-2" style="width:16px;height:16px"></i></button>
-    `;
-    document.body.appendChild(toolbar);
-    // initialize lucide icons in the injected toolbar
+    // Use fixed toolbar under canvas
+    const toolbar = document.getElementById('elementToolbarFixed');
+    // ensure lucide icons are initialized here as well
     try { if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') { lucide.createIcons(); } } catch (e) { console.warn('lucide init failed', e); }
 
     // Add element to canvas
@@ -366,7 +365,7 @@
         // Long-press to show toolbar
         element.addEventListener('pointerdown', function(e) {
             longPressTimer = setTimeout(() => {
-                showToolbarForElement(element, e.clientX, e.clientY);
+                showToolbarForElement(element);
             }, LONG_PRESS_MS);
         });
         element.addEventListener('pointerup', function() { clearLongPress(); });
@@ -463,22 +462,33 @@
         if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
     }
 
-    function showToolbarForElement(el, clientX, clientY) {
-        toolbar.style.left = (clientX + 8) + 'px';
-        toolbar.style.top = (clientY + 8) + 'px';
-        toolbar.style.display = 'block';
+    function showToolbarForElement(el) {
+        // Show fixed toolbar and mark selection
+        toolbar.style.display = 'flex';
+        selectElement(el);
         // Attach actions
         toolbar.querySelectorAll('button').forEach(btn => {
             btn.onclick = function(ev) {
+                ev.stopPropagation();
                 const action = this.getAttribute('data-action');
                 handleToolbarAction(el, action);
-                toolbar.style.display = 'none';
+                // Keep toolbar visible after action except delete
+                if (action === 'delete') toolbar.style.display = 'none';
             };
         });
     }
 
     // Hide toolbar when clicking elsewhere
     document.addEventListener('click', () => { toolbar.style.display = 'none'; selectElement(null); });
+
+    // When selecting element via list, show fixed toolbar
+    document.getElementById('elementsList').addEventListener('click', function(e) {
+        const item = e.target.closest('[data-el-id]');
+        if (!item) return;
+        const elId = item.getAttribute('data-el-id');
+        const el = document.getElementById(elId);
+        if (el) showToolbarForElement(el);
+    });
 
     function handleToolbarAction(el, action) {
         const canvas = document.getElementById('ticketCanvas');
