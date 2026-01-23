@@ -669,22 +669,33 @@ async def admin_evento_participantes(request: Request, evento_id: str, busca: Op
         evento["id"] = evento["_id"]
         
         # Build query para buscar participantes com ingressos deste evento
-        query = {"ingressos": {"$elemMatch": {"evento_id": evento["id"]}}}
-        
+        # Support both string and ObjectId stored evento_id
+        base_query = {"$or": [
+            {"ingressos.evento_id": evento["id"]},
+            {"ingressos.evento_id": ObjectId(evento_id)}
+        ]}
+
+        # If a busca term is provided, require both base_query AND match on nome/email/cpf
         if busca:
-            query["$or"] = [
+            search_q = {"$or": [
                 {"nome": {"$regex": busca, "$options": "i"}},
                 {"email": {"$regex": busca, "$options": "i"}},
                 {"cpf": {"$regex": busca, "$options": "i"}}
-            ]
-        
+            ]}
+            query = {"$and": [base_query, search_q]}
+        else:
+            query = base_query
+
         participantes = []
         cursor = db.participantes.find(query)
-        
+
         async for doc in cursor:
-            # Contar ingressos deste evento
-            ingressos_count = sum(1 for ing in doc.get("ingressos", []) if ing.get("evento_id") == evento["id"])
-            
+            # Contar ingressos deste evento (comparo tanto str quanto ObjectId)
+            ingressos_count = 0
+            for ing in doc.get("ingressos", []):
+                if ing.get("evento_id") == evento["id"] or ing.get("evento_id") == ObjectId(evento_id):
+                    ingressos_count += 1
+
             participantes.append({
                 "id": str(doc["_id"]),
                 "nome": doc.get("nome", ""),
