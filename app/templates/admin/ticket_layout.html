@@ -84,6 +84,17 @@
         background: rgba(102, 126, 234, 0.2);
         transform: scale(1.05);
     }
+.fixed-save-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 10px 0;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 -6px 20px rgba(0,0,0,0.12);
+    z-index: 1200;
+}
+.content-container { padding-bottom: 96px; }
 </style>
 {% endblock %}
 
@@ -163,14 +174,14 @@
             
             <hr class="border-light">
             
-            <!-- Save Button -->
-            <button type="button" class="btn btn-gradient w-100 mb-2" id="saveLayoutBtn">
+            <!-- Save Button (hidden, kept for backward compatibility) -->
+            <button type="button" class="btn btn-gradient w-100 mb-2 d-none" id="saveLayoutBtnOld">
                 <i data-lucide="save" style="width: 20px; height: 20px;"></i>
                 Salvar Layout
             </button>
             
-            <!-- Clear Button -->
-            <button type="button" class="btn btn-danger w-100" id="clearLayoutBtn">
+            <!-- Clear Button (hidden, kept for backward compatibility) -->
+            <button type="button" class="btn btn-danger w-100 d-none" id="clearLayoutBtnOld">
                 <i data-lucide="trash-2" style="width: 20px; height: 20px;"></i>
                 Limpar Tudo
             </button>
@@ -201,6 +212,20 @@
                 <button class="btn btn-sm btn-danger" data-action="delete" title="Excluir"><i data-lucide="trash-2" style="width:18px;height:18px"></i></button>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Fixed save bar for all devices -->
+<div class="fixed-save-bar">
+    <div class="container d-flex justify-content-center">
+        <button type="button" class="btn btn-gradient me-2" id="saveLayoutBtn">
+            <i data-lucide="save" style="width:20px;height:20px"></i>
+            <span class="ms-2">Salvar Layout</span>
+        </button>
+        <button type="button" class="btn btn-danger" id="clearLayoutBtn">
+            <i data-lucide="trash-2" style="width:20px;height:20px"></i>
+            <span class="ms-2">Limpar Tudo</span>
+        </button>
     </div>
 </div>
 
