@@ -68,7 +68,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 # Admin management functions
 def _admin_collection(db):
-    return getattr(db, 'administradores', None) or getattr(db, 'admins', None)
+    col = getattr(db, 'administradores', None)
+    if col is not None:
+        return col
+    return getattr(db, 'admins', None)
 
 
 async def get_admin_by_username(username: str) -> Optional[Admin]:
