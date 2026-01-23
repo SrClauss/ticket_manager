@@ -86,11 +86,16 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
     return img
 
 
-async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Dict, Optional[Dict]]:
+async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Optional[Dict], Optional[Dict]]:
     """Fetch ingresso from database (embedded in participante or standalone).
     
+    Args:
+        db: MongoDB database instance (AsyncIOMotorDatabase)
+        evento_id: ID of the event
+        ingresso_id: ID of the ingresso
+        
     Returns:
-        Tuple of (ingresso_dict, participante_dict or None)
+        Tuple of (ingresso_dict or None, participante_dict or None)
     """
     # Try to find ingresso embedded in participante first
     try:
@@ -120,7 +125,18 @@ async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Di
 
 
 async def _get_or_create_embedded_layout(db, ingresso: Dict, evento_id: str, from_participante: bool, participante: Optional[Dict]) -> Dict:
-    """Get embedded layout from ingresso or create and persist it."""
+    """Get embedded layout from ingresso or create and persist it.
+    
+    Args:
+        db: MongoDB database instance (AsyncIOMotorDatabase)
+        ingresso: Ingresso document dict
+        evento_id: ID of the event
+        from_participante: Whether ingresso was found embedded in participante
+        participante: Participante document dict or None
+        
+    Returns:
+        Embedded layout dict with all placeholders replaced
+    """
     layout = ingresso.get("layout_ingresso")
     
     if layout:
