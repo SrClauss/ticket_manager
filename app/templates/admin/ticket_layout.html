@@ -383,22 +383,26 @@
 
         canvas.appendChild(element);
 
-        // Set initial size-mm for QR/Logo
+        // Set initial size-mm and aspect for QR/Logo
         let initialSizeMm = 0;
         if (type === 'qrcode' || type === 'logo') {
             initialSizeMm = parseFloat(size) || 20;
             element.setAttribute('data-size-mm', initialSizeMm);
-            // set inner element pixel size
+            // set inner element pixel size and store aspect ratio
             try {
                 const inner = element.querySelector(type === 'qrcode' ? '.element-qrcode' : '.element-logo');
                 if (inner) {
                     const px = (initialSizeMm / 80) * canvasRect.width;
                     inner.style.width = px + 'px';
                     inner.style.height = px + 'px';
+                    // store aspect ratio (width/height)
+                    const aspect = (inner.offsetWidth || px) / (inner.offsetHeight || px) || 1;
+                    element.setAttribute('data-aspect', aspect);
                 }
             } catch (e) {}
         } else {
             element.setAttribute('data-size-mm', 0);
+            element.setAttribute('data-aspect', 1);
         }
 
         // Make draggable
@@ -425,9 +429,11 @@
 
                 // update the element's size
                 const newWidth = evt.rect.width;
-                const newHeight = evt.rect.height;
+                // enforce proportional height based on stored aspect
+                const aspect = parseFloat(target.getAttribute('data-aspect')) || 1;
+                const newHeight = Math.round(newWidth / (aspect || 1));
 
-                // apply to inner
+                // apply to inner proportionally
                 const inner = target.querySelector(type === 'qrcode' ? '.element-qrcode' : '.element-logo');
                 if (inner) {
                     inner.style.width = newWidth + 'px';
@@ -442,7 +448,7 @@
                 target.setAttribute('data-x', x);
                 target.setAttribute('data-y', y);
 
-                // update data-size-mm based on width (assuming square)
+                // update data-size-mm based on width (reference width)
                 const canvasW = canvas.getBoundingClientRect().width;
                 const sizeMm = (newWidth / canvasW) * 80;
                 target.setAttribute('data-size-mm', Math.round(sizeMm * 10) / 10);
