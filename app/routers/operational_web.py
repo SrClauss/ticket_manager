@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
 from bson import ObjectId
-from app.config.database import get_database
+import app.config.database as database
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -35,7 +35,7 @@ async def auto_credenciamento_page(
     evento = None
     
     if evento_id:
-        db = get_database()
+        db = database.get_database()
         try:
             evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
             if evento:

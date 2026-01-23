@@ -164,9 +164,15 @@
             <hr class="border-light">
             
             <!-- Save Button -->
-            <button type="button" class="btn btn-gradient w-100" id="saveLayoutBtn">
+            <button type="button" class="btn btn-gradient w-100 mb-2" id="saveLayoutBtn">
                 <i data-lucide="save" style="width: 20px; height: 20px;"></i>
                 Salvar Layout
+            </button>
+            
+            <!-- Clear Button -->
+            <button type="button" class="btn btn-danger w-100" id="clearLayoutBtn">
+                <i data-lucide="trash-2" style="width: 20px; height: 20px;"></i>
+                Limpar Tudo
             </button>
         </div>
     </div>
@@ -204,8 +210,11 @@
     
     // Load existing layout
     const existingLayout = JSON.parse(document.getElementById('layoutJson').value);
+    console.log('Loading existing layout from DB:', existingLayout);
     if (existingLayout && existingLayout.elements) {
         existingLayout.elements.forEach(el => {
+            console.log(`Loading element: type=${el.type}, x=${el.x}mm, y=${el.y}mm, value=${el.value}`);
+            // Now passing coordinates in mm (not percentage)
             addElementToCanvas(el.type, el.value, el.x, el.y, el.size);
         });
     }
@@ -252,15 +261,16 @@
             return;
         }
         
-        // Add to center of canvas with percentage-based positioning
-        addElementToCanvas(type, content, 50, 30, parseInt(fontSize));
+        // Add to center of canvas (40mm x 60mm in an 80mm x 120mm canvas)
+        addElementToCanvas(type, content, 40, 60, parseInt(fontSize));
         
         // Clear form
         document.getElementById('elementContent').value = '';
     });
     
-    function addElementToCanvas(type, value, xPercent, yPercent, size) {
+    function addElementToCanvas(type, value, xMm, yMm, size) {
         const canvas = document.getElementById('ticketCanvas');
+        const canvasRect = canvas.getBoundingClientRect();
         const elementId = `element-${elementCounter++}`;
         
         const element = document.createElement('div');
@@ -278,9 +288,19 @@
             element.innerHTML = '<div class="element-logo">LOGO</div>';
         }
         
-        // Set position using percentage
-        element.style.left = xPercent + '%';
-        element.style.top = yPercent + '%';
+        // Convert mm to pixels for initial positioning
+        // Canvas is 80mm x 120mm displayed in canvasRect.width x canvasRect.height pixels
+        const xPx = (xMm / 80) * canvasRect.width;
+        const yPx = (yMm / 120) * canvasRect.height;
+        
+        // Clamp to canvas bounds (in pixels)
+        const clampedX = Math.max(0, Math.min(xPx, canvasRect.width - 50)); // -50 for element width estimate
+        const clampedY = Math.max(0, Math.min(yPx, canvasRect.height - 30)); // -30 for element height estimate
+        
+        element.style.left = clampedX + 'px';
+        element.style.top = clampedY + 'px';
+        element.setAttribute('data-x', 0);
+        element.setAttribute('data-y', 0);
         
         canvas.appendChild(element);
         
@@ -363,23 +383,38 @@
             elements: []
         };
         
+        // Canvas dimensions in mm
+        const canvasWidthMm = 80;
+        const canvasHeightMm = 120;
+        
         elements.forEach(el => {
             const rect = el.getBoundingClientRect();
-            const x = parseFloat(el.getAttribute('data-x')) || 0;
-            const y = parseFloat(el.getAttribute('data-y')) || 0;
+            const translateX = parseFloat(el.getAttribute('data-x')) || 0;
+            const translateY = parseFloat(el.getAttribute('data-y')) || 0;
             
-            // Calculate percentage position relative to canvas
-            const xPercent = ((rect.left - canvasRect.left + x) / canvasRect.width) * 100;
-            const yPercent = ((rect.top - canvasRect.top + y) / canvasRect.height) * 100;
+            // Get element's position relative to canvas (in pixels)
+            const leftPx = rect.left - canvasRect.left;
+            const topPx = rect.top - canvasRect.top;
+            
+            // Convert pixels to mm (relative to canvas size)
+            // Ensure coordinates are >= 0 and within canvas bounds
+            let xMm = Math.max(0, (leftPx / canvasRect.width) * canvasWidthMm);
+            let yMm = Math.max(0, (topPx / canvasRect.height) * canvasHeightMm);
+            
+            // Clamp to canvas bounds
+            xMm = Math.min(xMm, canvasWidthMm);
+            yMm = Math.min(yMm, canvasHeightMm);
             
             layout.elements.push({
                 type: el.getAttribute('data-type'),
                 value: el.getAttribute('data-value'),
-                x: Math.round(xPercent * 10) / 10,  // Round to 1 decimal
-                y: Math.round(yPercent * 10) / 10,
+                x: Math.round(xMm * 10) / 10,  // Round to 1 decimal (mm)
+                y: Math.round(yMm * 10) / 10,  // Round to 1 decimal (mm)
                 size: parseInt(el.getAttribute('data-size')) || 12
             });
         });
+        
+        console.log('Saving layout with mm coordinates:', layout);
         
         // Send to backend
         try {
@@ -395,11 +430,23 @@
             if (response.ok) {
                 showToast('Layout salvo com sucesso!', 'success');
             } else {
+                const errorText = await response.text();
+                console.error('Save failed:', errorText);
                 showToast('Erro ao salvar layout', 'danger');
             }
         } catch (error) {
             console.error('Error:', error);
             showToast('Erro ao salvar layout', 'danger');
+        }
+    });
+    
+    // Clear all elements
+    document.getElementById('clearLayoutBtn').addEventListener('click', function() {
+        if (confirm('Deseja remover TODOS os elementos do layout?')) {
+            const canvas = document.getElementById('ticketCanvas');
+            canvas.innerHTML = '';
+            updateElementsList();
+            showToast('Layout limpo', 'success');
         }
     });
     

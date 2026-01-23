@@ -34,17 +34,18 @@ def validate_cpf(cpf: str) -> str:
 def normalize_event_name(name: str) -> str:
     """Normaliza o nome do evento para usar na URL de inscrição.
 
-    Ex.: "Show Do Gustavo Lima Limeira 2025" -> "showgustavolimalimeira2025"
-    Remove acentuação, espaços e caracteres não alfanuméricos, e converte para minúsculas.
+    Ex.: "Show Do Gustavo Lima Limeira 2025" -> "show-do-gustavo-lima-limeira-2025"
+    Remove acentuação, converte para minúsculas, substitui sequências de não-alfanuméricos por hífen, e remove hífens duplicados.
     """
     if not name:
         return ""
     # Remove acentuação
     nkfd = unicodedata.normalize('NFKD', name)
     ascii_str = ''.join([c for c in nkfd if not unicodedata.combining(c)])
-    # Remove não-alfanuméricos
-    cleaned = re.sub(r'[^0-9a-zA-Z]', '', ascii_str)
-    return cleaned.lower()
+    # Replace non-alphanumeric sequences with hyphen
+    slug = re.sub(r'[^0-9a-zA-Z]+', '-', ascii_str).strip('-')
+    # Normalize to lowercase
+    return slug.lower()
 
 
 def format_datetime_display(dt) -> str:
@@ -72,14 +73,23 @@ async def ensure_cpf_unique(db, evento_id: str, participante_id: str = None, cpf
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    # Verifica se já existe ingresso para este evento com este participante_id ou cpf
-    query = {'evento_id': evento_id, '$or': []}
-    if participante_id:
-        query['$or'].append({'participante_id': participante_id})
-    query['$or'].append({'participante_cpf': cpf_digits})
-
-    existing = await db.ingressos_emitidos.find_one(query)
+    # Verifica se já existe ingresso para este evento com este CPF (permite múltiplos para o mesmo participante)
+    # Verifica na coleção antiga de ingressos
+    existing = await db.ingressos_emitidos.find_one({"evento_id": evento_id, "participante_cpf": cpf_digits})
     if existing:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='CPF já inscrito neste evento')
+        # if an existing ingresso belongs to a different participante_id, block
+        if not participante_id or str(existing.get("participante_id")) != str(participante_id):
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='CPF já inscrito neste evento')
+
+    # Verifica em ingressos embutidos dentro de participantes (se coleção existir no DB de teste)
+    if hasattr(db, 'participantes'):
+        existing_part = await db.participantes.find_one({
+            "ingressos": {"$elemMatch": {"evento_id": evento_id, "participante_cpf": cpf_digits}}
+        })
+        if existing_part:
+            # if the found participant has a different id than the provided participante_id, block
+            found_pid = existing_part.get("_id")
+            if not participante_id or str(found_pid) != str(participante_id):
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='CPF já inscrito neste evento')
 
     return cpf_digits

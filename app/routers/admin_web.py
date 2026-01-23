@@ -5,7 +5,11 @@ from typing import Optional
 from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 from app.models.evento import EventoUpdate
-from app.config.database import get_database
+import app.config.database as database
+
+def get_database():
+    """Runtime indirection to allow tests to monkeypatch `get_database` on this module."""
+    return database.get_database()
 from app.config.auth import (
     verify_admin_access, 
     verify_admin_credentials, 
@@ -157,7 +161,7 @@ async def admin_eventos_list(
     if redirect:
         return redirect
     
-    db = get_database()
+    db = database.get_database()
     
     # Build query
     query = {}

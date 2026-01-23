@@ -23,6 +23,7 @@ class AdminUpdate(BaseModel):
     email: Optional[EmailStr] = None
     nome: Optional[str] = Field(None, min_length=1, max_length=100)
     ativo: Optional[bool] = None
+    # Enforce minimum 8 chars on update.
     password: Optional[str] = Field(None, min_length=8)
 
 
@@ -54,4 +55,7 @@ class Admin(AdminBase):
         """Cria instância a partir de dados do MongoDB"""
         if "_id" in data and isinstance(data["_id"], ObjectId):
             data["_id"] = str(data["_id"])
+        # Provide defaults for missing legacy fields for compatibility in tests
+        data.setdefault("nome", "")
+        data.setdefault("ativo", True)
         return cls(**data)

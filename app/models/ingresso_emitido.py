@@ -34,6 +34,21 @@ class IngressoEmitido(IngressoEmitidoBase):
     id: str = Field(..., alias="_id")
     qrcode_hash: str
     data_emissao: datetime
+    # Embedded layout specific for this issued ticket
+    layout_ingresso: Optional[dict] = None
+
+
+class IngressoEmitidoEmbedded(BaseModel):
+    """Modelo de ingresso para uso embutido dentro de Participante"""
+    id: Optional[str] = Field(None, alias="_id")
+    evento_id: str
+    tipo_ingresso_id: str
+    participante_id: Optional[str] = None
+    participante_cpf: Optional[str] = None
+    status: StatusIngresso = StatusIngresso.ATIVO
+    qrcode_hash: str
+    data_emissao: datetime
+    layout_ingresso: Optional[dict] = None
     
     model_config = ConfigDict(
         populate_by_name=True,
@@ -45,7 +60,11 @@ class IngressoEmitido(IngressoEmitidoBase):
                 "participante_id": "507f1f77bcf86cd799439015",
                 "status": "Ativo",
                 "qrcode_hash": "a1b2c3d4e5f6",
-                "data_emissao": "2024-01-20T14:30:00"
+                "data_emissao": "2024-01-20T14:30:00",
+                "layout_ingresso": {
+                    "canvas": {"width": 80, "height": 120, "unit": "mm"},
+                    "elements": []
+                }
             }
         }
     )

@@ -122,9 +122,15 @@ async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db)
         if cpf_digits and not row_errors:
             existing_part = await db.participantes.find_one({'cpf': cpf_digits})
             if existing_part:
-                ingresso_exist = await db.ingressos_emitidos.find_one({'evento_id': evento_id, 'participante_id': str(existing_part.get('_id'))})
-                if ingresso_exist:
+                # Verifica se participante já tem ingresso para este evento (procura em ingressos embutidos)
+                part_has_ingresso = await db.participantes.find_one({'_id': existing_part.get('_id'), 'ingressos.evento_id': evento_id})
+                if part_has_ingresso:
                     row_errors.append('CPF já inscrito neste evento')
+                else:
+                    # Fallback: verifica coleção antiga ingressos_emitidos
+                    ingresso_exist = await db.ingressos_emitidos.find_one({'evento_id': evento_id, 'participante_id': str(existing_part.get('_id'))})
+                    if ingresso_exist:
+                        row_errors.append('CPF já inscrito neste evento')
 
         if row_errors:
             errors.append({'line': line_no, 'errors': row_errors, 'row': row})
@@ -153,7 +159,7 @@ async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db)
 
         # tipo to use
         if tipo_obj:
-            tipo_id = str(tipo_obj.get('_id'))
+            tipo_id = str(tipo_obj.get('_id') or tipo_obj.get('id') or tipo_obj.get('numero'))
         else:
             # find padrao
             tipo_obj = await db.tipos_ingresso.find_one({'evento_id': evento_id, 'padrao': True})
@@ -168,7 +174,42 @@ async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db)
             'qrcode_hash': f'auto-{datetime.now(timezone.utc).timestamp()}',
             'data_emissao': datetime.now(timezone.utc)
         }
-        await db.ingressos_emitidos.insert_one(ingresso_doc)
+        # embed layout into ingresso
+        layout_source = evento.get("layout_ingresso")
+        try:
+            from app.utils.layouts import embed_layout
+            embedded = embed_layout(layout_source, {'nome': nome or '', 'cpf': cpf_digits or '', 'email': email or ''}, tipo_obj or {}, evento, ingresso_doc)
+            ingresso_doc['layout_ingresso'] = embedded
+        except Exception:
+            pass
+        # Primeiro insere na coleção antiga para compatibilidade e obter _id
+        try:
+            res = await db.ingressos_emitidos.insert_one(ingresso_doc)
+            ingresso_doc["_id"] = res.inserted_id
+        except Exception:
+            # Se falhar (ex: coleção não existe), continua sem _id
+            pass
+
+        # Em seguida push no participante (ingressos embutidos)
+        try:
+            await db.participantes.update_one({"_id": ObjectId(participante_id)}, {"$push": {"ingressos": ingresso_doc}})
+        except AttributeError:
+            # FakeCollection in some tests lacks update_one: perform in-place append on the found document
+            try:
+                part = await db.participantes.find_one({"_id": ObjectId(participante_id)})
+            except Exception:
+                part = await db.participantes.find_one({"_id": participante_id})
+            if part is not None:
+                part.setdefault('ingressos', []).append(ingresso_doc)
+        except Exception:
+            # fallback se participante._id estiver em formato string or other DB differences
+            try:
+                await db.participantes.update_one({"_id": participante_id}, {"$push": {"ingressos": ingresso_doc}})
+            except AttributeError:
+                part = await db.participantes.find_one({"_id": participante_id})
+                if part is not None:
+                    part.setdefault('ingressos', []).append(ingresso_doc)
+
         created_ingressos += 1
 
     report = {

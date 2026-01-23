@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from bson import ObjectId
-from app.config.database import get_database
+import app.config.database as database
+get_database = database.get_database
 from app.models.lead_interacao import LeadInteracao, LeadInteracaoCreate
 from datetime import datetime, timezone
 
@@ -13,7 +14,7 @@ async def coletar_lead(interacao: LeadInteracaoCreate):
     Lê o QR Code de um participante e salva a interação 
     para posterior exportação pelo organizador
     """
-    db = get_database()
+    db = database.get_database()
     
     # Busca o ingresso pelo QR code
     ingresso = await db.ingressos_emitidos.find_one({
@@ -53,7 +54,7 @@ async def coletar_lead(interacao: LeadInteracaoCreate):
 @router.get("/interacoes/{evento_id}")
 async def listar_interacoes(evento_id: str, origem: str = None):
     """Lista todas as interações de um evento, opcionalmente filtradas por origem"""
-    db = get_database()
+    db = database.get_database()
     
     query = {"evento_id": evento_id}
     if origem:
@@ -87,7 +88,7 @@ async def listar_interacoes(evento_id: str, origem: str = None):
 @router.get("/estatisticas/{evento_id}")
 async def estatisticas_leads(evento_id: str):
     """Retorna estatísticas de coleta de leads"""
-    db = get_database()
+    db = database.get_database()
     
     # Total de interações
     total = await db.lead_interacoes.count_documents({"evento_id": evento_id})

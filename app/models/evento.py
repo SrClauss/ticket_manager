@@ -11,6 +11,22 @@ class EventoBase(BaseModel):
     data_evento: datetime
     logo_base64: Optional[str] = None
     ativo: bool = Field(default=True)
+    # Entidades embutidas
+    class IlhaEmbedded(BaseModel):
+        id: Optional[str] = Field(None, alias="_id")
+        nome_setor: str = Field(..., min_length=1, max_length=100)
+        capacidade_maxima: int = Field(..., gt=0)
+
+    class TipoIngressoEmbedded(BaseModel):
+        id: Optional[str] = Field(None, alias="_id")
+        descricao: str = Field(..., min_length=1, max_length=100)
+        numero: Optional[int] = None
+        padrao: bool = Field(default=False)
+        valor: Optional[float] = Field(None, ge=0)
+        permissoes: List[str] = Field(default_factory=list)
+
+    ilhas: List[IlhaEmbedded] = Field(default_factory=list)
+    tipos_ingresso: List[TipoIngressoEmbedded] = Field(default_factory=list)
     layout_ingresso: Dict[str, Any] = Field(
         default={
             "canvas": {"width": 80, "height": 120, "unit": "mm"},

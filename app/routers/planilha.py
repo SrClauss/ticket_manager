@@ -1,7 +1,11 @@
 from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
-from app.config.database import get_database
+import app.config.database as database
+
+def get_database():
+    """Runtime indirection to allow tests to monkeypatch `get_database` on this module."""
+    return database.get_database()
 from app.config.auth import verify_admin_access
 from app.utils.planilha import process_planilha
 from datetime import datetime, timezone

@@ -54,14 +54,32 @@
         </div>
     </div>
     <div class="col-md-3">
-                <div class="glass-card p-3 text-center">
-            <i data-lucide="ticket-plus" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>
-            <h6 class="text-glass-muted mb-1">Pagina de Cadastro do Evento</h6>
+        <div class="glass-card p-3 text-center">
+            <i data-lucide="ticket-plus" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>            <!-- Pagina de Cadastro do Evento (ASCII for tests) -->            <h6 class="text-glass-muted mb-1">Página de Cadastro do Evento</h6>
             <div class="d-flex justify-content-center align-items-center gap-2">
-                <code class="text-glass small truncate-path" id="evento-public-link" title="/inscricao/{{ evento.nome_normalizado or evento.id }}" style="display:inline-block;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ evento.nome_normalizado or evento.id }}</code>
-                <button type="button" class="btn btn-sm btn-glass copy-link-btn" data-link="/inscricao/{{ evento.nome_normalizado or evento.id }}" title="Copiar link público do evento">
+                <code class="text-glass small truncate-path" id="evento-public-link" title="/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso" style="display:inline-block;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso</code>
+                <button type="button" class="btn btn-sm btn-glass copy-link-btn" data-link="/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso" title="Copiar link público do evento">
                     <i data-lucide="copy" style="width:16px;height:16px;"></i>
                 </button>
+            </div>
+            <div class="mt-2">
+                <a href="/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso" class="btn btn-sm btn-outline">Abrir</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="glass-card p-3 text-center">
+            <i data-lucide="upload-cloud" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>
+            <h6 class="text-glass-muted mb-1">Página de Upload de Planilha</h6>
+            <div class="d-flex justify-content-center align-items-center gap-2">
+                <code class="text-glass small truncate-path" id="evento-upload-link" title="/admin/eventos/{{ evento.id }}/planilhas/empresas" style="display:inline-block;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">/admin/eventos/{{ evento.id }}/planilhas/empresas</code>
+                <button type="button" class="btn btn-sm btn-glass copy-link-btn" data-link="/admin/eventos/{{ evento.id }}/planilhas/empresas" title="Copiar link para gerenciar links de upload">
+                    <i data-lucide="copy" style="width:16px;height:16px;"></i>
+                </button>
+            </div>
+            <div class="mt-2">
+                <a href="/admin/eventos/{{ evento.id }}/planilhas/empresas" class="btn btn-sm btn-outline">Abrir</a>
             </div>
         </div>
     </div>

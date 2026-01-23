@@ -3,11 +3,19 @@
 <div class="glass-card p-4 text-center">
   <h2>Ingresso</h2>
   <p id="meta"></p>
-  <img id="ingressoImg" src="/api/eventos/{{ evento_id }}/ingresso/{{ ingresso_id }}/render.jpg" alt="Ingresso" style="max-width:100%;height:auto;border:1px solid #ddd;" />
+  <img id="ingressoImg" src="" alt="Ingresso" style="max-width:100%;height:auto;border:1px solid #ddd;" />
   <div class="mt-3">
-    <a id="downloadLink" class="btn btn-glass" href="/api/eventos/{{ evento_id }}/ingresso/{{ ingresso_id }}/render.jpg" download>Baixar JPG</a>
+    <a id="downloadLink" class="btn btn-glass" href="#" download>Baixar JPG</a>
     <button id="captureBtn" class="btn btn-gradient">Capturar imagem (abrir câmera)</button>
   </div>
+  <script>
+    // Force fetch from render endpoint every time using cache-buster
+    const renderUrlBase = `/api/eventos/{{ evento_id }}/ingresso/{{ ingresso_id }}/render.jpg`;
+    const cacheBuster = `t=${Date.now()}`;
+    const renderUrl = `${renderUrlBase}?${cacheBuster}`;
+    document.getElementById('ingressoImg').src = renderUrl;
+    document.getElementById('downloadLink').href = renderUrl;
+  </script>
   <input type="file" accept="image/*" capture="environment" id="cameraInput" style="display:none" />
 </div>
 <script>

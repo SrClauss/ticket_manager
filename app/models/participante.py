@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, EmailStr, field_validator, ConfigDict
-from typing import Optional
+from typing import Optional, List
+from app.models.ingresso_emitido import IngressoEmitidoEmbedded
 import re
 
 
@@ -39,6 +40,7 @@ class ParticipanteUpdate(BaseModel):
 class Participante(ParticipanteBase):
     """Modelo completo de Participante"""
     id: str = Field(..., alias="_id")
+    ingressos: List[IngressoEmitidoEmbedded] = Field(default_factory=list)
 
     model_config = ConfigDict(
         populate_by_name=True,

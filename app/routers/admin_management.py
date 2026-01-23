@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request, Body
 from typing import List
 from app.models.admin import Admin, AdminCreate, AdminUpdate
 from app.config.auth import (
@@ -38,8 +38,17 @@ async def get_admin(admin_id: str):
 
 
 @router.put("/admins/{admin_id}", response_model=Admin, dependencies=[Depends(verify_admin_access)])
-async def update_existing_admin(admin_id: str, admin_data: AdminUpdate):
-    """Atualiza um administrador"""
+async def update_existing_admin(admin_id: str, request: Request, admin_payload: dict = Body(...)):
+    """Atualiza um administrador. Loga payload recebido para depuração e valida depois com Pydantic."""
+    # Print payload to stdout to ensure visibility in uvicorn logs
+    print(f"PUT /admins/{admin_id} payload: {admin_payload}")
+    # Validate payload using Pydantic model and return clear 422 on validation error
+    from pydantic import ValidationError
+    try:
+        admin_data = AdminUpdate(**admin_payload)
+    except ValidationError as e:
+        print(f"Validation error for /admins/{admin_id}: {e}")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e.errors())
     return await update_admin(admin_id, admin_data)
 
 

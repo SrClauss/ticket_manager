@@ -9,16 +9,6 @@ class TipoIngressoBase(BaseModel):
     padrao: bool = Field(default=False)
     valor: Optional[float] = Field(None, ge=0)
     permissoes: List[str] = Field(default_factory=list)  # Lista de IDs de Ilhas
-    layout_ingresso: Optional[Dict[str, Any]] = Field(
-        default={
-            "canvas": {"width": 62, "height": 90, "unit": "mm"},
-            "elements": [
-                {"type": "text", "value": "{NOME}", "x": 5, "y": 5, "size": 12},
-                {"type": "qrcode", "value": "{qrcode_hash}", "x": 5, "y": 20, "size": 30},
-                {"type": "text", "value": "{TIPO_INGRESSO}", "x": 5, "y": 60, "size": 10}
-            ]
-        }
-    )
 
 
 class TipoIngressoCreate(TipoIngressoBase):
@@ -33,7 +23,6 @@ class TipoIngressoUpdate(BaseModel):
     numero: Optional[int] = None
     padrao: Optional[bool] = None
     permissoes: Optional[List[str]] = None
-    layout_ingresso: Optional[Dict[str, Any]] = None
 
 
 class TipoIngresso(TipoIngressoBase):
@@ -52,7 +41,6 @@ class TipoIngresso(TipoIngressoBase):
                 "padrao": True,
                 "valor": 150.00,
                 "permissoes": ["507f1f77bcf86cd799439012", "507f1f77bcf86cd799439014"],
-                "layout_ingresso": {"canvas": {"width": 62, "height": 90, "unit": "mm"}, "elements": []}
             }
         }
     )

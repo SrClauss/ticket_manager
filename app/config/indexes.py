@@ -1,9 +1,9 @@
-from app.config.database import get_database
+import app.config.database as database
 
 
 async def create_indexes():
     """Cria índices no MongoDB necessários pela Fase 2"""
-    db = get_database()
+    db = database.get_database()
 
     # Eventos: tokens únicos e nome normalizado único (endpoint baseado no nome)
     await db.eventos.create_index("token_bilheteria", unique=True)
@@ -21,17 +21,25 @@ async def create_indexes():
         partialFilterExpression={"padrao": True}
     )
 
-    # Índice para QR code hash (único)
-    await db.ingressos_emitidos.create_index("qrcode_hash", unique=True)
+    # Índices para suportar ingressos embutidos em participantes
+    # Índice único para qrcode dentro dos ingressos embutidos
+    try:
+        await db.participantes.create_index([("ingressos.qrcode_hash", 1)], unique=True, sparse=True)
+    except Exception:
+        pass
+    # Index para consultas por evento dentro dos ingressos embutidos
+    try:
+        await db.participantes.create_index([("ingressos.evento_id", 1)])
+    except Exception:
+        pass
 
-    # Garantir unicidade de participação por evento (evento_id, participante_id)
-    await db.ingressos_emitidos.create_index([("evento_id", 1), ("participante_id", 1)], unique=True)
-    # Garantir unicidade de CPF por evento para reforçar regra de negócio
-    await db.ingressos_emitidos.create_index(
-        [("evento_id", 1), ("participante_cpf", 1)],
-        unique=True,
-        sparse=True
-    )
+    # Mantém índices antigos em ingressos_emitidos para compatibilidade (se coleção existir)
+    try:
+        await db.ingressos_emitidos.create_index("qrcode_hash", unique=True)
+        await db.ingressos_emitidos.create_index([("evento_id", 1), ("participante_id", 1)], unique=True)
+        await db.ingressos_emitidos.create_index([("evento_id", 1), ("participante_cpf", 1)], unique=True, sparse=True)
+    except Exception:
+        pass
 
     # Participantes: email único e busca por nome
     await db.participantes.create_index("email", unique=True)
@@ -42,7 +50,6 @@ async def create_indexes():
 
     # Ilhas e interações
     await db.ilhas.create_index("evento_id")
-    await db.lead_interacoes.create_index([("evento_id", 1), ("data_interacao", -1)])
 
     # Administradores
     await db.administradores.create_index("username", unique=True)

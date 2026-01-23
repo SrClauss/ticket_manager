@@ -2,7 +2,11 @@ from fastapi import APIRouter, HTTPException, status, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from app.config.database import get_database
+import app.config.database as database
+
+def get_database():
+    """Runtime indirection to allow tests to monkeypatch `get_database` on this module."""
+    return database.get_database()
 from app.models.participante import ParticipanteCreate, Participante
 from app.models.ingresso_emitido import IngressoEmitido
 from app.config.auth import generate_qrcode_hash
@@ -64,7 +68,9 @@ async def minha_pagina_meu_ingresso(request: Request, evento_slug: str):
     if not evento:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evento não encontrado")
     evento["_id"] = str(evento.get("_id"))
-    return templates.TemplateResponse('inscricao_meu_ingresso.html', {"request": request, "evento": evento})
+    # Compute a slug for client-side fetches (prefer nome_normalizado, fallback to id/_id)
+    slug = evento.get("nome_normalizado") or evento.get("id") or evento.get("_id") or str(evento.get("_id"))
+    return templates.TemplateResponse('inscricao_meu_ingresso.html', {"request": request, "evento": evento, "slug": slug})
 
 
 @router.post("/{evento_slug}/buscar-ingresso")
@@ -149,8 +155,17 @@ async def post_inscricao(evento_slug: str, participante: ParticipanteCreate):
         "data_emissao": datetime.now(timezone.utc)
     }
 
+    # Always use the event layout; embed it into the ingresso before saving
+    layout_source = evento.get("layout_ingresso")
+    try:
+        from app.utils.layouts import embed_layout
+        embedded = embed_layout(layout_source, {"nome": participante.get("nome"), "cpf": participante.get("cpf"), "email": participante.get("email")}, tipo, evento, ingresso_dict)
+        ingresso_dict["layout_ingresso"] = embedded
+    except Exception:
+        pass
+
     result = await db.ingressos_emitidos.insert_one(ingresso_dict)
     created_ingresso = await db.ingressos_emitidos.find_one({"_id": result.inserted_id})
     created_ingresso["_id"] = str(created_ingresso["_id"])
 
-    return {"message": "Inscrição realizada com sucesso", "ingresso": IngressoEmitido(**created_ingresso)}
+    return {"message": "Inscrição realizada com sucesso", "ingresso_id": str(created_ingresso["_id"]), "ingresso": IngressoEmitido(**created_ingresso)}
