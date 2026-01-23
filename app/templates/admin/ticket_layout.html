@@ -321,7 +321,7 @@
     `;
     document.body.appendChild(toolbar);
     // initialize lucide icons in the injected toolbar
-    try { if (window && window.lucide && typeof window.lucide.replace === 'function') { window.lucide.replace(); } } catch (e) {}
+    try { if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') { lucide.createIcons(); } } catch (e) { console.warn('lucide init failed', e); }
 
     // Add element to canvas
     function addElementToCanvas(type, value, xMm, yMm, size, marginMm) {
