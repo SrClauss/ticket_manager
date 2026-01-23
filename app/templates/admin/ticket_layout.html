@@ -8,7 +8,7 @@
     .canvas-container {
         position: relative;
         background: white;
-        width: 300px;  /* 80mm scaled */
+        width: 300px;  /* base visual scale, actual mm set via JS */
         height: 450px; /* 120mm scaled */
         margin: 0 auto;
         border: 2px dashed #667eea;
@@ -122,6 +122,28 @@
         <div class="glass-card p-4 control-panel">
             <h5 class="text-glass mb-3">Painel de Controle</h5>
             
+            <!-- Canvas orientation and fixed size controls -->
+            <div class="mb-3">
+                <label class="form-label text-glass">Orientação</label>
+                <select class="form-select" id="canvasOrientation">
+                    <option value="portrait">Portrait</option>
+                    <option value="landscape">Landscape</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-glass" id="fixedDimLabel">Dimensão fixa (mm)</label>
+                <select class="form-select" id="fixedDimSelect">
+                    <option value="29">29</option>
+                    <option value="62" selected>62</option>
+                </select>
+                <small class="text-glass-muted" id="variableDimHint">Dimensão variável pode ser ajustada abaixo.</small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-glass" id="variableDimLabel">Altura do Canvas (mm)</label>
+                <input type="number" class="form-control" id="variableDimInput" value="120" min="10" step="1">
+                <small class="text-glass-muted">Altura livre (mínimo 10 mm). Para landscape a largura mínima recomendada é 70 mm.</small>
+            </div>
+
             <!-- Element Type -->
             <div class="mb-3">
                 <label class="form-label text-glass">Tipo de Elemento</label>
@@ -191,7 +213,7 @@
     <!-- Frame B: Ticket Canvas -->
     <div class="col-lg-8">
         <div class="glass-card p-4">
-            <h5 class="text-glass mb-3 text-center">Canvas do Ingresso (80mm x 120mm)</h5>
+            <h5 class="text-glass mb-3 text-center" id="canvasHeader">Canvas do Ingresso</h5>
             
             <div class="canvas-container" id="ticketCanvas">
                 <!-- Elements will be added here dynamically -->
@@ -283,6 +305,130 @@
     applyCanvasBorder();
     document.getElementById('canvasBorder').addEventListener('change', applyCanvasBorder);
 
+    // PX per mm for visual scaling (keeps previous visual scale)
+    const PX_PER_MM = 300 / 80; // ~3.75 px per mm
+
+    // Initialize canvas orientation and dimensions controls
+    const orientationEl = document.getElementById('canvasOrientation');
+    const fixedDimEl = document.getElementById('fixedDimSelect');
+    const variableDimEl = document.getElementById('variableDimInput');
+    const fixedDimLabel = document.getElementById('fixedDimLabel');
+    const variableDimLabel = document.getElementById('variableDimLabel');
+    const canvasHeader = document.getElementById('canvasHeader');
+
+    // derive initial values from existing layout or defaults
+    let canvasOrientation = (existingLayout && existingLayout.canvas && existingLayout.canvas.orientation) ? existingLayout.canvas.orientation : 'portrait';
+    let canvasMmWidth = 62;
+    let canvasMmHeight = 120;
+    if (existingLayout && existingLayout.canvas && typeof existingLayout.canvas.width === 'number' && typeof existingLayout.canvas.height === 'number') {
+        canvasMmWidth = existingLayout.canvas.width;
+        canvasMmHeight = existingLayout.canvas.height;
+    } else {
+        if (canvasOrientation === 'portrait') {
+            canvasMmWidth = 62;
+            canvasMmHeight = parseInt(variableDimEl.value || '120', 10) || 120;
+        } else {
+            canvasMmHeight = 62;
+            canvasMmWidth = parseInt(variableDimEl.value || '100', 10) || 100;
+        }
+    }
+
+    // apply control values to DOM
+    if (orientationEl) orientationEl.value = canvasOrientation;
+    if (fixedDimEl) fixedDimEl.value = (canvasOrientation === 'portrait' ? String(canvasMmWidth) : String(canvasMmHeight));
+    if (variableDimEl) variableDimEl.value = (canvasOrientation === 'portrait' ? String(canvasMmHeight) : String(canvasMmWidth));
+
+    const ticketCanvasEl = document.getElementById('ticketCanvas');
+    function applyCanvasSize() {
+        ticketCanvasEl.style.width = (canvasMmWidth * PX_PER_MM) + 'px';
+        ticketCanvasEl.style.height = (canvasMmHeight * PX_PER_MM) + 'px';
+        if (canvasHeader) canvasHeader.textContent = `Canvas do Ingresso (${canvasMmWidth}mm x ${canvasMmHeight}mm) — ${canvasOrientation}`;
+    }
+    applyCanvasSize();
+
+    // helper to rescale elements proportionally when canvas size changes
+    function rescaleElements(oldWmm, oldHmm) {
+        const oldRect = ticketCanvasEl.getBoundingClientRect();
+        // read new rect after resize
+        const newRect = ticketCanvasEl.getBoundingClientRect();
+        document.querySelectorAll('.draggable-element').forEach(el => {
+            const er = el.getBoundingClientRect();
+            const leftPx = er.left - oldRect.left;
+            const topPx = er.top - oldRect.top;
+            const xMm = (leftPx / oldRect.width) * oldWmm;
+            const yMm = (topPx / oldRect.height) * oldHmm;
+            const newLeft = (xMm / canvasMmWidth) * newRect.width;
+            const newTop = (yMm / canvasMmHeight) * newRect.height;
+            el.style.left = Math.max(0, Math.min(newLeft, newRect.width - er.width)) + 'px';
+            el.style.top = Math.max(0, Math.min(newTop, newRect.height - er.height)) + 'px';
+            el.style.transform = 'translate(0px, 0px)';
+            el.setAttribute('data-x', 0);
+            el.setAttribute('data-y', 0);
+            // update inner size for qr/logo
+            const dtype = el.getAttribute('data-type');
+            if (dtype === 'qrcode' || dtype === 'logo') {
+                const sizeMm = parseFloat(el.getAttribute('data-size-mm')) || 0;
+                const inner = el.querySelector(dtype === 'qrcode' ? '.element-qrcode' : '.element-logo');
+                if (inner) {
+                    const px = (sizeMm / canvasMmWidth) * newRect.width;
+                    inner.style.width = px + 'px';
+                    inner.style.height = px + 'px';
+                }
+            }
+        });
+    }
+
+    // update controls when orientation changes
+    if (orientationEl) orientationEl.addEventListener('change', function() {
+        const oldW = canvasMmWidth, oldH = canvasMmHeight;
+        const oldOrientation = canvasOrientation;
+        canvasOrientation = this.value || 'portrait';
+        // swap interpret fixed/variable
+        if (canvasOrientation === 'portrait') {
+            // fixed = width
+            canvasMmWidth = parseInt(fixedDimEl.value || '62', 10) || 62;
+            canvasMmHeight = Math.max(10, parseInt(variableDimEl.value || '120', 10) || 120);
+            fixedDimLabel.textContent = 'Dimensão fixa (largura) (mm)';
+            variableDimLabel.textContent = 'Altura do Canvas (mm)';
+            variableDimEl.min = 10;
+        } else {
+            // fixed = height
+            canvasMmHeight = parseInt(fixedDimEl.value || '62', 10) || 62;
+            canvasMmWidth = Math.max(70, parseInt(variableDimEl.value || '100', 10) || 100);
+            fixedDimLabel.textContent = 'Dimensão fixa (altura) (mm)';
+            variableDimLabel.textContent = 'Largura do Canvas (mm)';
+            variableDimEl.min = 70;
+        }
+        applyCanvasSize();
+        rescaleElements(oldOrientation==='portrait' ? oldW : oldW, oldOrientation==='portrait' ? oldH : oldH);
+    });
+
+    if (fixedDimEl) fixedDimEl.addEventListener('change', function() {
+        const oldW = canvasMmWidth, oldH = canvasMmHeight;
+        const val = parseInt(this.value || '62', 10) || 62;
+        if (canvasOrientation === 'portrait') {
+            canvasMmWidth = val;
+        } else {
+            canvasMmHeight = val;
+        }
+        applyCanvasSize();
+        rescaleElements(oldW, oldH);
+    });
+
+    if (variableDimEl) variableDimEl.addEventListener('change', function() {
+        const oldW = canvasMmWidth, oldH = canvasMmHeight;
+        let val = parseInt(this.value || (canvasOrientation==='portrait' ? '120' : '100'), 10) || (canvasOrientation==='portrait' ? 120 : 100);
+        if (canvasOrientation === 'portrait') {
+            val = Math.max(10, val);
+            canvasMmHeight = val;
+        } else {
+            val = Math.max(70, val);
+            canvasMmWidth = val;
+        }
+        applyCanvasSize();
+        rescaleElements(oldW, oldH);
+    });
+
     // Load existing elements (if any)
     if (existingLayout && Array.isArray(existingLayout.elements)) {
         existingLayout.elements.forEach(el => {
@@ -372,7 +518,7 @@
         // Position using mm -> px conversion
         const canvasW = canvasRect.width;
         const canvasH = canvasRect.height;
-        const leftPx = (xMm / 80) * canvasW;
+        const leftPx = (xMm / canvasMmWidth) * canvasW;
         const topPx = (yMm / 120) * canvasH;
 
         element.style.left = Math.max(0, Math.min(leftPx, canvasW - 10)) + 'px';
@@ -416,7 +562,7 @@
             try {
                 const inner = element.querySelector(type === 'qrcode' ? '.element-qrcode' : '.element-logo');
                 if (inner) {
-                    const px = (initialSizeMm / 80) * canvasRect.width;
+                    const px = (initialSizeMm / canvasMmWidth) * canvasRect.width;
                     inner.style.width = px + 'px';
                     inner.style.height = px + 'px';
                     // store aspect ratio (width/height)
@@ -474,7 +620,7 @@
 
                 // update data-size-mm based on width (reference width)
                 const canvasW = canvas.getBoundingClientRect().width;
-                const sizeMm = (newWidth / canvasW) * 80;
+                const sizeMm = (newWidth / canvasW) * canvasMmWidth;
                 target.setAttribute('data-size-mm', Math.round(sizeMm * 10) / 10);
                 updateElementsList();
             });
@@ -519,7 +665,7 @@
         const canvas = document.getElementById('ticketCanvas');
         const canvasRect = canvas.getBoundingClientRect();
         const paddingMm = parseFloat(document.getElementById('canvasPadding').value || '5');
-        const paddingPx = (paddingMm / 80) * canvasRect.width;
+        const paddingPx = (paddingMm / canvasMmWidth) * canvasRect.width;
         const elRect = el.getBoundingClientRect();
         const elW = elRect.width;
 
@@ -627,11 +773,12 @@
 
         const layout = {
             canvas: {
-                width: 80,
-                height: 120,
+                width: canvasMmWidth,
+                height: canvasMmHeight,
                 unit: 'mm',
                 padding_mm: parseFloat(document.getElementById('canvasPadding').value || '5'),
-                border: document.getElementById('canvasBorder').checked
+                border: document.getElementById('canvasBorder').checked,
+                orientation: (document.getElementById('canvasOrientation') && document.getElementById('canvasOrientation').value) ? document.getElementById('canvasOrientation').value : 'portrait'
             },
             elements: []
         };
