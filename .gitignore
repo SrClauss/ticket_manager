@@ -136,4 +136,4 @@ uploads_dev/
 
 # Generated ticket images (but keep the directory)
 app/static/ingressos/*
-!app/static/ingressos/.gitkeep
+!app/static/ingressos/.gitkeepbpsdkmanual_en_1110/
