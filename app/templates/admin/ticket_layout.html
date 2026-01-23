@@ -437,7 +437,12 @@
             newLeftPx = canvasRect.width - paddingPx - elW;
         }
 
-        // Apply position and reset transform/data-x
+        // Preserve current vertical visual position (including any translate) before clearing transform
+        const currentTopPx = el.getBoundingClientRect().top - canvasRect.top;
+        const clampedTop = Math.max(0, Math.min(currentTopPx, canvasRect.height - elRect.height));
+        el.style.top = clampedTop + 'px';
+
+        // Apply horizontal position and reset transform/data-x
         el.style.left = Math.max(0, Math.min(newLeftPx, canvasRect.width - elW)) + 'px';
         el.style.transform = 'translate(0px, 0px)';
         el.setAttribute('data-x', 0);
