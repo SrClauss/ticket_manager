@@ -383,6 +383,24 @@
 
         canvas.appendChild(element);
 
+        // Set initial size-mm for QR/Logo
+        let initialSizeMm = 0;
+        if (type === 'qrcode' || type === 'logo') {
+            initialSizeMm = parseFloat(size) || 20;
+            element.setAttribute('data-size-mm', initialSizeMm);
+            // set inner element pixel size
+            try {
+                const inner = element.querySelector(type === 'qrcode' ? '.element-qrcode' : '.element-logo');
+                if (inner) {
+                    const px = (initialSizeMm / 80) * canvasRect.width;
+                    inner.style.width = px + 'px';
+                    inner.style.height = px + 'px';
+                }
+            } catch (e) {}
+        } else {
+            element.setAttribute('data-size-mm', 0);
+        }
+
         // Make draggable
         interact(element).draggable({
             inertia: true,
@@ -391,6 +409,46 @@
             ],
             listeners: { move: dragMoveListener }
         });
+
+        // Make resizable for qrcode/logo preserving aspect ratio
+        if (type === 'qrcode' || type === 'logo') {
+            interact(element).resizable({
+                edges: { left: true, right: true, bottom: true, top: true },
+                modifiers: [
+                    interact.modifiers.restrictSize({ min: { width: 10, height: 10 }, max: { width: canvasRect.width - 10, height: canvasRect.height - 10 } })
+                ],
+                inertia: true
+            }).on('resizemove', function (evt) {
+                const target = evt.target;
+                let x = (parseFloat(target.getAttribute('data-x')) || 0);
+                let y = (parseFloat(target.getAttribute('data-y')) || 0);
+
+                // update the element's size
+                const newWidth = evt.rect.width;
+                const newHeight = evt.rect.height;
+
+                // apply to inner
+                const inner = target.querySelector(type === 'qrcode' ? '.element-qrcode' : '.element-logo');
+                if (inner) {
+                    inner.style.width = newWidth + 'px';
+                    inner.style.height = newHeight + 'px';
+                }
+
+                // translate when resizing from edges
+                x += evt.deltaRect.left;
+                y += evt.deltaRect.top;
+
+                target.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+                target.setAttribute('data-x', x);
+                target.setAttribute('data-y', y);
+
+                // update data-size-mm based on width (assuming square)
+                const canvasW = canvas.getBoundingClientRect().width;
+                const sizeMm = (newWidth / canvasW) * 80;
+                target.setAttribute('data-size-mm', Math.round(sizeMm * 10) / 10);
+                updateElementsList();
+            });
+        }
 
         updateElementsList();
     }
@@ -547,14 +605,32 @@
             const xMm = Math.max(0, (leftPx / canvasRect.width) * layout.canvas.width);
             const yMm = Math.max(0, (topPx / canvasRect.height) * layout.canvas.height);
 
-            layout.elements.push({
-                type: el.getAttribute('data-type'),
+            // determine size_mm for images/qrcodes, and size for text
+            let sizeMmVal = 0;
+            const dtype = el.getAttribute('data-type');
+            if (el.getAttribute('data-size-mm')) {
+                sizeMmVal = parseFloat(el.getAttribute('data-size-mm')) || 0;
+            } else if (dtype === 'qrcode' || dtype === 'logo') {
+                // fallback compute from rect
+                const er = el.getBoundingClientRect();
+                sizeMmVal = Math.round(((er.width / canvasRect.width) * layout.canvas.width) * 10) / 10;
+            }
+
+            const elementObj = {
+                type: dtype,
                 value: el.getAttribute('data-value'),
                 x: Math.round(xMm * 10) / 10,
                 y: Math.round(yMm * 10) / 10,
-                size: parseInt(el.getAttribute('data-size')) || 12,
                 margin_mm: parseFloat(el.getAttribute('data-margin-mm')) || 0
-            });
+            };
+
+            if (dtype === 'text') {
+                elementObj.size = parseInt(el.getAttribute('data-size')) || 12;
+            } else {
+                elementObj.size_mm = sizeMmVal || undefined;
+            }
+
+            layout.elements.push(elementObj);
         });
 
         console.log('Saving layout with mm coordinates and canvas padding:', layout);
