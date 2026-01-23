@@ -109,6 +109,13 @@
                     <i data-lucide="eye" style="width: 14px; height: 14px;"></i>
                     Ver
                 </a>
+                <!-- TEMPORARY: botão de exclusão definitiva via UI; componente temporário, reverter depois -->
+                <form action="/admin/eventos/{{ evento.id }}/delete" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.');" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-danger">
+                        <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                        Excluir
+                    </button>
+                </form>
             </div>
         </div>
     </div>

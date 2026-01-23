@@ -630,6 +630,26 @@ async def admin_limpar_eventos_passados(request: Request):
     )
 
 
+# TEMPORARY COMPONENT: Exclusão definitiva via UI
+# Este endpoint e o botão de exclusão no template são temporários para facilitar manutenção rápida.
+# Remover/reescrever este componente assim que a operação for concluída.
+@router.post("/eventos/{evento_id}/delete")
+async def admin_evento_deletar(request: Request, evento_id: str):
+    """Deleta um evento (via UI administrativa)."""
+    redirect = check_admin_session(request)
+    if redirect:
+        return redirect
+    db = get_database()
+    try:
+        object_id = ObjectId(evento_id)
+    except Exception:
+        return RedirectResponse(url="/admin/eventos", status_code=status.HTTP_303_SEE_OTHER)
+    try:
+        await db.eventos.delete_one({"_id": object_id})
+    except Exception:
+        pass
+    return RedirectResponse(url="/admin/eventos", status_code=status.HTTP_303_SEE_OTHER)
+
 @router.get("/financeiro", response_class=HTMLResponse)
 async def admin_financeiro(request: Request):
     """Financial page (placeholder)"""
