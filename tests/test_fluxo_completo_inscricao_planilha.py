@@ -21,7 +21,16 @@ from app.utils.planilha import process_planilha
 
 # ==================== FakeDB Implementation ====================
 # Implementação compatível com conftest.py, adaptada para suportar
-# operações específicas necessárias para estes testes
+# operações específicas necessárias para estes testes.
+#
+# NOTA: Esta implementação estende FakeCollection do conftest.py com:
+# - Suporte para $push em update_one (necessário para ingressos embutidos)
+# - Suporte para $elemMatch em queries (necessário para detecção de duplicatas)
+# 
+# A duplicação é intencional para manter os testes auto-contidos e evitar
+# modificar o conftest.py compartilhado que pode afetar outros testes.
+# Se esta funcionalidade for necessária em múltiplos testes futuros,
+# considere migrar para conftest.py.
 
 class FakeCollection:
     """Mock de collection MongoDB para testes."""
@@ -58,7 +67,8 @@ class FakeCollection:
             if isinstance(new_doc["_id"], str):
                 try:
                     new_doc["_id"] = ObjectId(new_doc["_id"])
-                except Exception:
+                except (ValueError, TypeError):
+                    # If conversion fails, keep as string (FakeDB flexibility)
                     pass
         self.docs.append(new_doc)
         
