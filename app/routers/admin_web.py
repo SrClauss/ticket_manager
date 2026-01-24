@@ -604,6 +604,110 @@ async def admin_evento_layout_salvar(
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Evento não encontrado")
         
+        # Load fresh evento doc
+        evento_doc = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+        try:
+            from app.utils.layouts import embed_layout
+            # Update standalone ingressos_emitidos and migrate into participantes when possible
+            try:
+                try:
+                    oid = ObjectId(evento_id)
+                    filter_or = {"$or": [{"evento_id": evento_id}, {"evento_id": oid}]}
+                except Exception:
+                    filter_or = {"evento_id": evento_id}
+
+                cursor = db.ingressos_emitidos.find(filter_or)
+                async for ingresso in cursor:
+                    participante = None
+                    tipo = None
+                    # fetch participante if referenced
+                    pid = ingresso.get('participante_id')
+                    if pid:
+                        try:
+                            participante = await db.participantes.find_one({"_id": ObjectId(pid)})
+                        except Exception:
+                            participante = await db.participantes.find_one({"_id": pid})
+                    # fetch tipo
+                    tid = ingresso.get('tipo_ingresso_id')
+                    if tid:
+                        try:
+                            tipo = await db.tipos_ingresso.find_one({"_id": ObjectId(tid)})
+                        except Exception:
+                            tipo = await db.tipos_ingresso.find_one({"_id": tid})
+
+                    embedded = None
+                    try:
+                        embedded = embed_layout(layout_ingresso, participante or {}, tipo or {}, evento_doc or {}, ingresso)
+                    except Exception:
+                        embedded = None
+
+                    # update standalone doc
+                    try:
+                        if embedded is not None:
+                            await db.ingressos_emitidos.update_one({"_id": ingresso.get("_id")}, {"$set": {"layout_ingresso": embedded}})
+                    except Exception:
+                        pass
+
+                    # migrate into participante if possible
+                    if participante is not None:
+                        try:
+                            found = False
+                            for ing in participante.get('ingressos', []):
+                                if str(ing.get('_id')) == str(ingresso.get('_id')) or ing.get('_id') == ingresso.get('_id'):
+                                    found = True
+                                    break
+                            if not found:
+                                ing_copy = ingresso.copy()
+                                if embedded is not None:
+                                    ing_copy['layout_ingresso'] = embedded
+                                for k in ['_id', 'participante_id', 'tipo_ingresso_id']:
+                                    if isinstance(ing_copy.get(k), ObjectId):
+                                        ing_copy[k] = str(ing_copy[k])
+                                await db.participantes.update_one({"_id": participante.get('_id')}, {"$push": {"ingressos": ing_copy}})
+                                # remove legacy doc
+                                try:
+                                    await db.ingressos_emitidos.delete_one({"_id": ingresso.get('_id')})
+                                except Exception:
+                                    pass
+                            else:
+                                try:
+                                    if embedded is not None:
+                                        await db.participantes.update_one({"_id": participante.get('_id'), "ingressos._id": ingresso.get('_id')}, {"$set": {"ingressos.$.layout_ingresso": embedded}})
+                                except Exception:
+                                    pass
+                        except Exception:
+                            pass
+            except Exception:
+                # non-fatal
+                pass
+
+            # Update any ingressos already embedded inside participantes
+            try:
+                p_cursor = db.participantes.find({"ingressos": {"$elemMatch": {"evento_id": evento_id}}})
+                async for part in p_cursor:
+                    for ing in part.get('ingressos', []):
+                        if str(ing.get('evento_id')) != str(evento_id) and not (isinstance(ing.get('evento_id'), ObjectId) and str(ing.get('evento_id')) == str(evento_id)):
+                            continue
+                        tipo = None
+                        try:
+                            if ing.get('tipo_ingresso_id'):
+                                try:
+                                    tipo = await db.tipos_ingresso.find_one({"_id": ObjectId(ing.get('tipo_ingresso_id'))})
+                                except Exception:
+                                    tipo = await db.tipos_ingresso.find_one({"_id": ing.get('tipo_ingresso_id')})
+                        except Exception:
+                            tipo = None
+                        try:
+                            embedded = embed_layout(layout_ingresso, part or {}, tipo or {}, evento_doc or {}, ing)
+                            await db.participantes.update_one({"_id": part.get('_id'), "ingressos._id": ing.get('_id')}, {"$set": {"ingressos.$.layout_ingresso": embedded}})
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+        except Exception:
+            # embed_layout not available or other error - continue
+            pass
+
         return {"message": "Layout salvo com sucesso"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
