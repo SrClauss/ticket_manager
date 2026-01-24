@@ -512,6 +512,47 @@ async def admin_evento_planilhas_empresas_generate(request: Request, evento_id: 
     return RedirectResponse(url=f"/admin/eventos/{evento_id}/planilhas/empresas", status_code=status.HTTP_303_SEE_OTHER)
 
 
+@router.delete("/eventos/{evento_id}/planilhas/empresas/{token}")
+async def admin_evento_planilhas_empresas_delete(request: Request, evento_id: str, token: str):
+    """Delete an upload link by token for the given event. Returns JSON for AJAX clients or redirects for browsers."""
+    redirect = check_admin_session(request)
+    if redirect:
+        return redirect
+    db = get_database()
+    try:
+        # Ensure the event exists
+        try:
+            object_id = ObjectId(evento_id)
+        except Exception:
+            raise HTTPException(status_code=400, detail="ID de evento inválido")
+        evento = await db.eventos.find_one({"_id": object_id})
+        if not evento:
+            raise HTTPException(status_code=404, detail="Evento não encontrado")
+
+        result = await db.planilha_upload_links.delete_one({"evento_id": str(object_id), "token": token})
+
+        accept = request.headers.get('accept', '')
+        if 'application/json' in accept or request.headers.get('x-requested-with', '').lower() == 'xmlhttprequest':
+            if result.deleted_count:
+                return JSONResponse({"status": "ok", "deleted": True})
+            else:
+                return JSONResponse({"status": "not_found", "deleted": False}, status_code=404)
+
+        # fallback: redirect back to management page
+        return RedirectResponse(url=f"/admin/eventos/{evento_id}/planilhas/empresas", status_code=status.HTTP_303_SEE_OTHER)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/eventos/{evento_id}/planilhas/empresas/{token}/delete")
+async def admin_evento_planilhas_empresas_delete_form(request: Request, evento_id: str, token: str):
+    """Form-compatible POST endpoint to delete a link (useful for non-AJAX submits)."""
+    return await admin_evento_planilhas_empresas_delete(request, evento_id, token)
+
+
 @router.post("/eventos/{evento_id}/planilhas/campos")
 async def admin_evento_planilhas_salvar_campos(request: Request, evento_id: str):
     """Atualiza campos obrigatórios de planilha para o evento."""

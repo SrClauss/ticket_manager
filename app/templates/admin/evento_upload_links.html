@@ -16,7 +16,7 @@
   {% if links %}
     <div class="row">
       {% for l in links %}
-      <div class="col-md-4 mb-3">
+      <div class="col-md-4 mb-3" data-token="{{ l.token }}">
         <div class="glass-card p-3 d-flex flex-column align-items-start">
           <div class="w-100 d-flex justify-content-between align-items-start">
             <div>
@@ -26,6 +26,7 @@
             <div>
               <button class="btn btn-sm btn-glass copy-link-btn" data-link="{{ url_root }}/upload/{{ l.token }}">Copiar</button>
               <a class="btn btn-sm btn-outline ms-1" href="{{ url_root }}/upload/{{ l.token }}" target="_blank" rel="noopener">Abrir</a>
+              <button class="btn btn-sm btn-danger ms-1 delete-link-btn" data-token="{{ l.token }}" title="Excluir link">Excluir</button>
             </div>
           </div>
           <div class="mt-2 w-100">
@@ -111,7 +112,35 @@
             row.insertBefore(col, row.firstChild);
 
             // attach copy handler
-            const copyBtn = card.querySelector('.copy-link-btn');
+    // attach copy handlers for existing buttons
+    document.querySelectorAll('.copy-link-btn').forEach(btn => {
+      btn.addEventListener('click', async function(){ const link = this.dataset.link; await copyToClipboard(link); alert('Link copiado'); });
+    });
+
+    // attach delete handlers
+    document.querySelectorAll('.delete-link-btn').forEach(btn => {
+      btn.addEventListener('click', async function(){
+        if (!confirm('Confirma exclusão deste link de upload?')) return;
+        const token = this.dataset.token;
+        const eventoId = '{{ evento.id }}';
+        try {
+          const resp = await fetch(`/admin/eventos/${eventoId}/planilhas/empresas/${token}`, { method: 'DELETE', headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } });
+          if (!resp.ok) throw new Error('delete failed');
+          const data = await resp.json();
+          if (data.deleted) {
+            // remove the card
+            const col = this.closest('[data-token]');
+            if (col) col.remove();
+            alert('Link excluído');
+          } else {
+            alert('Link não encontrado');
+          }
+        } catch (err) {
+          alert('Falha ao excluir link');
+        }
+      });
+    });
+
             copyBtn.addEventListener('click', async function(){ await copyToClipboard(this.dataset.link); alert('Link copiado'); });
           }
         } catch (err) {
