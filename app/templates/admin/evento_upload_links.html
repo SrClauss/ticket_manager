@@ -11,19 +11,29 @@
   </form>
 
   {% if links %}
-    <table class="table">
-      <thead><tr><th>Token</th><th>Link</th><th>Criado em</th><th>Ações</th></tr></thead>
-      <tbody>
-        {% for l in links %}
-        <tr>
-          <td><code>{{ l.token[:12] }}...</code></td>
-          <td><code style="max-width:320px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ url_root }}/upload/{{ l.token }}</code></td>
-          <td>{{ l.created }}</td>
-          <td><button class="btn btn-sm btn-glass copy-link-btn" data-link="{{ url_root }}/upload/{{ l.token }}">Copiar</button></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="row">
+      {% for l in links %}
+      <div class="col-md-4 mb-3">
+        <div class="glass-card p-3 d-flex flex-column align-items-start">
+          <div class="w-100 d-flex justify-content-between align-items-start">
+            <div>
+              <div class="small text-muted">Token</div>
+              <code>{{ l.token[:12] }}...</code>
+            </div>
+            <div>
+              <button class="btn btn-sm btn-glass copy-link-btn" data-link="{{ url_root }}/upload/{{ l.token }}">Copiar</button>
+              <a class="btn btn-sm btn-outline ms-1" href="{{ url_root }}/upload/{{ l.token }}" target="_blank" rel="noopener">Abrir</a>
+            </div>
+          </div>
+          <div class="mt-2 w-100">
+            <div class="small text-muted">Link</div>
+            <div style="word-break:break-all;"><a href="{{ url_root }}/upload/{{ l.token }}" target="_blank" rel="noopener">{{ url_root }}/upload/{{ l.token }}</a></div>
+            <div class="text-muted small mt-2">Criado: {{ l.created }}</div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
   {% else %}
     <p>Nenhum link gerado ainda.</p>
   {% endif %}
