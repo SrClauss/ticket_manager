@@ -648,15 +648,34 @@ async def admin_evento_layout_salvar(
                     except Exception:
                         pass
 
-                    # migrate into participante if possible
+                    # migrate into participante if possible, enforcing single ingresso per participant per event
                     if participante is not None:
                         try:
-                            found = False
+                            # collect existing ingressos for this participant that match the event
+                            existing = []
                             for ing in participante.get('ingressos', []):
-                                if str(ing.get('_id')) == str(ingresso.get('_id')) or ing.get('_id') == ingresso.get('_id'):
-                                    found = True
-                                    break
-                            if not found:
+                                try:
+                                    if str(ing.get('evento_id')) == str(evento_id) or (isinstance(ing.get('evento_id'), ObjectId) and str(ing.get('evento_id')) == str(evento_id)):
+                                        existing.append(ing)
+                                except Exception:
+                                    continue
+
+                            if existing:
+                                # update the first matching ingresso's layout
+                                keep = existing[0]
+                                try:
+                                    if embedded is not None:
+                                        await db.participantes.update_one({"_id": participante.get('_id'), "ingressos._id": keep.get('_id')}, {"$set": {"ingressos.$.layout_ingresso": embedded}})
+                                except Exception:
+                                    pass
+                                # remove additional duplicates (keep the first) to enforce one ingresso per participant per event
+                                try:
+                                    keep_id = keep.get('_id')
+                                    await db.participantes.update_one({"_id": participante.get('_id')}, {"$pull": {"ingressos": {"evento_id": evento_id, "_id": {"$ne": keep_id}}}})
+                                except Exception:
+                                    pass
+                            else:
+                                # no existing ingresso for this event, push the migrated one
                                 ing_copy = ingresso.copy()
                                 if embedded is not None:
                                     ing_copy['layout_ingresso'] = embedded
@@ -664,12 +683,6 @@ async def admin_evento_layout_salvar(
                                     if isinstance(ing_copy.get(k), ObjectId):
                                         ing_copy[k] = str(ing_copy[k])
                                 await db.participantes.update_one({"_id": participante.get('_id')}, {"$push": {"ingressos": ing_copy}})
-                            else:
-                                try:
-                                    if embedded is not None:
-                                        await db.participantes.update_one({"_id": participante.get('_id'), "ingressos._id": ingresso.get('_id')}, {"$set": {"ingressos.$.layout_ingresso": embedded}})
-                                except Exception:
-                                    pass
                         except Exception:
                             pass
             except Exception:
