@@ -86,6 +86,25 @@ async def root():
         }
     }
 
+
+# Public friendly routes to expose the planilha upload form at /upload/{token}
+# The planilha router is mounted under /api/admin; provide a root-level GET redirect to the mounted form
+from fastapi.responses import RedirectResponse
+from fastapi import UploadFile, File
+
+@app.get('/upload/{token}', response_class=RedirectResponse)
+async def public_upload_form_redirect(token: str):
+    """Redirect GET /upload/{token} -> /api/admin/upload/{token} which serves the upload form template."""
+    return RedirectResponse(url=f"/api/admin/upload/{token}")
+
+
+@app.post('/upload/{token}')
+async def public_upload_proxy(token: str, file: UploadFile = File(...), request: Request = None):
+    """Proxy POST /upload/{token} to the planilha.public_upload handler so the template's action (/upload/{token}) works."""
+    from app.routers import planilha
+    # delegate to existing router handler
+    return await planilha.public_upload(request=request, token=token, file=file)
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "EventMaster API"}
