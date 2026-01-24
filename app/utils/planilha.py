@@ -9,7 +9,7 @@ from bson import ObjectId
 from app.utils.validations import validate_cpf
 
 
-async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db, import_id: str = None) -> Dict[str, Any]:
+async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db, import_id: str = None, validate_only: bool = False) -> Dict[str, Any]:
     """Processa uma planilha (.xlsx ou .csv) e importa participantes/ingressos.
 
     Retorna um relatório com estatísticas e lista de erros por linha.
@@ -143,81 +143,85 @@ async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db,
             errors.append({'line': line_no, 'errors': row_errors, 'row': row})
             continue
 
-        # Passed validations -> create participant if needed and ingresso
-        if cpf_digits:
-            existing_part = await db.participantes.find_one({'cpf': cpf_digits})
-        else:
-            existing_part = None
+        # Passed validations -> if not in validate-only mode, create participant if needed and ingresso
+        if not validate_only:
+            if cpf_digits:
+                existing_part = await db.participantes.find_one({'cpf': cpf_digits})
+            else:
+                existing_part = None
 
-        if existing_part:
-            participante_id = str(existing_part.get('_id'))
-            reused_participants += 1
-        else:
-            part_doc = {
-                'nome': nome or '',
-                'email': email or '',
-                'cpf': cpf_digits or '',
-                'telefone': row.get('Telefone', '') or row.get('telefone', '') or '' ,
-                'empresa': row.get('Empresa', '') or ''
+            if existing_part:
+                participante_id = str(existing_part.get('_id'))
+                reused_participants += 1
+            else:
+                part_doc = {
+                    'nome': nome or '',
+                    'email': email or '',
+                    'cpf': cpf_digits or '',
+                    'telefone': row.get('Telefone', '') or row.get('telefone', '') or '' ,
+                    'empresa': row.get('Empresa', '') or ''
+                }
+                res = await db.participantes.insert_one(part_doc)
+                participante_id = str(res.inserted_id)
+                created_participants += 1
+
+            # tipo to use
+            if tipo_obj:
+                tipo_id = str(tipo_obj.get('_id') or tipo_obj.get('id') or tipo_obj.get('numero'))
+            else:
+                # find padrao
+                tipo_obj = await db.tipos_ingresso.find_one({'evento_id': evento_id, 'padrao': True})
+                tipo_id = str(tipo_obj.get('_id')) if tipo_obj else None
+
+            ingresso_doc = {
+                'evento_id': evento_id,
+                'tipo_ingresso_id': tipo_id,
+                'participante_id': participante_id,
+                'participante_cpf': cpf_digits,
+                'status': 'Ativo',
+                'qrcode_hash': f'auto-{datetime.now(timezone.utc).timestamp()}',
+                'data_emissao': datetime.now(timezone.utc)
             }
-            res = await db.participantes.insert_one(part_doc)
-            participante_id = str(res.inserted_id)
-            created_participants += 1
-
-        # tipo to use
-        if tipo_obj:
-            tipo_id = str(tipo_obj.get('_id') or tipo_obj.get('id') or tipo_obj.get('numero'))
-        else:
-            # find padrao
-            tipo_obj = await db.tipos_ingresso.find_one({'evento_id': evento_id, 'padrao': True})
-            tipo_id = str(tipo_obj.get('_id')) if tipo_obj else None
-
-        ingresso_doc = {
-            'evento_id': evento_id,
-            'tipo_ingresso_id': tipo_id,
-            'participante_id': participante_id,
-            'participante_cpf': cpf_digits,
-            'status': 'Ativo',
-            'qrcode_hash': f'auto-{datetime.now(timezone.utc).timestamp()}',
-            'data_emissao': datetime.now(timezone.utc)
-        }
-        # embed layout into ingresso
-        layout_source = evento.get("layout_ingresso")
-        try:
-            from app.utils.layouts import embed_layout
-            embedded = embed_layout(layout_source, {'nome': nome or '', 'cpf': cpf_digits or '', 'email': email or ''}, tipo_obj or {}, evento, ingresso_doc)
-            ingresso_doc['layout_ingresso'] = embedded
-        except Exception:
-            pass
-        # Primeiro insere na coleção antiga para compatibilidade e obter _id
-        try:
-            res = await db.ingressos_emitidos.insert_one(ingresso_doc)
-            ingresso_doc["_id"] = res.inserted_id
-        except Exception:
-            # Se falhar (ex: coleção não existe), continua sem _id
-            pass
-
-        # Em seguida push no participante (ingressos embutidos)
-        try:
-            await db.participantes.update_one({"_id": ObjectId(participante_id)}, {"$push": {"ingressos": ingresso_doc}})
-        except AttributeError:
-            # FakeCollection in some tests lacks update_one: perform in-place append on the found document
+            # embed layout into ingresso
+            layout_source = evento.get("layout_ingresso")
             try:
-                part = await db.participantes.find_one({"_id": ObjectId(participante_id)})
+                from app.utils.layouts import embed_layout
+                embedded = embed_layout(layout_source, {'nome': nome or '', 'cpf': cpf_digits or '', 'email': email or ''}, tipo_obj or {}, evento, ingresso_doc)
+                ingresso_doc['layout_ingresso'] = embedded
             except Exception:
-                part = await db.participantes.find_one({"_id": participante_id})
-            if part is not None:
-                part.setdefault('ingressos', []).append(ingresso_doc)
-        except Exception:
-            # fallback se participante._id estiver em formato string or other DB differences
+                pass
+            # Primeiro insere na coleção antiga para compatibilidade e obter _id
             try:
-                await db.participantes.update_one({"_id": participante_id}, {"$push": {"ingressos": ingresso_doc}})
+                res = await db.ingressos_emitidos.insert_one(ingresso_doc)
+                ingresso_doc["_id"] = res.inserted_id
+            except Exception:
+                # Se falhar (ex: coleção não existe), continua sem _id
+                pass
+
+            # Em seguida push no participante (ingressos embutidos)
+            try:
+                await db.participantes.update_one({"_id": ObjectId(participante_id)}, {"$push": {"ingressos": ingresso_doc}})
             except AttributeError:
-                part = await db.participantes.find_one({"_id": participante_id})
+                # FakeCollection in some tests lacks update_one: perform in-place append on the found document
+                try:
+                    part = await db.participantes.find_one({"_id": ObjectId(participante_id)})
+                except Exception:
+                    part = await db.participantes.find_one({"_id": participante_id})
                 if part is not None:
                     part.setdefault('ingressos', []).append(ingresso_doc)
+            except Exception:
+                # fallback se participante._id estiver em formato string or other DB differences
+                try:
+                    await db.participantes.update_one({"_id": participante_id}, {"$push": {"ingressos": ingresso_doc}})
+                except AttributeError:
+                    part = await db.participantes.find_one({"_id": participante_id})
+                    if part is not None:
+                        part.setdefault('ingressos', []).append(ingresso_doc)
 
-        created_ingressos += 1
+            created_ingressos += 1
+        else:
+            # In validation-only mode we don't create participants/ingressos; counts remain zero
+            pass
 
     report = {
         'total': total,
