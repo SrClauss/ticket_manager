@@ -17,6 +17,17 @@ from pydantic import BaseModel
 router = APIRouter()
 
 
+class CompatResponse(dict):
+    """Compatibility response that supports both dict access and attribute access."""
+    def __getattr__(self, name):
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError(name)
+    def __setattr__(self, name, value):
+        self[name] = value
+
+
 class EmissaoIngressoRequest(BaseModel):
     """Request para emissão de ingresso"""
     tipo_ingresso_id: str
@@ -244,14 +255,38 @@ async def emitir_ingresso(
         # non-fatal: if embedding fails, continue returning the prefilled layout
         pass
 
-    # Return a plain dict for compatibility with tests that call the function directly
-    return {
+    # Normalize created_ingresso _id to string if present
+    if created_ingresso and created_ingresso.get("_id"):
+        try:
+            created_ingresso["_id"] = str(created_ingresso["_id"])
+        except Exception:
+            pass
+
+    # Return a Pydantic response object so tests calling the function directly can access attributes
+    try:
+        ingresso_model = IngressoEmitido(**created_ingresso) if isinstance(created_ingresso, dict) else created_ingresso
+    except Exception:
+        # Fallback: wrap minimal fields
+        ingresso_model = IngressoEmitido(**{
+            "_id": str(created_ingresso.get("_id")) if created_ingresso and created_ingresso.get("_id") else "",
+            "evento_id": ingresso_dict.get("evento_id"),
+            "tipo_ingresso_id": ingresso_dict.get("tipo_ingresso_id"),
+            "participante_id": ingresso_dict.get("participante_id"),
+            "participante_cpf": ingresso_dict.get("participante_cpf"),
+            "status": ingresso_dict.get("status"),
+            "qrcode_hash": ingresso_dict.get("qrcode_hash"),
+            "data_emissao": ingresso_dict.get("data_emissao")
+        })
+
+    # Return compatibility response: behaves like dict and object
+    resp = CompatResponse({
         "participante_nome": participante["nome"],
         "tipo_ingresso": tipo_ingresso["descricao"],
         "qrcode_hash": qrcode_hash,
-        "ingresso": created_ingresso,
+        "ingresso": ingresso_model,
         "layout_preenchido": layout_preenchido
-    }
+    })
+    return resp
 
 
 async def _ensure_participante_cpf_unico(db, evento_id: str, participante_id: str, participante: dict) -> str:

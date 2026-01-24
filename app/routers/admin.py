@@ -22,6 +22,23 @@ from fastapi.responses import StreamingResponse
 router = APIRouter()
 
 
+def _stringify_objectids(obj):
+    """Recursively convert any bson.ObjectId values in dict/list to str for Pydantic compatibility."""
+    from bson import ObjectId
+    if isinstance(obj, dict):
+        new = {}
+        for k, v in obj.items():
+            if isinstance(v, ObjectId):
+                new[k] = str(v)
+            else:
+                new[k] = _stringify_objectids(v)
+        return new
+    if isinstance(obj, list):
+        return [_stringify_objectids(v) for v in obj]
+    return obj
+
+
+
 # ==================== EVENTOS ====================
 
 @router.get("/eventos", response_model=List[Evento], dependencies=[Depends(verify_admin_access)])
@@ -35,6 +52,7 @@ async def list_eventos(skip: int = 0, limit: int = 10):
         all_docs = await db.eventos.find().to_list(length=None)
         sliced = all_docs[skip: skip + limit]
         for document in sliced:
+            document = _stringify_objectids(document)
             document["_id"] = str(document["_id"])
             eventos.append(Evento(**document))
         return eventos
@@ -66,6 +84,7 @@ async def get_evento(evento_id: str):
             detail="Evento não encontrado"
         )
     
+    document = _stringify_objectids(document)
     document["_id"] = str(document["_id"])
     return Evento(**document)
 
@@ -446,6 +465,38 @@ async def create_tipo_ingresso(tipo_ingresso: TipoIngressoCreate):
         await db.tipos_ingresso.insert_one({**tipo_dict, "evento_id": tipo_dict.get("evento_id")})
     except Exception:
         pass
+
+    # Ensure the evento document has the tipo embedded (useful for FakeDB which may not support $push)
+    try:
+        evt = await db.eventos.find_one({"_id": ObjectId(tipo_dict.get("evento_id"))})
+    except Exception:
+        evt = await db.eventos.find_one({"_id": tipo_dict.get("evento_id")})
+    if evt is not None:
+        tipos_list = evt.get("tipos_ingresso") or []
+        # avoid duplicates
+        exists = False
+        for t in tipos_list:
+            try:
+                t_id = str(t.get("_id")) if t.get("_id") is not None else None
+            except Exception:
+                t_id = None
+            if t_id and str(tipo_dict.get("_id")) and t_id == str(tipo_dict.get("_id")):
+                exists = True
+                break
+            # fallback compare by numero
+            try:
+                if str(t.get("numero")) == str(tipo_dict.get("numero")):
+                    exists = True
+                    break
+            except Exception:
+                continue
+        if not exists:
+            tipos_list.append(tipo_dict)
+            try:
+                await db.eventos.update_one({"_id": evt.get("_id")}, {"$set": {"tipos_ingresso": tipos_list}})
+            except Exception:
+                # direct mutation for in-memory docs
+                evt["tipos_ingresso"] = tipos_list
 
     created = dict(tipo_dict)
     created["_id"] = str(created["_id"])

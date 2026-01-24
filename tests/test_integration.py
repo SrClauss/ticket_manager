@@ -5,6 +5,7 @@ Testa cenários end-to-end simulando uso real.
 import pytest
 from datetime import datetime, timezone
 from bson import ObjectId
+from fastapi import HTTPException
 
 from tests.conftest import FakeDB
 
@@ -257,12 +258,23 @@ class TestFluxoRelatorios:
         tipo2 = await admin.create_tipo_ingresso(tipo2_data)
         
         # Emitir ingressos (5 VIP, 10 Pista)
+        def make_cpf_from_base(n):
+            s = f"{n:09d}"
+            # compute check digits
+            def _calc(digs):
+                total = sum(int(d) * w for d, w in zip(digs, range(len(digs) + 1, 1, -1)))
+                rem = total % 11
+                return '0' if rem < 2 else str(11 - rem)
+            d1 = _calc(s)
+            d2 = _calc(s + d1)
+            return s + d1 + d2
+
         for i in range(5):
             participante = await bilheteria.create_participante(
                 ParticipanteCreate(
                     nome=f"VIP {i}",
                     email=f"vip{i}@example.com",
-                    cpf=f"{100000000 + i:011d}",
+                    cpf=make_cpf_from_base(100000000 + i),
                     telefone="11999999999"
                 ),
                 evento_id=str(sample_evento["_id"])
@@ -280,7 +292,7 @@ class TestFluxoRelatorios:
                 ParticipanteCreate(
                     nome=f"Pista {i}",
                     email=f"pista{i}@example.com",
-                    cpf=f"{200000000 + i:011d}",
+                    cpf=make_cpf_from_base(200000000 + i),
                     telefone="11999999999"
                 ),
                 evento_id=str(sample_evento["_id"])

@@ -54,16 +54,11 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
     width_px = max(1, _mm_to_px(width_mm, dpi))
     height_px = max(1, _mm_to_px(height_mm, dpi))
 
-    # If resulting image is excessively large (>1000px in any dimension), downscale by adjusting effective DPI
-    MAX_PIXELS = 1000
-    if width_px > MAX_PIXELS or height_px > MAX_PIXELS:
-        scale = min(MAX_PIXELS / float(width_px), MAX_PIXELS / float(height_px))
-        dpi_effective = max(1, int(round(dpi * scale)))
-    else:
-        dpi_effective = dpi
+    # For print-accurate output do not auto-downscale: use requested DPI so mm->px mapping is exact
+    dpi_effective = dpi
 
-    img_width_px = max(1, _mm_to_px(width_mm, dpi_effective))
-    img_height_px = max(1, _mm_to_px(height_mm, dpi_effective))
+    img_width_px = width_px
+    img_height_px = height_px
 
     img = Image.new('RGB', (img_width_px, img_height_px), color='white')
     draw = ImageDraw.Draw(img)
@@ -90,14 +85,23 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
         
         if etype == "text":
             text = str(el.get("value", ""))
-            size = int(el.get("size", 12))
-            font = _get_font(size)
-            
+            # interpret size as points (pt) and convert to pixel size using DPI so font scales physically
+            size_pt = float(el.get("size", 12))
+            font_px = max(1, int(round(size_pt * dpi_effective / 72.0)))
+            try:
+                font = ImageFont.truetype("DejaVuSans.ttf", font_px)
+            except Exception:
+                try:
+                    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_px)
+                except Exception:
+                    font = ImageFont.load_default()
+
             x = _mm_to_px(x_mm, dpi_effective) + margin_px
             y = _mm_to_px(y_mm, dpi_effective) + margin_px
             draw.text((x, y), text, fill='black', font=font)
             
         elif etype == "qrcode":
+
             qr_text = str(el.get("value", ""))
             size_mm = float(el.get("size", 30))
             # reduce QR size by margin on both sides
@@ -115,6 +119,59 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
             img.paste(qr, (x, y))
     
     return img
+
+
+@router.get("/labels/generate.png")
+async def generate_label_png(width_mm: float = 69, height_mm: float = 99, dpi: int = 300, text: str = "", bg: str = "white", fg: str = "black"):
+    """Generate a PNG label sized by millimeters converted to pixels using the requested DPI.
+
+    Returns a PNG image with DPI metadata suitable for consumption by mobile apps and SDKs.
+    """
+    # compute exact pixel dimensions (no automatic downscaling here) so physical size matches when printed
+    width_px = max(1, _mm_to_px(float(width_mm), int(dpi)))
+    height_px = max(1, _mm_to_px(float(height_mm), int(dpi)))
+
+    img = Image.new('RGB', (width_px, height_px), color=bg)
+    draw = ImageDraw.Draw(img)
+
+    if text:
+        # choose a font size proportional to label
+        font_size = max(10, int(min(width_px, height_px) * 0.12))
+        try:
+            font = ImageFont.truetype("DejaVuSans.ttf", font_size)
+        except Exception:
+            try:
+                font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
+            except Exception:
+                font = ImageFont.load_default()
+
+        lines = str(text).split("\n")
+        total_h = 0
+        sizes = []
+        for line in lines:
+            ts = draw.textsize(line, font=font)
+            sizes.append(ts)
+            total_h += ts[1]
+        y = (height_px - total_h) // 2
+        for i, line in enumerate(lines):
+            tw, th = sizes[i]
+            x = (width_px - tw) // 2
+            draw.text((x, y), line, font=font, fill=fg)
+            y += th
+
+    bio = BytesIO()
+    # write PNG with dpi metadata
+    try:
+        img.save(bio, format='PNG', dpi=(dpi, dpi))
+    except Exception:
+        img.save(bio, format='PNG')
+    bio.seek(0)
+
+    headers = {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Content-Disposition": f'inline; filename="label_{width_mm}x{height_mm}mm.png"'
+    }
+    return StreamingResponse(bio, media_type='image/png', headers=headers)
 
 
 async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Optional[Dict], Optional[Dict]]:

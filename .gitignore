@@ -137,3 +137,4 @@ uploads_dev/
 # Generated ticket images (but keep the directory)
 app/static/ingressos/*
 !app/static/ingressos/.gitkeepbpsdkmanual_en_1110/
+scripts/deploy_remote.sh
