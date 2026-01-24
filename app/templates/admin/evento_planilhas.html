@@ -164,6 +164,22 @@
   </div>
 </div>
 
+<div class="planilha-card upload-area">
+  <h3>Enviar planilha</h3>
+  <p>Envie um arquivo .xlsx ou .csv. Acompanhe o progresso abaixo enquanto a planilha é processada.</p>
+  <div style="display:flex;gap:0.5rem;align-items:center;">
+    <input type="file" id="planilhaFile" accept=".xlsx,.csv" />
+    <button class="btn" id="uploadBtn" type="button">Enviar</button>
+  </div>
+  <div id="uploadWrapper" style="margin-top:0.75rem;">
+    <div style="background:#eee;border-radius:6px;overflow:hidden;height:12px;">
+      <div id="uploadProgress" style="width:0%;height:12px;background:#1a73e8;"></div>
+    </div>
+    <div id="uploadStatus" style="margin-top:0.5rem;font-size:0.9rem;color:#424242;"></div>
+    <pre id="uploadResult" style="margin-top:0.5rem;max-height:200px;overflow:auto;background:#fff;padding:0.5rem;border:1px solid #eee;"></pre>
+  </div>
+</div>
+
 <div class="planilha-card">
   <h3>Histórico de importações</h3>
   {% if importacoes %}
@@ -219,8 +235,12 @@ window.planilhaHistorico = {{ importacoes | tojson }};
 
 async function handleUpload() {
   const fileInput = document.getElementById('planilhaFile');
-  const output = document.getElementById('uploadResult');
-  output.textContent = '';
+  const result = document.getElementById('uploadResult');
+  const statusDiv = document.getElementById('uploadStatus');
+  const progressBar = document.getElementById('uploadProgress');
+  result.textContent = '';
+  statusDiv.textContent = '';
+  progressBar.style.width = '0%';
 
   if (!fileInput.files.length) {
     alert('Selecione um arquivo');
@@ -241,12 +261,53 @@ async function handleUpload() {
     headers
   });
 
-  const data = await resp.json();
-  output.textContent = JSON.stringify(data, null, 2);
-
-  if (resp.ok) {
-    setTimeout(() => window.location.reload(), 1500);
+  let data;
+  try {
+    data = await resp.json();
+  } catch (e) {
+    result.textContent = 'Erro inesperado na resposta do servidor.';
+    return;
   }
+
+  if (!resp.ok) {
+    result.textContent = JSON.stringify(data, null, 2);
+    return;
+  }
+
+  const importId = data.import_id;
+  if (!importId) {
+    result.textContent = JSON.stringify(data, null, 2);
+    setTimeout(() => window.location.reload(), 1500);
+    return;
+  }
+
+  statusDiv.textContent = 'Processando...';
+  const pollUrl = `/api/admin/eventos/{{ evento.id }}/planilha-importacao/${importId}`;
+  const interval = setInterval(async () => {
+    try {
+      const sresp = await fetch(pollUrl);
+      if (!sresp.ok) return;
+      const sdata = await sresp.json();
+      const processed = sdata.progress && sdata.progress.processed ? sdata.progress.processed : 0;
+      const total = sdata.progress && sdata.progress.total ? sdata.progress.total : null;
+      if (total) {
+        const pct = Math.min(100, Math.round((processed / total) * 100));
+        progressBar.style.width = pct + '%';
+        statusDiv.textContent = `Processados ${processed} de ${total}`;
+      } else {
+        progressBar.style.width = Math.min(100, (processed % 100)) + '%';
+        statusDiv.textContent = `Processados ${processed}`;
+      }
+      if (sdata.status && sdata.status !== 'processing') {
+        clearInterval(interval);
+        result.textContent = JSON.stringify(sdata.relatorio || sdata, null, 2);
+        statusDiv.textContent = 'Finalizado: ' + sdata.status;
+        setTimeout(() => window.location.reload(), 1500);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, 800);
 }
 
 function findReport(importId) {

@@ -9,7 +9,7 @@ from bson import ObjectId
 from app.utils.validations import validate_cpf
 
 
-async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db) -> Dict[str, Any]:
+async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db, import_id: str = None) -> Dict[str, Any]:
     """Processa uma planilha (.xlsx ou .csv) e importa participantes/ingressos.
 
     Retorna um relatório com estatísticas e lista de erros por linha.
@@ -52,6 +52,13 @@ async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db)
     for row in iter_rows():
         line_no += 1
         total += 1
+        # After each row processed, update progress if import_id provided
+        if import_id:
+            try:
+                await db.planilha_importacoes.update_one({'_id': ObjectId(import_id)}, {'$set': {'progress': {'processed': total}}})
+            except Exception:
+                # ignore DB/update issues (e.g., fake DB in tests)
+                pass
         # Normalize header keys to lowercase without spaces for lookup
         def g(key):
             return row.get(key) or row.get(key.title()) or row.get(key.capitalize()) or row.get(key.upper()) or row.get(key.lower())

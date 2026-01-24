@@ -29,30 +29,44 @@ async def upload_planilha(evento_id: str, file: UploadFile = File(...)):
 
     evento_id_str = str(evento_object_id)
     content = await file.read()
-    try:
-        report = await process_planilha(content, file.filename, evento_id_str, db)
-    except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
-    # registrar importacao
-    if report.get('errors'):
-        if report.get('created_ingressos', 0) > 0 or report.get('created_participants', 0) > 0:
-            status = 'partial'
-        else:
-            status = 'failed'
-    else:
-        status = 'completed'
-
+    # registrar importacao como em processamento antes de começar para permitir updates de progresso
     import_doc = {
         'evento_id': evento_id_str,
         'filename': file.filename,
-        'status': status,
-        'relatorio': report,
+        'status': 'processing',
+        'relatorio': {},
+        'progress': {'processed': 0},
         'created_at': datetime.now(timezone.utc)
     }
-    await db.planilha_importacoes.insert_one(import_doc)
+    res = await db.planilha_importacoes.insert_one(import_doc)
+    import_id = str(res.inserted_id)
 
-    return { 'message': 'Upload processed', 'report': report }
+    try:
+        report = await process_planilha(content, file.filename, evento_id_str, db, import_id=import_id)
+    except ValueError as exc:
+        # update import_doc as failed
+        try:
+            await db.planilha_importacoes.update_one({'_id': ObjectId(import_id)}, {'$set': {'status': 'failed', 'relatorio': {'errors': [str(exc)]}}})
+        except Exception:
+            pass
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+    # registrar importacao final
+    if report.get('errors'):
+        if report.get('created_ingressos', 0) > 0 or report.get('created_participants', 0) > 0:
+            status_val = 'partial'
+        else:
+            status_val = 'failed'
+    else:
+        status_val = 'completed'
+
+    try:
+        await db.planilha_importacoes.update_one({'_id': ObjectId(import_id)}, {'$set': {'status': status_val, 'relatorio': report, 'progress': {'processed': report.get('total', 0), 'total': report.get('total', 0)}}})
+    except Exception:
+        pass
+
+    return { 'message': 'Upload processed', 'report': report, 'import_id': import_id }
 
 
 # Public upload via token
@@ -77,12 +91,28 @@ async def public_upload(request: Request, token: str, file: UploadFile = File(..
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Link de upload inválido')
     evento_id = link.get('evento_id')
     content = await file.read()
+    # registrar importacao como em processamento antes de começar
+    import_doc = {
+        'evento_id': evento_id,
+        'filename': file.filename,
+        'status': 'processing',
+        'relatorio': {},
+        'progress': {'processed': 0},
+        'created_at': datetime.now(timezone.utc)
+    }
+    res = await db.planilha_importacoes.insert_one(import_doc)
+    import_id = str(res.inserted_id)
+
     try:
-        report = await process_planilha(content, file.filename, evento_id, db)
+        report = await process_planilha(content, file.filename, evento_id, db, import_id=import_id)
     except ValueError as exc:
+        try:
+            await db.planilha_importacoes.update_one({'_id': ObjectId(import_id)}, {'$set': {'status': 'failed', 'relatorio': {'errors': [str(exc)]}}})
+        except Exception:
+            pass
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
-    # registrar importacao
+    # registrar importacao final
     if report.get('errors'):
         if report.get('created_ingressos', 0) > 0 or report.get('created_participants', 0) > 0:
             status_val = 'partial'
@@ -91,16 +121,26 @@ async def public_upload(request: Request, token: str, file: UploadFile = File(..
     else:
         status_val = 'completed'
 
-    import_doc = {
-        'evento_id': evento_id,
-        'filename': file.filename,
-        'status': status_val,
-        'relatorio': report,
-        'created_at': datetime.now(timezone.utc)
-    }
-    await db.planilha_importacoes.insert_one(import_doc)
+    try:
+        await db.planilha_importacoes.update_one({'_id': ObjectId(import_id)}, {'$set': {'status': status_val, 'relatorio': report, 'progress': {'processed': report.get('total', 0), 'total': report.get('total', 0)}}})
+    except Exception:
+        pass
 
     evento = await db.eventos.find_one({'_id': ObjectId(evento_id)})
     evento['_id'] = str(evento['_id'])
 
     return templates.TemplateResponse('upload_result.html', {'request': request, 'status': status_val, 'report': report})
+
+
+@router.get('/eventos/{evento_id}/planilha-importacao/{import_id}')
+async def get_importacao(evento_id: str, import_id: str):
+    db = get_database()
+    try:
+        doc = await db.planilha_importacoes.find_one({'_id': ObjectId(import_id), 'evento_id': evento_id})
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Importacao não encontrada')
+    if not doc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Importacao não encontrada')
+    # serializar _id para string
+    doc['_id'] = str(doc['_id'])
+    return doc
