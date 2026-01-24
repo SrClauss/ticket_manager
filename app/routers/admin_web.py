@@ -795,7 +795,7 @@ async def admin_evento_deletar(request: Request, evento_id: str):
 
 
 @router.get("/eventos/{evento_id}/participantes", response_class=HTMLResponse)
-async def admin_evento_participantes(request: Request, evento_id: str, busca: Optional[str] = None):
+async def admin_evento_participantes(request: Request, evento_id: str, busca: Optional[str] = None, page: int = 1, per_page: int = 20):
     """Lista participantes de um evento com possibilidade de exclusão."""
     redirect = check_admin_session(request)
     if redirect:
@@ -830,29 +830,37 @@ async def admin_evento_participantes(request: Request, evento_id: str, busca: Op
             query = base_query
 
         participantes = []
-        cursor = db.participantes.find(query)
+        # Pagination: try counting matching participants first
+        try:
+            total_count = await db.participantes.count_documents(query)
+        except Exception:
+            total_count = 0
 
-        async for doc in cursor:
-            # Contar ingressos deste evento (comparo tanto str quanto ObjectId)
-            ingressos_count = 0
-            for ing in doc.get("ingressos", []):
-                if ing.get("evento_id") == evento["id"] or ing.get("evento_id") == ObjectId(evento_id):
-                    ingressos_count += 1
+        if total_count > 0:
+            total_pages = max(1, math.ceil(total_count / per_page))
+            if page < 1:
+                page = 1
+            if page > total_pages:
+                page = total_pages
+            skip = (page - 1) * per_page
+            cursor = db.participantes.find(query).skip(skip).limit(per_page)
 
-            participantes.append({
-                "id": str(doc["_id"]),
-                "nome": doc.get("nome", ""),
-                "email": doc.get("email", ""),
-                "cpf": doc.get("cpf", ""),
-                "ingressos_count": ingressos_count
-            })
-
-        # Diagnostics: log how many found; if none, try legacy collection ingressos_emitidos as fallback
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f"admin_evento_participantes: found {len(participantes)} participants for evento {evento_id}")
-
-        if not participantes:
+            async for doc in cursor:
+                ingressos_count = 0
+                for ing in doc.get("ingressos", []):
+                    if ing.get("evento_id") == evento["id"] or ing.get("evento_id") == ObjectId(evento_id):
+                        ingressos_count += 1
+                participantes.append({
+                    "id": str(doc["_id"]),
+                    "nome": doc.get("nome", ""),
+                    "email": doc.get("email", ""),
+                    "cpf": doc.get("cpf", ""),
+                    "ingressos_count": ingressos_count
+                })
+        else:
+            # Diagnostics: log how many found; if none, try legacy collection ingressos_emitidos as fallback
+            import logging
+            logger = logging.getLogger(__name__)
             logger.info("No participants in participantes collection; checking ingressos_emitidos fallback")
             pids = set()
             try:
@@ -892,6 +900,26 @@ async def admin_evento_participantes(request: Request, evento_id: str, busca: Op
                 })
             logger.info(f"admin_evento_participantes: fallback added {len(participantes)} participants from ingressos_emitidos")
 
+            # paginate in-memory for fallback
+            total_count = len(participantes)
+            total_pages = max(1, math.ceil(total_count / per_page))
+            if page < 1:
+                page = 1
+            if page > total_pages:
+                page = total_pages
+            start = (page - 1) * per_page
+            participantes = participantes[start:start + per_page]
+
+        # final totals/pagination vars
+        try:
+            total_pages
+        except NameError:
+            total_pages = 1
+        try:
+            total_count
+        except NameError:
+            total_count = len(participantes)
+
         return templates.TemplateResponse(
             "admin/evento_participantes.html",
             {
@@ -899,8 +927,12 @@ async def admin_evento_participantes(request: Request, evento_id: str, busca: Op
                 "active_page": "eventos",
                 "evento": evento,
                 "participantes": participantes,
-                "total_participantes": len(participantes),
-                "busca": busca or ""
+                "total_participantes": total_count,
+                "busca": busca or "",
+                "page": page,
+                "per_page": per_page,
+                "total_pages": total_pages,
+                "total_count": total_count
             }
         )
     except Exception as e:
