@@ -81,7 +81,90 @@ async def public_upload_form(request: Request, token: str):
     if not evento:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Evento não encontrado')
     evento['_id'] = str(evento['_id'])
-    return templates.TemplateResponse('upload_form.html', {'request': request, 'evento': evento, 'token': token})
+
+    # load ticket types for instructions (if available)
+    tipos = []
+    try:
+        cursor = db.tipos_ingresso.find({'evento_id': evento['_id']})
+        async for t in cursor:
+            tipos.append({'descricao': t.get('descricao', ''), 'id': str(t.get('_id'))})
+    except Exception:
+        # fallback: no tipos
+        tipos = []
+
+    return templates.TemplateResponse('upload_form.html', {'request': request, 'evento': evento, 'token': token, 'tipos': tipos})
+
+
+@router.get('/upload/{token}/template.xlsx')
+async def download_template_xlsx(token: str):
+    """Generate an XLSX template for the event associated with the upload token."""
+    db = get_database()
+    link = await db.planilha_upload_links.find_one({'token': token})
+    if not link:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Link de upload inválido')
+    evento_id = link.get('evento_id')
+    evento = await db.eventos.find_one({'_id': ObjectId(evento_id)})
+    if not evento:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Evento não encontrado')
+
+    # fetch tipos_ingresso
+    tipos = []
+    try:
+        cursor = db.tipos_ingresso.find({'evento_id': evento.get('_id')})
+        async for t in cursor:
+            tipos.append({'descricao': t.get('descricao', ''), 'valor': t.get('valor', 0)})
+    except Exception:
+        tipos = []
+
+    # create workbook
+    from openpyxl import Workbook
+    from openpyxl.utils import get_column_letter
+    from io import BytesIO
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'participants'
+
+    headers = ['Nome', 'Email', 'CPF', 'Telefone', 'Empresa', 'Tipo Ingresso', 'Quantidade']
+    for i, h in enumerate(headers, start=1):
+        ws.cell(row=1, column=i, value=h)
+        ws.column_dimensions[get_column_letter(i)].width = max(12, len(h) + 2)
+
+    # sample row
+    sample = ['João Silva', 'joao@example.com', '123.456.789-09', '+5511999999999', 'Empresa X', tipos[0]['descricao'] if tipos else '', 1]
+    for i, v in enumerate(sample, start=1):
+        ws.cell(row=2, column=i, value=v)
+
+    # instruction sheet
+    ws2 = wb.create_sheet('tipos_disponiveis')
+    ws2.cell(row=1, column=1, value='Tipo Ingresso')
+    ws2.cell(row=1, column=2, value='Valor')
+    ws2.cell(row=1, column=3, value='Observação (coloque o texto exato em Tipo Ingresso)')
+    for idx, t in enumerate(tipos, start=2):
+        ws2.cell(row=idx, column=1, value=t.get('descricao'))
+        ws2.cell(row=idx, column=2, value=t.get('valor'))
+        ws2.cell(row=idx, column=3, value='Use este texto na coluna "Tipo Ingresso" para esta opção')
+
+    # info sheet
+    ws3 = wb.create_sheet('instrucoes')
+    instructions = [
+        'Instruções de Importação:',
+        '1) Preencha uma linha por participante.',
+        '2) Campos obrigatórios: Nome, Email, CPF.',
+        '3) Coluna "Tipo Ingresso": use exatamente os textos listados na aba "tipos_disponiveis".',
+        '4) Coluna "Quantidade": número inteiro (ex.: 1).',
+        '5) Salve como .xlsx antes de enviar.'
+    ]
+    for i, line in enumerate(instructions, start=1):
+        ws3.cell(row=i, column=1, value=line)
+
+    bio = BytesIO()
+    wb.save(bio)
+    bio.seek(0)
+
+    from fastapi.responses import StreamingResponse
+    headers = {'Content-Disposition': f'attachment; filename="template_planilha_{evento.get("_id")}.xlsx"'}
+    return StreamingResponse(bio, media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers=headers)
 
 
 @router.post('/upload/{token}', response_class=HTMLResponse)
