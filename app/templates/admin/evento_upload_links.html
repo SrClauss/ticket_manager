@@ -4,10 +4,13 @@
   <h2>Links de Upload - {{ evento.nome }}</h2>
   <p>Gere links públicos para que empresas possam enviar planilhas para este evento.</p>
 
-  <form method="post" action="/admin/eventos/{{ evento.id }}/planilhas/empresas/generate" style="margin-bottom:1rem;">
+  <form id="generate-link-form" method="post" action="/admin/eventos/{{ evento.id }}/planilhas/empresas/generate" style="margin-bottom:1rem;">
     <label class="form-label">Descrição do link (opcional)</label>
     <input type="text" name="descricao" class="form-control" />
-    <button class="btn btn-gradient mt-2">Gerar link de upload</button>
+    <div class="mt-2">
+      <button id="generate-link-btn" class="btn btn-gradient">Gerar link de upload</button>
+      <span id="generate-loading" style="display:none;margin-left:8px;">Gerando...</span>
+    </div>
   </form>
 
   {% if links %}
@@ -67,6 +70,58 @@
         try{ const ok = await copyToClipboard(link); if (ok) { alert('Link copiado'); } else { alert('Falha ao copiar'); } }catch(e){ alert('Falha ao copiar'); }
       });
     });
+
+    // AJAX form submission for generating links
+    const form = document.getElementById('generate-link-form');
+    if (form) {
+      form.addEventListener('submit', async function(e){
+        e.preventDefault();
+        const btn = document.getElementById('generate-link-btn');
+        const loading = document.getElementById('generate-loading');
+        btn.disabled = true; loading.style.display = 'inline';
+        const formData = new FormData(form);
+        try {
+          const resp = await fetch(form.action, { method: 'POST', body: formData, headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+          if (!resp.ok) throw new Error('Failed to generate');
+          const data = await resp.json();
+          // prepend new card to list
+          const row = document.querySelector('.row');
+          if (row) {
+            const col = document.createElement('div'); col.className = 'col-md-4 mb-3';
+            const card = document.createElement('div'); card.className = 'glass-card p-3 d-flex flex-column align-items-start';
+            card.innerHTML = `
+              <div class="w-100 d-flex justify-content-between align-items-start">
+                <div>
+                  <div class="small text-muted">Token</div>
+                  <code>${data.token.slice(0,12)}...</code>
+                </div>
+                <div>
+                  <button class="btn btn-sm btn-glass copy-link-btn" data-link="${data.url}">Copiar</button>
+                  <a class="btn btn-sm btn-outline ms-1" href="${data.url}" target="_blank" rel="noopener">Abrir</a>
+                </div>
+              </div>
+              <div class="mt-2 w-100">
+                <div class="small text-muted">Link</div>
+                <div style="word-break:break-all;"><a href="${data.url}" target="_blank" rel="noopener">${data.url}</a></div>
+                <div class="text-muted small mt-2">Criado: ${new Date(data.created).toLocaleString()}</div>
+              </div>
+            `;
+            col.appendChild(card);
+            // insert at top
+            row.insertBefore(col, row.firstChild);
+
+            // attach copy handler
+            const copyBtn = card.querySelector('.copy-link-btn');
+            copyBtn.addEventListener('click', async function(){ await copyToClipboard(this.dataset.link); alert('Link copiado'); });
+          }
+        } catch (err) {
+          alert('Falha ao gerar link');
+        } finally {
+          btn.disabled = false; loading.style.display = 'none';
+        }
+      });
+    }
+
   });
 </script>
 {% endblock %}

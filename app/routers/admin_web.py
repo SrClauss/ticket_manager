@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, HTTPException, status, Depends, Form, UploadFile, File
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
 from datetime import datetime, timedelta, timezone
@@ -495,8 +495,20 @@ async def admin_evento_planilhas_empresas_generate(request: Request, evento_id: 
     form = await request.form()
     descricao = form.get('descricao')
     token = secrets.token_urlsafe(20)
-    link_doc = {"evento_id": str(object_id), "token": token, "descricao": descricao, "created_at": datetime.now(timezone.utc)}
+    created_at = datetime.now(timezone.utc)
+    link_doc = {"evento_id": str(object_id), "token": token, "descricao": descricao, "created_at": created_at}
     await db.planilha_upload_links.insert_one(link_doc)
+
+    # If the client expects JSON (AJAX), return JSON with link info; otherwise redirect
+    accept = request.headers.get('accept', '')
+    if 'application/json' in accept or request.headers.get('x-requested-with', '').lower() == 'xmlhttprequest':
+        url_root = str(request.base_url).rstrip('/')
+        return JSONResponse({
+            'token': token,
+            'url': f"{url_root}/upload/{token}",
+            'created': created_at.isoformat()
+        })
+
     return RedirectResponse(url=f"/admin/eventos/{evento_id}/planilhas/empresas", status_code=status.HTTP_303_SEE_OTHER)
 
 
