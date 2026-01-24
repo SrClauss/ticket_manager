@@ -467,7 +467,8 @@ async def admin_evento_planilhas_empresas(request: Request, evento_id: str):
         async for l in links_cursor:
             links.append({"token": l.get("token"), "created": l.get("created_at_display", str(l.get("created_at")) )})
 
-        url_root = request.url.scheme + "://" + request.client.host
+        # Use base_url to build the proper server-rooted URL (request.client.host was client IP)
+        url_root = str(request.base_url).rstrip('/')
 
         return templates.TemplateResponse(
             "admin/evento_upload_links.html",
