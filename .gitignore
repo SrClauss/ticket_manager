@@ -138,3 +138,4 @@ uploads_dev/
 app/static/ingressos/*
 !app/static/ingressos/.gitkeepbpsdkmanual_en_1110/
 scripts/deploy_remote.sh
+scripts/clear_mongo.sh

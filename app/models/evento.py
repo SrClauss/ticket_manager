@@ -41,6 +41,18 @@ class EventoBase(BaseModel):
     token_inscricao: Optional[str] = None
     aceita_inscricoes: bool = Field(default=False)
 
+    class PlanilhaEmbedded(BaseModel):
+        id: Optional[str] = Field(None, alias="_id")
+        filename: str = Field(..., min_length=1)
+        original_filename: Optional[str] = None
+        uploaded_at: Optional[datetime] = None
+        uploaded_by: Optional[str] = None
+        rows: Optional[int] = None
+        errors: List[str] = Field(default_factory=list)
+        status: str = Field(default="uploaded")
+
+    planilhas_enviadas: List[PlanilhaEmbedded] = Field(default_factory=list)
+
 
 class EventoCreate(EventoBase):
     """Modelo para criação de Evento"""
