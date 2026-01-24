@@ -437,6 +437,77 @@ async def render_ingresso_from_payload(evento_id: str, ingresso_id: str, payload
     headers = {"Cache-Control": "no-cache, no-store, must-revalidate"}
     return StreamingResponse(bio, media_type='image/jpeg', headers=headers)
 
+
+@router.post("/{evento_id}/ingresso/render_by_cpf")
+async def render_ingresso_by_cpf(evento_id: str, payload: dict = None, dpi: int = 300, request: Request = None):
+    """Renderiza ingresso a partir de CPF no payload JSON: {"cpf": "..."}.
+
+    Procura participante com cpf e ingresso para o evento, injeta/gera layout e retorna JPG.
+    """
+    db = get_database()
+
+    if not payload or not isinstance(payload, dict) or not payload.get("cpf"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Payload deve conter 'cpf'")
+
+    cpf = payload.get("cpf")
+    # tenta normalizar cpf quando possível
+    try:
+        from app.utils.validations import validate_cpf
+        cpf_clean = validate_cpf(cpf)
+    except Exception:
+        cpf_clean = cpf
+
+    # Busca participante com ingressos para este evento
+    participante = await db.participantes.find_one(
+        {"cpf": cpf_clean, "ingressos.evento_id": evento_id},
+        {"ingressos": {"$elemMatch": {"evento_id": evento_id}}}
+    )
+
+    if not participante or not participante.get("ingressos"):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ingresso não encontrado para este CPF neste evento")
+
+    ingresso = participante["ingressos"][0]
+
+    # Gera ou obtém layout embutido
+    layout = await _get_or_create_embedded_layout(db, ingresso, evento_id, True, participante)
+
+    # Renderiza imagem
+    img = _render_layout_to_image(layout, dpi)
+    bio2 = BytesIO()
+    img.save(bio2, format='JPEG', quality=85)
+    bio2.seek(0)
+
+    # Persiste cópia em disco para cache (não crítico)
+    try:
+        out_dir = Path('app') / 'static' / 'ingressos'
+        out_dir.mkdir(parents=True, exist_ok=True)
+        file_path = out_dir / f"{ingresso.get('_id')}.jpg"
+        with open(file_path, 'wb') as f:
+            f.write(bio2.getvalue())
+    except Exception:
+        pass
+
+    # Gera ETag/Last-Modified semelhantes ao endpoint existente
+    try:
+        from email.utils import format_datetime
+        etag_src = (ingresso.get('qrcode_hash', '') or '') + str(ingresso.get('data_emissao', ''))
+        etag = hashlib.sha1(etag_src.encode()).hexdigest()
+    except Exception:
+        etag = None
+
+    headers = {"Cache-Control": "public, max-age=0, must-revalidate"}
+    if etag:
+        headers["ETag"] = etag
+    if ingresso.get('data_emissao'):
+        try:
+            from email.utils import format_datetime
+            headers["Last-Modified"] = format_datetime(ingresso.get('data_emissao'))
+        except Exception:
+            pass
+
+    bio2.seek(0)
+    return StreamingResponse(bio2, media_type='image/jpeg', headers=headers)
+
 @router.get("/{evento_id}/ingresso/{ingresso_id}/meta")
 async def meta_ingresso(evento_id: str, ingresso_id: str):
     """Retorna metadados do ingresso (nome, tipo, data de emissão)."""
