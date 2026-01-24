@@ -49,21 +49,33 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
     canvas = layout.get("canvas", {})
     width_mm = float(canvas.get("width", 80))
     height_mm = float(canvas.get("height", 120))
-    
+
+    # compute pixel dimensions at requested DPI
     width_px = max(1, _mm_to_px(width_mm, dpi))
     height_px = max(1, _mm_to_px(height_mm, dpi))
-    
-    img = Image.new('RGB', (width_px, height_px), color='white')
+
+    # If resulting image is excessively large (>1000px in any dimension), downscale by adjusting effective DPI
+    MAX_PIXELS = 1000
+    if width_px > MAX_PIXELS or height_px > MAX_PIXELS:
+        scale = min(MAX_PIXELS / float(width_px), MAX_PIXELS / float(height_px))
+        dpi_effective = max(1, int(round(dpi * scale)))
+    else:
+        dpi_effective = dpi
+
+    img_width_px = max(1, _mm_to_px(width_mm, dpi_effective))
+    img_height_px = max(1, _mm_to_px(height_mm, dpi_effective))
+
+    img = Image.new('RGB', (img_width_px, img_height_px), color='white')
     draw = ImageDraw.Draw(img)
-    
+
     elements = layout.get("elements", [])
     # honor optional canvas padding and border
     canvas_padding_mm = float(canvas.get('padding_mm', 0))
     canvas_border = bool(canvas.get('border', False))
     if canvas_border and canvas_padding_mm >= 0:
         try:
-            pad_px = _mm_to_px(canvas_padding_mm, dpi)
-            draw.rectangle([pad_px, pad_px, width_px - pad_px - 1, height_px - pad_px - 1], outline='black', width=2)
+            pad_px = _mm_to_px(canvas_padding_mm, dpi_effective)
+            draw.rectangle([pad_px, pad_px, img_width_px - pad_px - 1, img_height_px - pad_px - 1], outline='black', width=2)
         except Exception:
             pass
 
@@ -73,16 +85,16 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
         y_mm = float(el.get('y', 0))
         el_margin_mm = float(el.get('margin_mm', 0) or 0)
         
-        # convert margin to pixels
-        margin_px = _mm_to_px(el_margin_mm, dpi) if el_margin_mm else 0
+        # convert margin to pixels using effective dpi
+        margin_px = _mm_to_px(el_margin_mm, dpi_effective) if el_margin_mm else 0
         
         if etype == "text":
             text = str(el.get("value", ""))
             size = int(el.get("size", 12))
             font = _get_font(size)
             
-            x = _mm_to_px(x_mm, dpi) + margin_px
-            y = _mm_to_px(y_mm, dpi) + margin_px
+            x = _mm_to_px(x_mm, dpi_effective) + margin_px
+            y = _mm_to_px(y_mm, dpi_effective) + margin_px
             draw.text((x, y), text, fill='black', font=font)
             
         elif etype == "qrcode":
@@ -93,13 +105,13 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
                 adj_size_mm = max(1, size_mm - (el_margin_mm * 2))
             except Exception:
                 adj_size_mm = size_mm
-            size_px = _mm_to_px(adj_size_mm, dpi)
+            size_px = _mm_to_px(adj_size_mm, dpi_effective)
             
             qr = qrcode.make(qr_text)
             qr = qr.resize((size_px, size_px))
             
-            x = _mm_to_px(x_mm, dpi) + margin_px
-            y = _mm_to_px(y_mm, dpi) + margin_px
+            x = _mm_to_px(x_mm, dpi_effective) + margin_px
+            y = _mm_to_px(y_mm, dpi_effective) + margin_px
             img.paste(qr, (x, y))
     
     return img

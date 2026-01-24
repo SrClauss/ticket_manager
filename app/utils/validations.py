@@ -77,9 +77,8 @@ async def ensure_cpf_unique(db, evento_id: str, participante_id: str = None, cpf
     # Verifica na coleção antiga de ingressos
     existing = await db.ingressos_emitidos.find_one({"evento_id": evento_id, "participante_cpf": cpf_digits})
     if existing:
-        # if an existing ingresso belongs to a different participante_id, block
-        if not participante_id or str(existing.get("participante_id")) != str(participante_id):
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='CPF já inscrito neste evento')
+        # Always block if any ingresso exists for this CPF in the event
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='CPF já inscrito neste evento')
 
     # Verifica em ingressos embutidos dentro de participantes (se coleção existir no DB de teste)
     if hasattr(db, 'participantes'):
@@ -87,9 +86,7 @@ async def ensure_cpf_unique(db, evento_id: str, participante_id: str = None, cpf
             "ingressos": {"$elemMatch": {"evento_id": evento_id, "participante_cpf": cpf_digits}}
         })
         if existing_part:
-            # if the found participant has a different id than the provided participante_id, block
-            found_pid = existing_part.get("_id")
-            if not participante_id or str(found_pid) != str(participante_id):
-                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='CPF já inscrito neste evento')
+            # Always block if found
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='CPF já inscrito neste evento')
 
     return cpf_digits
