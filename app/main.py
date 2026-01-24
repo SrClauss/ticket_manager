@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -74,17 +74,7 @@ async def ingresso_page(request: Request, ingresso_id: str):
 
 @app.get("/")
 async def root():
-    return {
-        "message": "Bem-vindo ao EventMaster API",
-        "description": "Sistema de gerenciamento de eventos com controle de acesso",
-        "docs": "/docs",
-        "redoc": "/redoc",
-        "modules": {
-            "admin": "/api/admin (Requer X-Admin-Key header)",
-            "bilheteria": "/api/bilheteria (Requer X-Token-Bilheteria header)",
-            "portaria": "/api/portaria (Requer X-Token-Portaria header)"
-        }
-    }
+    return RedirectResponse(url="/admin/login", status_code=302)
 
 
 # Public friendly routes to expose the planilha upload form at /upload/{token}

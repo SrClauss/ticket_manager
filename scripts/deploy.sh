@@ -24,4 +24,4 @@ git push --quiet
 echo "Deploying to server..."
 ssh root@82.25.69.42 "cd /srv/ticket_manager && git pull --quiet && docker compose pull && docker compose up -d --remove-orphans --build"
 
-echo "Done."
+echo "ok"
