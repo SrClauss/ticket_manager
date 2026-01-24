@@ -664,11 +664,6 @@ async def admin_evento_layout_salvar(
                                     if isinstance(ing_copy.get(k), ObjectId):
                                         ing_copy[k] = str(ing_copy[k])
                                 await db.participantes.update_one({"_id": participante.get('_id')}, {"$push": {"ingressos": ing_copy}})
-                                # remove legacy doc
-                                try:
-                                    await db.ingressos_emitidos.delete_one({"_id": ingresso.get('_id')})
-                                except Exception:
-                                    pass
                             else:
                                 try:
                                     if embedded is not None:
