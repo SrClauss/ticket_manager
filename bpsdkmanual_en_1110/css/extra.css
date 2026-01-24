@@ -1,0 +1,12 @@
+/* Override styles of Material for MkDocs */
+.md-header { background-color: #0D2EA0; }
+.md-tabs { background-color: #0D2EA0; }
+code, pre, kbd { font-family: Consolas, Menlo, monospace; }
+
+/* Custom */
+span.deprecated {
+    color: #c35400;
+    padding: 4px 10px;
+    border: solid 1px #c35400;
+    border-radius: 5px;
+}

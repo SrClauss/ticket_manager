@@ -43,6 +43,12 @@
                         <option value="passados" {% if periodo == 'passados' %}selected{% endif %}>Passados</option>
                     </select>
                 </div>
+                <div class="col-md-3 d-flex align-items-center">
+                    <div class="form-check form-switch ms-2">
+                        <input class="form-check-input" type="checkbox" role="switch" id="futuros_only" name="futuros_only" {% if futuros_only %}checked{% endif %}>
+                        <label class="form-check-label text-glass-muted" for="futuros_only">Mostrar apenas eventos futuros</label>
+                    </div>
+                </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-glass w-100">
                         <i data-lucide="search" style="width: 16px; height: 16px;"></i>
@@ -132,6 +138,29 @@
         </div>
     </div>
     {% endfor %}
+</div>
+
+<!-- Paginação -->
+<div class="row mt-3">
+    <div class="col-12">
+        <nav aria-label="Event pagination">
+            <ul class="pagination justify-content-center">
+                {% if page and page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="?busca={{ busca }}&status={{ status }}&periodo={{ periodo }}&futuros_only={{ futuros_only }}&page={{ page - 1 }}">Anterior</a>
+                </li>
+                {% endif %}
+                {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}"><a class="page-link" href="?busca={{ busca }}&status={{ status }}&periodo={{ periodo }}&futuros_only={{ futuros_only }}&page={{ p }}">{{ p }}</a></li>
+                {% endfor %}
+                {% if page and page < total_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="?busca={{ busca }}&status={{ status }}&periodo={{ periodo }}&futuros_only={{ futuros_only }}&page={{ page + 1 }}">Próximo</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
 </div>
 
 <!-- Modal de Confirmação de Exclusão -->

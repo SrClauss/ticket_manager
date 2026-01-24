@@ -1,0 +1,4914 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../android_v4/removetemplate.html">
+      
+      
+        <link rel="next" href="brptouchprintinfo.html">
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.1">
+    
+    
+      
+        <title>BRPtouchPrinter - Brother Print SDK Manual</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.402914a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../../css/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="" data-md-color-accent="">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#instance-methods" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Brother Print SDK Manual" class="md-header__button md-logo" aria-label="Brother Print SDK Manual" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Brother Print SDK Manual
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              BRPtouchPrinter
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Brother Print SDK Manual" class="md-nav__button md-logo" aria-label="Brother Print SDK Manual" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Brother Print SDK Manual
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+          Overview
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1">
+          <span class="md-nav__icon md-icon"></span>
+          Overview
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.html" class="md-nav__link">
+        What's Brother Print SDK
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../overview/supported-environment.html" class="md-nav__link">
+        Supported OS
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../overview/supported-printer.html" class="md-nav__link">
+        Supported Printer
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          Guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+          Getting Started
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_2_1">
+          <span class="md-nav__icon md-icon"></span>
+          Getting Started
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/getting-started/getting-started-ios.html" class="md-nav__link">
+        Develop via Xcode
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/getting-started/getting-started-android.html" class="md-nav__link">
+        Develop via Android Studio
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/getting-started/getting-started-cross-platform.html" class="md-nav__link">
+        Cross Platform Development
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/print-image.html" class="md-nav__link">
+        Printing Image/PDF
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/print-template.html" class="md-nav__link">
+        Printing with P-touch Template
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/discover-printer.html" class="md-nav__link">
+        Discovering Printers
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
+          API for iOS v.4 +
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3_1">
+          <span class="md-nav__icon md-icon"></span>
+          API for iOS v.4 +
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterdefine.html" class="md-nav__link">
+        BRLMPrinterDefine
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterdriver.html" class="md-nav__link">
+        BRLMPrinterDriver
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmchannel.html" class="md-nav__link">
+        BRLMChannel
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmchannelcredential.html" class="md-nav__link">
+        BRLMChannelCredential
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterdrivergenerator.html" class="md-nav__link">
+        BRLMPrinterDriverGenerator
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterdrivergenerateresult.html" class="md-nav__link">
+        BRLMPrinterDriverGenerateResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmgetprinterstatusresult.html" class="md-nav__link">
+        BRLMGetPrinterStatusResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmerror.html" class="md-nav__link">
+        BRLMError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmopenchannelerror.html" class="md-nav__link">
+        BRLMOpenChannelError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterror.html" class="md-nav__link">
+        BRLMPrintError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintersearcher.html" class="md-nav__link">
+        BRLMPrinterSearcher
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintersearchresult.html" class="md-nav__link">
+        BRLMPrinterSearchResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintersearcherror.html" class="md-nav__link">
+        BRLMPrinterSearchError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmnetworksearchoption.html" class="md-nav__link">
+        BRLMNetworkSearchOption
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmblesearchoption.html" class="md-nav__link">
+        BRLMBLESearchOption
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmgetstatuserror.html" class="md-nav__link">
+        BRLMGetStatusError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterstatus.html" class="md-nav__link">
+        BRLMPrinterStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterbatterystatus.html" class="md-nav__link">
+        BRLMPrinterBatteryStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmrequestprinterinforesult.html" class="md-nav__link">
+        BRLMRequestPrinterInfoResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmrequestprinterinfoerror.html" class="md-nav__link">
+        BRLMRequestPrinterInfoError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmmediainfo.html" class="md-nav__link">
+        BRLMMediaInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmbatteryinfo.html" class="md-nav__link">
+        BRLMBatteryInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmptouchtemplateinfo.html" class="md-nav__link">
+        BRLMPtouchTemplateInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintermodelspec.html" class="md-nav__link">
+        BRLMPrinterModelSpec
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintimagesettings.html" class="md-nav__link">
+        BRLMPrintImageSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintsettingsprotocol.html" class="md-nav__link">
+        BRLMPrintSettingsProtocol
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmpjprintsettings.html" class="md-nav__link">
+        BRLMPJPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmrjprintsettings.html" class="md-nav__link">
+        BRLMRJPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmtdprintsettings.html" class="md-nav__link">
+        BRLMTDPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmptprintsettings.html" class="md-nav__link">
+        BRLMPTPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmqlprintsettings.html" class="md-nav__link">
+        BRLMQLPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmmwprintsettings.html" class="md-nav__link">
+        BRLMMWPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmtemplateobjectreplacer.html" class="md-nav__link">
+        BRLMTemplateObjectReplacer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmtemplateprintsettingsprotocol.html" class="md-nav__link">
+        BRLMTemplatePrintSettingsProtocol
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmpjtemplateprintsettings.html" class="md-nav__link">
+        BRLMPJTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmrjtemplateprintsettings.html" class="md-nav__link">
+        BRLMRJTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmtdtemplateprintsettings.html" class="md-nav__link">
+        BRLMTDTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmpttemplateprintsettings.html" class="md-nav__link">
+        BRLMPTTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmqltemplateprintsettings.html" class="md-nav__link">
+        BRLMQLTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmmwtemplateprintsettings.html" class="md-nav__link">
+        BRLMMWTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterclassifier.html" class="md-nav__link">
+        BRLMPrinterClassifier
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmcustompapersize.html" class="md-nav__link">
+        BRLMCustomPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmpjprintsettingscustompapersize.html" class="md-nav__link">
+        BRLMPJPrintSettingsCustomPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmpjprintsettingspapersize.html" class="md-nav__link">
+        BRLMPJPrintSettingsPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmvalidateprintsettings.html" class="md-nav__link">
+        BRLMValidatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmvalidateprintsettingsreport.html" class="md-nav__link">
+        BRLMValidatePrintSettingsReport
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmvalidateprintsettingsissue.html" class="md-nav__link">
+        BRLMValidatePrintSettingsIssue
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmlog.html" class="md-nav__link">
+        BRLMLog
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmfileanalyzer.html" class="md-nav__link">
+        BRLMFileAnalyzer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmfileanalyzeresult.html" class="md-nav__link">
+        BRLMFileAnalyzeResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmfileanalyzeerror.html" class="md-nav__link">
+        BRLMFileAnalyzeError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmremovetemplateresult.html" class="md-nav__link">
+        BRLMRemoveTemplateResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmtransferresult.html" class="md-nav__link">
+        BRLMTransferResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmptouchdevicedependeddataheader.html" class="md-nav__link">
+        BRLMPtouchDeviceDependedDataHeader
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+          API for Android v.4 +
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3_2">
+          <span class="md-nav__icon md-icon"></span>
+          API for Android v.4 +
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printermodel.html" class="md-nav__link">
+        PrinterModel
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printerdriver.html" class="md-nav__link">
+        PrinterDriver
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/channel.html" class="md-nav__link">
+        Channel
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/channelcredential.html" class="md-nav__link">
+        ChannelCredential
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printerdrivergenerator.html" class="md-nav__link">
+        PrinterDriverGenerator
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printerdrivergenerateresult.html" class="md-nav__link">
+        PrinterDriverGenerateResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/getstatusresult.html" class="md-nav__link">
+        GetStatusResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/openchannelerror.html" class="md-nav__link">
+        OpenChannelError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printerror.html" class="md-nav__link">
+        PrintError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printersearcher.html" class="md-nav__link">
+        PrinterSearcher
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printersearchresult.html" class="md-nav__link">
+        PrinterSearchResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printersearcherror.html" class="md-nav__link">
+        PrinterSearchError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/networksearchoption.html" class="md-nav__link">
+        NetworkSearchOption
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/blesearchoption.html" class="md-nav__link">
+        BLESearchOption
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/getstatuserror.html" class="md-nav__link">
+        GetStatusError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printerstatus.html" class="md-nav__link">
+        PrinterStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printerstatusrawdata.html" class="md-nav__link">
+        PrinterStatusRawData
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printerbatterystatus.html" class="md-nav__link">
+        PrinterBatteryStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/requestprinterinforesult.html" class="md-nav__link">
+        RequestPrinterInfoResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/requestprinterinfoerror.html" class="md-nav__link">
+        RequestPrinterInfoError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/mediainfo.html" class="md-nav__link">
+        MediaInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/ptouchtemplateinfo.html" class="md-nav__link">
+        PtouchTemplateInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printermodelspec.html" class="md-nav__link">
+        PrinterModelSpec
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printimagesettings.html" class="md-nav__link">
+        PrintImageSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printsettings.html" class="md-nav__link">
+        PrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/pjprintsettings.html" class="md-nav__link">
+        PJPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/rjprintsettings.html" class="md-nav__link">
+        RJPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/tdprintsettings.html" class="md-nav__link">
+        TDPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/ptprintsettings.html" class="md-nav__link">
+        PTPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/qlprintsettings.html" class="md-nav__link">
+        QLPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/mwprintsettings.html" class="md-nav__link">
+        MWPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/templateobjectreplacer.html" class="md-nav__link">
+        TemplateObjectReplacer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/itemplateprintsettings.html" class="md-nav__link">
+        ITemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/pjtemplateprintsettings.html" class="md-nav__link">
+        PJTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/rjtemplateprintsettings.html" class="md-nav__link">
+        RJTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/tdtemplateprintsettings.html" class="md-nav__link">
+        TDTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/pttemplateprintsettings.html" class="md-nav__link">
+        PTTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/qltemplateprintsettings.html" class="md-nav__link">
+        QLTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/mwtemplateprintsettings.html" class="md-nav__link">
+        MWTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/custompapersize.html" class="md-nav__link">
+        CustomPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/pjcustompapersize.html" class="md-nav__link">
+        PJCustomPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/pjpapersize.html" class="md-nav__link">
+        PJPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/validateprintsettings.html" class="md-nav__link">
+        ValidatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/validateprintsettingsreport.html" class="md-nav__link">
+        ValidatePrintSettingsReport
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/validateprintsettingsissue.html" class="md-nav__link">
+        ValidatePrintSettingsIssue
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/log.html" class="md-nav__link">
+        Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/fileanalyzer.html" class="md-nav__link">
+        FileAnalyzer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/fileconverter.html" class="md-nav__link">
+        FileConverter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/transfer.html" class="md-nav__link">
+        Transfer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/ptouchdevicedependeddataheader.html" class="md-nav__link">
+        PtouchDeviceDependedDataHeader
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/removetemplate.html" class="md-nav__link">
+        RemoveTemplate
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+          API for iOS v.3 +
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_3_3">
+          <span class="md-nav__icon md-icon"></span>
+          API for iOS v.3 +
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          BRPtouchPrinter
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="brptouchprinter.html" class="md-nav__link md-nav__link--active">
+        BRPtouchPrinter
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#instance-methods" class="md-nav__link">
+    Instance Methods
+  </a>
+  
+    <nav class="md-nav" aria-label="Instance Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#initwithprinteripaddressipaddress" class="md-nav__link">
+    initWithPrinterIPAddress:IPAddress:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#initwithprinternamestrprintername" class="md-nav__link">
+    initWithPrinterName:strPrinterName:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#initwithprinternameinterface" class="md-nav__link">
+    initWithPrinterName:interface:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printername" class="md-nav__link">
+    printerName
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setprinternamestrprintername" class="md-nav__link">
+    setPrinterName:strPrinterName
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setprintinfo" class="md-nav__link">
+    setPrintInfo:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setcustompaperfile" class="md-nav__link">
+    setCustomPaperFile:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setcustompaperinfocommand" class="md-nav__link">
+    setCustomPaperInfoCommand:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getsupportpaperarray" class="md-nav__link">
+    getSupportPaperArray
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getcurrentlabelparam" class="md-nav__link">
+    getCurrentLabelParam
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getlabelinfostatus" class="md-nav__link">
+    getLabelInfoStatus
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getstatus" class="md-nav__link">
+    getStatus:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getstatuserrorcode" class="md-nav__link">
+    getStatus:errorCode:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getmodelname" class="md-nav__link">
+    getModelName
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getfirmversion" class="md-nav__link">
+    getFirmVersion
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getmediaversion" class="md-nav__link">
+    getMediaVersion
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getmediafileversionfilepath" class="md-nav__link">
+    getMediaFileVersion:filepath
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getdeviceserialnumber" class="md-nav__link">
+    getDeviceSerialNumber
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getsystemreport" class="md-nav__link">
+    getSystemReport:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sendtemplatefile" class="md-nav__link">
+    sendTemplateFile:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sendfirmwarefile" class="md-nav__link">
+    sendFirmwareFile:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sendtemplateconnectiontype" class="md-nav__link">
+    sendTemplate:connectionType:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#senddatabase" class="md-nav__link">
+    sendDatabase:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#startpttprintencoding" class="md-nav__link">
+    startPTTPrint:encoding:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replacetext" class="md-nav__link">
+    replaceText:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replacetextindexobjectindex" class="md-nav__link">
+    replaceTextIndex:objectIndex:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replacetextnameobjectname" class="md-nav__link">
+    replaceTextName:objectName:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flushpttprintwithcopies" class="md-nav__link">
+    flushPTTPrintWithCopies:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removetemplate" class="md-nav__link">
+    removeTemplate:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gettemplatelist" class="md-nav__link">
+    getTemplateList:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#searchavailablessid" class="md-nav__link">
+    searchAvailableSSID:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setipaddress" class="md-nav__link">
+    setIPAddress:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setupforbluetoothdevicewithserialnumber" class="md-nav__link">
+    setupForBluetoothDeviceWithSerialNumber:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setbluetooth-low-energyadvertiselocalname" class="md-nav__link">
+    setBluetooth Low EnergyAdvertiseLocalName:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#startcommunication" class="md-nav__link">
+    startCommunication
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#endcommunication" class="md-nav__link">
+    endCommunication
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sendfile" class="md-nav__link">
+    sendFile:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#senddata" class="md-nav__link">
+    sendData:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sendfileex" class="md-nav__link">
+    sendFileEx:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#senddataex" class="md-nav__link">
+    sendDataEx:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printpdfatpathpageslengthcopy" class="md-nav__link">
+    printPDFAtPath:pages:length:copy:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printimagecopy" class="md-nav__link">
+    printImage:copy:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printfilescopy" class="md-nav__link">
+    printFiles:copy:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cancelprinting" class="md-nav__link">
+    cancelPrinting
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setinterface" class="md-nav__link">
+    setInterface:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getbatterystatus" class="md-nav__link">
+    getBatteryStatus
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getbatteryinfo" class="md-nav__link">
+    getBatteryInfo:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getprinterbootmode" class="md-nav__link">
+    getPrinterBootMode
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setautoconnectbluetooth" class="md-nav__link">
+    setAutoConnectBluetooth:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#isautoconnectbluetooth" class="md-nav__link">
+    isAutoConnectBluetooth
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setprintersettings" class="md-nav__link">
+    setPrinterSettings:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getprintersettingsrequire" class="md-nav__link">
+    getPrinterSettings:require:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setprinternamefromstatus" class="md-nav__link">
+    setPrinterNameFromStatus:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#types" class="md-nav__link">
+    Types
+  </a>
+  
+    <nav class="md-nav" aria-label="Types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#connection_type" class="md-nav__link">
+    CONNECTION_TYPE
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-codes" class="md-nav__link">
+    Error Codes
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printersettingitem" class="md-nav__link">
+    PrinterSettingItem
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notifications" class="md-nav__link">
+    Notifications
+  </a>
+  
+    <nav class="md-nav" aria-label="Notifications">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#transmission-progress-notification" class="md-nav__link">
+    Transmission Progress Notification
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#event-notification" class="md-nav__link">
+    Event Notification
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    Notes
+  </a>
+  
+    <nav class="md-nav" aria-label="Notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api-compatibility" class="md-nav__link">
+    API Compatibility
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#template-object-number-range" class="md-nav__link">
+    Template Object Number Range
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deprecates" class="md-nav__link">
+    Deprecates
+  </a>
+  
+    <nav class="md-nav" aria-label="Deprecates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#isprinterready" class="md-nav__link">
+    isPrinterReady
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getptstatus" class="md-nav__link">
+    getPTstatus:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setcredential" class="md-nav__link">
+    setCredential:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchprintinfo.html" class="md-nav__link">
+        BRPtouchPrintInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchprinterstatus.html" class="md-nav__link">
+        BRPtouchPrinterStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchtemplateinfo.html" class="md-nav__link">
+        BRPtouchTemplateInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchbatteryinfo.html" class="md-nav__link">
+        BRPtouchBatteryInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchprinterdata.html" class="md-nav__link">
+        BRPtouchPrinterData
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchdeviceinfo.html" class="md-nav__link">
+        BRPtouchDeviceInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchlabelparam.html" class="md-nav__link">
+        BRPtouchLabelParam
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchlabelinfostatus.html" class="md-nav__link">
+        BRPtouchLabelInfoStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchbluetoothmanager.html" class="md-nav__link">
+        BRPtouchBluetoothManager
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchblemanager.html" class="md-nav__link">
+        BRPtouchBLEManager
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchnetworkmanager.html" class="md-nav__link">
+        BRPtouchNetworkManager
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brcustompaperinfocommand.html" class="md-nav__link">
+        BRCustomPaperInfoCommand
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+          API for Android v.3 +
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3_4">
+          <span class="md-nav__icon md-icon"></span>
+          API for Android v.3 +
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/printer.html" class="md-nav__link">
+        Printer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/printerinfo.html" class="md-nav__link">
+        PrinterInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/printerstatus.html" class="md-nav__link">
+        PrinterStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/netprinter.html" class="md-nav__link">
+        NetPrinter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/bleprinter.html" class="md-nav__link">
+        BLEPrinter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/labelparam.html" class="md-nav__link">
+        LabelParam
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/labelinfo.html" class="md-nav__link">
+        LabelInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/templateinfo.html" class="md-nav__link">
+        TemplateInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/batteryinfo.html" class="md-nav__link">
+        BatteryInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/bluetoothpreference.html" class="md-nav__link">
+        BluetoothPreference
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/custompaperinfo.html" class="md-nav__link">
+        CustomPaperInfo
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+          Appendix
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3_5">
+          <span class="md-nav__icon md-icon"></span>
+          Appendix
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/printer-configurations.html" class="md-nav__link">
+        Printer Configurations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/parameters.html" class="md-nav__link">
+        Parameters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/sample-application.html" class="md-nav__link">
+        Sample Application
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          About
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          About
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/release-notes-manual.html" class="md-nav__link">
+        Release Notes for Manual
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/release-notes-ios.html" class="md-nav__link">
+        Release Notes for iOS
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/release-notes-android.html" class="md-nav__link">
+        Release Notes for Android
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/trademark.html" class="md-nav__link">
+        Trademarks
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/license.html" class="md-nav__link">
+        Licenses
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#instance-methods" class="md-nav__link">
+    Instance Methods
+  </a>
+  
+    <nav class="md-nav" aria-label="Instance Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#initwithprinteripaddressipaddress" class="md-nav__link">
+    initWithPrinterIPAddress:IPAddress:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#initwithprinternamestrprintername" class="md-nav__link">
+    initWithPrinterName:strPrinterName:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#initwithprinternameinterface" class="md-nav__link">
+    initWithPrinterName:interface:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printername" class="md-nav__link">
+    printerName
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setprinternamestrprintername" class="md-nav__link">
+    setPrinterName:strPrinterName
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setprintinfo" class="md-nav__link">
+    setPrintInfo:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setcustompaperfile" class="md-nav__link">
+    setCustomPaperFile:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setcustompaperinfocommand" class="md-nav__link">
+    setCustomPaperInfoCommand:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getsupportpaperarray" class="md-nav__link">
+    getSupportPaperArray
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getcurrentlabelparam" class="md-nav__link">
+    getCurrentLabelParam
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getlabelinfostatus" class="md-nav__link">
+    getLabelInfoStatus
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getstatus" class="md-nav__link">
+    getStatus:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getstatuserrorcode" class="md-nav__link">
+    getStatus:errorCode:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getmodelname" class="md-nav__link">
+    getModelName
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getfirmversion" class="md-nav__link">
+    getFirmVersion
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getmediaversion" class="md-nav__link">
+    getMediaVersion
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getmediafileversionfilepath" class="md-nav__link">
+    getMediaFileVersion:filepath
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getdeviceserialnumber" class="md-nav__link">
+    getDeviceSerialNumber
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getsystemreport" class="md-nav__link">
+    getSystemReport:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sendtemplatefile" class="md-nav__link">
+    sendTemplateFile:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sendfirmwarefile" class="md-nav__link">
+    sendFirmwareFile:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sendtemplateconnectiontype" class="md-nav__link">
+    sendTemplate:connectionType:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#senddatabase" class="md-nav__link">
+    sendDatabase:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#startpttprintencoding" class="md-nav__link">
+    startPTTPrint:encoding:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replacetext" class="md-nav__link">
+    replaceText:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replacetextindexobjectindex" class="md-nav__link">
+    replaceTextIndex:objectIndex:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replacetextnameobjectname" class="md-nav__link">
+    replaceTextName:objectName:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flushpttprintwithcopies" class="md-nav__link">
+    flushPTTPrintWithCopies:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removetemplate" class="md-nav__link">
+    removeTemplate:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gettemplatelist" class="md-nav__link">
+    getTemplateList:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#searchavailablessid" class="md-nav__link">
+    searchAvailableSSID:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setipaddress" class="md-nav__link">
+    setIPAddress:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setupforbluetoothdevicewithserialnumber" class="md-nav__link">
+    setupForBluetoothDeviceWithSerialNumber:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setbluetooth-low-energyadvertiselocalname" class="md-nav__link">
+    setBluetooth Low EnergyAdvertiseLocalName:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#startcommunication" class="md-nav__link">
+    startCommunication
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#endcommunication" class="md-nav__link">
+    endCommunication
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sendfile" class="md-nav__link">
+    sendFile:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#senddata" class="md-nav__link">
+    sendData:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sendfileex" class="md-nav__link">
+    sendFileEx:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#senddataex" class="md-nav__link">
+    sendDataEx:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printpdfatpathpageslengthcopy" class="md-nav__link">
+    printPDFAtPath:pages:length:copy:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printimagecopy" class="md-nav__link">
+    printImage:copy:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printfilescopy" class="md-nav__link">
+    printFiles:copy:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cancelprinting" class="md-nav__link">
+    cancelPrinting
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setinterface" class="md-nav__link">
+    setInterface:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getbatterystatus" class="md-nav__link">
+    getBatteryStatus
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getbatteryinfo" class="md-nav__link">
+    getBatteryInfo:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getprinterbootmode" class="md-nav__link">
+    getPrinterBootMode
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setautoconnectbluetooth" class="md-nav__link">
+    setAutoConnectBluetooth:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#isautoconnectbluetooth" class="md-nav__link">
+    isAutoConnectBluetooth
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setprintersettings" class="md-nav__link">
+    setPrinterSettings:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getprintersettingsrequire" class="md-nav__link">
+    getPrinterSettings:require:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setprinternamefromstatus" class="md-nav__link">
+    setPrinterNameFromStatus:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#types" class="md-nav__link">
+    Types
+  </a>
+  
+    <nav class="md-nav" aria-label="Types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#connection_type" class="md-nav__link">
+    CONNECTION_TYPE
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-codes" class="md-nav__link">
+    Error Codes
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printersettingitem" class="md-nav__link">
+    PrinterSettingItem
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notifications" class="md-nav__link">
+    Notifications
+  </a>
+  
+    <nav class="md-nav" aria-label="Notifications">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#transmission-progress-notification" class="md-nav__link">
+    Transmission Progress Notification
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#event-notification" class="md-nav__link">
+    Event Notification
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    Notes
+  </a>
+  
+    <nav class="md-nav" aria-label="Notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api-compatibility" class="md-nav__link">
+    API Compatibility
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#template-object-number-range" class="md-nav__link">
+    Template Object Number Range
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deprecates" class="md-nav__link">
+    Deprecates
+  </a>
+  
+    <nav class="md-nav" aria-label="Deprecates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#isprinterready" class="md-nav__link">
+    isPrinterReady
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getptstatus" class="md-nav__link">
+    getPTstatus:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setcredential" class="md-nav__link">
+    setCredential:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  <h1>BRPtouchPrinter</h1>
+
+<p><code>BRPtouchPrinter</code> class provides APIs to print data or get information from the printer.</p>
+<h2 id="instance-methods">Instance Methods</h2>
+<h3 id="initwithprinteripaddressipaddress">initWithPrinterIPAddress:IPAddress:</h3>
+<p>Initialize the object with the printer name. Then you need to set <a href="#connection_type"><code>CONNECTION_TYPE</code></a> and the identifier based on the connection type. Usually, using <a href="#initwithprinternameinterface"><code>initWithPrinterName:interface:</code></a> is recommended.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">initWithPrinterIPAddress:</span><span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">IPAddress</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="initwithprinternamestrprintername">initWithPrinterName:strPrinterName:</h3>
+<p>Initialize the object with the printer name and an identifier based on the connection type. Then you need to set <a href="#connection_type"><code>CONNECTION_TYPE</code></a>. Usually, using <a href="#initwithprinternameinterface"><code>initWithPrinterName:interface:</code></a> is recommended.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>For the TD-23XX series, strPrinterName must include the resolution,
+such as "TD-2320D_203", "TD-2350DFSA_300", etc.
+If the resolution is unknown, use <a href="#setprinternamefromstatus"><code>setPrinterNameFromStatus</code></a>.</p>
+</div>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">initWithPrinterName:</span><span class="p">(</span><span class="bp">NSString</span><span class="o">*</span><span class="p">)</span><span class="nv">strPrinterName</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="initwithprinternameinterface">initWithPrinterName:interface:</h3>
+<p>Initialize the object with the printer name (e.g. <code>@"QL-1110NWB"</code>) and <a href="#connection_type"><code>CONNECTION_TYPE</code></a>. After that, you need to set the identifier based on the connection type.</p>
+<ul>
+<li><a href="#setipaddress"><code>setIPAddress:</code></a></li>
+<li><a href="#setupforbluetoothdevicewithserialnumber"><code>setupForBluetoothDeviceWithSerialNumber:</code></a></li>
+<li><a href="#setbleadvertiselocalname"><code>setBLEAdvertiseLocalName:</code></a></li>
+</ul>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>For the TD-23XX series, strPrinterName must include the resolution,
+such as "TD-2320D_203", "TD-2350DFSA_300", etc.
+If the resolution is unknown, use <a href="#setprinternamefromstatus"><code>setPrinterNameFromStatus</code></a>.</p>
+</div>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nf">initWithPrinterName:</span><span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">strPrinterName</span><span class="w"> </span><span class="nf">interface:</span><span class="p">(</span><span class="n">CONNECTION_TYPE</span><span class="p">)</span><span class="nv">type</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="printername">printerName</h3>
+<p>A getter of the printer name set when initialized.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nf">printerName</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="setprinternamestrprintername">setPrinterName:strPrinterName</h3>
+<p>A setter of the printer name set when initialized. The printer name must follow the format like <code>@"QL-1110NWB"</code>.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>For the TD-23XX series, strPrinterName must include the resolution,
+such as "TD-2320D_203", "TD-2350DFSA_300", etc.
+If the resolution is unknown, use <a href="#setprinternamefromstatus"><code>setPrinterNameFromStatus</code></a>.</p>
+</div>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">setPrinterName:</span><span class="p">(</span><span class="bp">NSString</span><span class="o">*</span><span class="p">)</span><span class="nv">strPrinterName</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="setprintinfo">setPrintInfo:</h3>
+<p>Set <a href="brptouchprintinfo.html"><code>BRPtouchPrintInfo</code></a> object to configure print settings.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setPrintInfo:</span><span class="p">(</span><span class="n">BRPtouchPrintInfo</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">printInfo</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>printInfo</em></td>
+<td>The print setting information.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="setcustompaperfile">setCustomPaperFile:</h3>
+<p>Set the custom paper information from the file. This is required for RJ/TD series printer. Also refer to <a href="../../guide/print-image.html#rjtd-series">the guide for those series</a>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">setCustomPaperFile:</span><span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">strFilePath</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>strFilePath</em></td>
+<td>The absolute file path of the custom paper file.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p><code>YES</code> if the file exists, otherwise <code>NO</code>.</p>
+<h3 id="setcustompaperinfocommand">setCustomPaperInfoCommand:</h3>
+<p>Set <a href="brcustompaperinfocommand.html"><code>BRCustomPaperInfoCommand</code></a> object to configure custom paper information parameters. This is required for RJ/TD series printer. Also refer to <a href="../../guide/print-image.html#rjtd-series">the guide for those series</a>. </p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="bp">NSArray</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nf">setCustomPaperInfoCommand:</span><span class="p">(</span><span class="n">BRCustomPaperInfoCommand</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">customPaperInfoCommand</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>customPaperInfoCommand</em></td>
+<td>The custom paper information parameters</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong>
+Array of <code>NSDictionary</code>, which contains two elements.    </p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@"errorParameter"</code></td>
+<td><a href="brcustompaperinfocommand.html#errorparametername"><code>ErrorParameterName</code></a></td>
+</tr>
+<tr>
+<td><code>@"errorDetail"</code></td>
+<td><a href="brcustompaperinfocommand.html#errorparameterdetail"><code>ErrorParameterDetail</code></a></td>
+</tr>
+</tbody>
+</table>
+<p>If <code>NSArray*</code> is empty, it's no error .</p>
+<h3 id="getsupportpaperarray">getSupportPaperArray</h3>
+<p>Get label/paper information of your printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="bp">NSArray</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nf">getSupportPaperArray</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong>
+<code>NSArray&lt;BRPtouchLabelParam *&gt;*</code></p>
+<h3 id="getcurrentlabelparam">getCurrentLabelParam</h3>
+<p>Get label/paper information of connected your printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="n">BRPtouchLabelParam</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nf">getCurrentLabelParam</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong>
+<a href="brptouchlabelparam.html"><code>BRPtouchLabelParam</code></a></p>
+<h3 id="getlabelinfostatus">getLabelInfoStatus</h3>
+<p>Get label information of connected your printer. This if for PT only.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="n">BRPtouchLabelInfoStatus</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nf">getLabelInfoStatus</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong>
+<a href="brptouchlabelinfostatus.html"><code>BRPtouchLabelInfoStatus</code></a></p>
+<h3 id="getstatus">getStatus:</h3>
+<p>Get the status from the printer as <a href="brptouchprinterstatus.html"><code>BRPtouchPrinterStatus</code></a>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">getStatus:</span><span class="p">(</span><span class="n">BRPtouchPrinterStatus</span><span class="w"> </span><span class="o">**</span><span class="p">)</span><span class="nv">status</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>status</em></td>
+<td>A double pointer of <code>BRPtouchPrinterStatus</code>.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p><code>0</code> if failed, non zero if success.</p>
+<h3 id="getstatuserrorcode">getStatus:errorCode:</h3>
+<p>Get the status from the printer as <a href="brptouchprinterstatus.html"><code>BRPtouchPrinterStatus</code></a> and <a href="#error-codes">error codes</a>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">getStatus:</span><span class="p">(</span><span class="n">BRPtouchPrinterStatus</span><span class="o">**</span><span class="p">)</span><span class="nv">status</span><span class="w"> </span><span class="nf">errorCode:</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">errorCode</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="getmodelname">getModelName</h3>
+<p>Get the model name of connected your printer. This is only for <code>CONNECTION_TYPE_WLAN</code> (cf. <a href="#connection_type"><code>CONNECTION_TYPE</code></a>).</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nf">getModelName</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong>
+<code>NSString</code> that is gotten from your printer through WLAN.</p>
+<h3 id="getfirmversion">getFirmVersion</h3>
+<p>Get the firmware version of the specified printer as a string.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nf">getFirmVersion</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong>
+For example, <code>@"0102"</code>. This means "ver.1.02".</p>
+<h3 id="getmediaversion">getMediaVersion</h3>
+<p>Get the media version in the firmware of connected your printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nf">getMediaVersion</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong>
+For example, <code>@"0102"</code>. This means "ver.1.02".</p>
+<h3 id="getmediafileversionfilepath">getMediaFileVersion:filepath</h3>
+<p>Get the firmware version from the firmware data file.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nf">getMediaFileVersion:</span><span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">filepath</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong>
+For example, <code>@"0102"</code>. This means "ver.1.02".</p>
+<h3 id="getdeviceserialnumber">getDeviceSerialNumber</h3>
+<p>Get the serial number from connected your printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nf">getDeviceSerialNumber</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="getsystemreport">getSystemReport:</h3>
+<p>Get the system report from the printer as string.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">getSystemReport:</span><span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">**</span><span class="p">)</span><span class="nv">report</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="sendtemplatefile">sendTemplateFile:</h3>
+<p>Send template files. See also <a href="#sendtemplateconnectiontype"><code>sendTemplate:</code></a>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">sendTemplateFile:</span><span class="p">(</span><span class="bp">NSArray</span><span class="o">*</span><span class="p">)</span><span class="nv">sendFileArray</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="sendfirmwarefile">sendFirmwareFile:</h3>
+<p>Send firmware files. </p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">sendFirmwareFile:</span><span class="p">(</span><span class="bp">NSArray</span><span class="o">*</span><span class="p">)</span><span class="nv">sendFileArray</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="sendtemplateconnectiontype">sendTemplate:connectionType:</h3>
+<p>Transfers P-touch Template files. Use P-touch Transfer Manager on PC to make <code>.blf</code> files.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">sendTemplate:</span><span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">sendtemplateFilePath</span><span class="w"> </span><span class="nf">connectionType:</span><span class="p">(</span><span class="n">CONNECTION_TYPE</span><span class="p">)</span> <span class="nv">type</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>sendtemplateFilePath</em></td>
+<td>The absolute file path of the file.</td>
+</tr>
+<tr>
+<td><em>type</em></td>
+<td>The connection type to the printer.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>One of <a href="#error-codes">the error code</a>.</p>
+<h3 id="senddatabase">sendDatabase:</h3>
+<p>Send the database data described in <code>.csv</code> format.
+In addition, this updates the database for printers that have templates and databases created and linked by P-touch Editor.</p>
+<p><code>.csv</code> data format restrictions :</p>
+<ul>
+<li>the delimiter is <code>,</code>(comma) only</li>
+<li>Alphanumeric &amp; symbol in ASCII only</li>
+</ul>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">sendDatabase:</span><span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">databaseFilePath</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>databaseFilePath</em></td>
+<td>The path of the <code>.csv</code> file.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>One of <a href="#error-codes">the error code</a>.</p>
+<h3 id="startpttprintencoding">startPTTPrint:encoding:</h3>
+<p>Start creating the command and print data string for a P-touch Template. Specify a template and the character encoding. This function assumes the default P-touch Template settings. Your application may not be able to print if the printer's settings differ from the defaults. If necessary, use the P-touch Template Setting Tool to configure the printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">startPTTPrint:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">key</span><span class="w"> </span><span class="nf">encoding:</span><span class="p">(</span><span class="n">NSStringEncoding</span><span class="p">)</span><span class="nv">encoding</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>key</em></td>
+<td>Key number assigned to the template. The key starts from <code>1</code>.</td>
+</tr>
+<tr>
+<td><em>encode</em></td>
+<td><code>NSShiftJISStringEncoding</code> for printer models with Japanese fonts, <code>CFStringConvertEncodingToNSStringEncoding(kCFStringEncodingGB_18030_2000)</code> for printer models with Chinese fonts, <code>NSUTF8StringEncoding</code> for all other printer models.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p><code>false</code> if the printer doesn't support P-touch template, otherwise <code>true</code>.</p>
+<h3 id="replacetext">replaceText:</h3>
+<p>Replaces the next replaceable text in a P-touch Template. Text strings are replaced in order from small object number.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">replaceText:</span><span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">data</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>data</em></td>
+<td>Replacement text.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p><code>false</code> if the printer doesn't support P-touch template, otherwise <code>true</code>.</p>
+<h3 id="replacetextindexobjectindex">replaceTextIndex:objectIndex:</h3>
+<p>Replaces the text in an object of a P-touch Template, specified by its object number.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">replaceTextIndex:</span><span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">data</span><span class="w"> </span><span class="nf">objectIndex:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">objIndex</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>data</em></td>
+<td>Replacement text.</td>
+</tr>
+<tr>
+<td><em>objIndex</em></td>
+<td>Object number in which to replace the text. <a href="#template-object-number-range">The range</a> depends on models.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p><code>false</code> if the index is out of range or the printer doesn't support P-touch template, otherwise <code>true</code>.</p>
+<h3 id="replacetextnameobjectname">replaceTextName:objectName:</h3>
+<p>Replaces the text in an object of a P-touch Template, specified by the object's name.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">replaceTextName:</span><span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">data</span><span class="w"> </span><span class="nf">objectName:</span><span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">objName</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>data</em></td>
+<td>Replacement text.</td>
+</tr>
+<tr>
+<td><em>objName</em></td>
+<td>Object name of the object in which to replace the text.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p><code>false</code> if the data length longer than 20 or the printer doesn't support P-touch template, otherwise <code>true</code>.</p>
+<h3 id="flushpttprintwithcopies">flushPTTPrintWithCopies:</h3>
+<p>Transmits command and print data used to print a P-touch Template.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">flushPTTPrintWithCopies:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">nCopy</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong>
+<code>RET_TRUE</code> if success, otherwise <code>RET_FALSE</code>.</p>
+<h3 id="removetemplate">removeTemplate:</h3>
+<p>Remove templates data from your printer with specifying the template key. It can be gotten by <a href="#gettemplatelist"><code>getTemplateList:</code></a>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">removeTemplate:</span><span class="p">(</span><span class="bp">NSArray</span><span class="o">&lt;</span><span class="bp">NSNumber</span><span class="o">*&gt;</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">keyList</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong>
+<code>RET_TRUE</code> if success, otherwise <code>RET_FALSE</code>.</p>
+<h3 id="gettemplatelist">getTemplateList:</h3>
+<p>Get template list in your printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">getTemplateList:</span><span class="p">(</span><span class="bp">NSArray</span><span class="o">&lt;</span><span class="n">BRPtouchTemplateInfo</span><span class="o">*&gt;*</span><span class="k">__autoreleasing</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">templateList</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong>
+<code>RET_TRUE</code> if success, otherwise <code>RET_FALSE</code>.</p>
+<h3 id="searchavailablessid">searchAvailableSSID:</h3>
+<p>Get available SSIDs on your printer.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This is beta function and is not guaranteed to work.</p>
+</div>
+<p><strong>*Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="bp">NSArray</span><span class="w"> </span><span class="o">&lt;</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*&gt;*</span><span class="p">)</span><span class="nf">searchAvailableSSID:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">waitTime</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="setipaddress">setIPAddress:</h3>
+<p>Set the IP address of the printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setIPAddress:</span><span class="p">(</span><span class="bp">NSString</span><span class="o">*</span><span class="p">)</span><span class="nv">strIP</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="setupforbluetoothdevicewithserialnumber">setupForBluetoothDeviceWithSerialNumber:</h3>
+<p>Set the serial number of the printer to connect via Bluetooth.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setupForBluetoothDeviceWithSerialNumber:</span><span class="p">(</span><span class="bp">NSString</span><span class="o">*</span><span class="p">)</span><span class="nv">serialNumber</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="setbluetooth-low-energyadvertiselocalname">setBluetooth Low EnergyAdvertiseLocalName:</h3>
+<p>Set the advertise local name of the printer to connect via Bluetooth Low Energy.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setBLEAdvertiseLocalName:</span><span class="p">(</span><span class="bp">NSString</span><span class="o">*</span><span class="p">)</span><span class="nv">advertiseLocalName</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="startcommunication">startCommunication</h3>
+<p>Open a session to communicate with the printer based on the connection type. You need to call it before calling any API communicating with the printer. You need to call <a href="#endcommunication"><code>endCommunication</code></a> when it becomes unnecessary.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">startCommunication</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong></p>
+<p><code>YES</code> if success, otherwise <code>NO</code>.</p>
+<h3 id="endcommunication">endCommunication</h3>
+<p>Close the session opened via <code>startCommunication</code>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">endCommunication</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>report</em></td>
+<td>A double pointer of <code>NSString</code>.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>One of <a href="#error-codes">the error code</a>.</p>
+<h3 id="sendfile">sendFile:</h3>
+<p>Send the contents of the file to the printer.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If you pass a file including raster commands customized by yourself, <em>automatic status notification mode</em> must be turned off (Do not notify). Any notifications from printers are not received in this function.
+For information on the mode, see a command reference for your printer.</p>
+</div>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">sendFile:</span><span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">filePath</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>filePath</em></td>
+<td>The absolute file path of the file.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>One of <a href="#error-codes">the error code</a>.</p>
+<h3 id="senddata">sendData:</h3>
+<p>Send the binary data to the printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">sendData:</span><span class="p">(</span><span class="bp">NSData</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">data</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>data</em></td>
+<td>The binary data.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>One of <a href="#error-codes">the error code</a>.</p>
+<h3 id="sendfileex">sendFileEx:</h3>
+<p>Same as <a href="#sendfile"><code>sendFile:</code></a>.</p>
+<h3 id="senddataex">sendDataEx:</h3>
+<p>Same as <a href="#senddata"><code>sendData:</code></a>.</p>
+<h3 id="printpdfatpathpageslengthcopy">printPDFAtPath:pages:length:copy:</h3>
+<p>Print the PDF file using print settings set by <a href="#setprintinfo"><code>setPrintInfo:</code></a>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">printPDFAtPath:</span><span class="p">(</span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">pdfPath</span><span class="w"> </span><span class="nf">pages:</span><span class="p">(</span><span class="n">NSUInteger</span><span class="w"> </span><span class="p">[])</span><span class="nv">indexes</span><span class="w"> </span><span class="nf">length:</span><span class="p">(</span><span class="n">NSUInteger</span><span class="p">)</span><span class="nv">length</span><span class="w"> </span><span class="nf">copy:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">nCopy</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>pdfPath</em></td>
+<td>The PDF file path to be printed.</td>
+</tr>
+<tr>
+<td><em>indexes</em></td>
+<td>The page index array.</td>
+</tr>
+<tr>
+<td><em>length</em></td>
+<td>The length of <code>indexes</code>. All pages are printed if this parameter is <code>0</code>.</td>
+</tr>
+<tr>
+<td><em>nCopy</em></td>
+<td>The number of copies.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>One of <a href="#error-codes">the error code</a>.</p>
+<h3 id="printimagecopy">printImage:copy:</h3>
+<p>Print the image using print settings set by <a href="#setprintinfo"><code>setPrintInfo:</code></a>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">printImage:</span><span class="p">(</span><span class="n">CGImageRef</span><span class="p">)</span><span class="nv">imageRef</span><span class="w"> </span><span class="nf">copy:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">nCopy</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>imageRef</em></td>
+<td>The reference to the image to be printed.</td>
+</tr>
+<tr>
+<td><em>nCopy</em></td>
+<td>The number of copies.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>One of <a href="#error-codes">the error code</a>.</p>
+<h3 id="printfilescopy">printFiles:copy:</h3>
+<p>Print the image files using print settings set by <a href="#setprintinfo"><code>setPrintInfo:</code></a>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">printFiles:</span><span class="p">(</span><span class="bp">NSArray</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">filePaths</span><span class="w"> </span><span class="nf">copy:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">nCopy</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>filePaths</em></td>
+<td>The path array of image file to be printed.</td>
+</tr>
+<tr>
+<td><em>nCopy</em></td>
+<td>The number of copies.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>One of <a href="#error-codes">the error code</a>.</p>
+<h3 id="cancelprinting">cancelPrinting</h3>
+<p>Cancels the print job. The job is cancelled after transmission if this is executed while print data is being transmitted.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">cancelPrinting</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong>
+One of <a href="#error-codes">the error code</a>.</p>
+<h3 id="setinterface">setInterface:</h3>
+<p>Set interface you use to connect your printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setInterface:</span><span class="p">(</span><span class="n">CONNECTION_TYPE</span><span class="p">)</span><span class="nv">strInterface</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="getbatterystatus">getBatteryStatus</h3>
+<p>Get Battery degradation level from your printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">getBatteryStatus</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong>
+<code>-1</code> if occur any errors. <code>0</code> if not supported. Positive integer if succeeded.</p>
+<h3 id="getbatteryinfo">getBatteryInfo:</h3>
+<p>Get the battery info from the printer as <a href="brptouchbatteryinfo.html"><code>BRPtouchBatteryInfo</code></a>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">getBatteryInfo:</span><span class="p">(</span><span class="n">BRPtouchBatteryInfo</span><span class="w"> </span><span class="o">**</span><span class="p">)</span><span class="nv">batteryInfo</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>batteryInfo</em></td>
+<td>A double pointer of <code>BRPtouchBatteryInfo</code>.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>One of <a href="#error-codes">the error code</a>.</p>
+<h3 id="getprinterbootmode">getPrinterBootMode</h3>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">getPrinterBootMode</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong>
+<code>1</code> if the printer is on boot mode.successfullyprinter have started up without any errors.
+This will be useful to check if your pritner reboot successfully after sending firmware file.</p>
+<h3 id="setautoconnectbluetooth">setAutoConnectBluetooth:</h3>
+<p>Change the printer configuration of Bluetooth auto connection from the printer. This API is available only when connected with the printer via Bluetooth/Bluetooth Low Energy.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">setAutoConnectBluetooth:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">flag</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>flag</em></td>
+<td>On/Off of auto connection</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p><code>0</code> if failed, non zero if success.</p>
+<h3 id="isautoconnectbluetooth">isAutoConnectBluetooth</h3>
+<p>Retrieves the Bluetooth auto connection configuration from the printer. This API is available only when connected with the printer via Bluetooth/Bluetooth Low Energy.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">isAutoConnectBluetooth</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong></p>
+<p><code>1</code> if the auto connection is enabled, <code>0</code> if disabled or <code>ERROR_COMMUNICATION_ERROR_</code> if fail to retrieve.</p>
+<h3 id="setprintersettings">setPrinterSettings:</h3>
+<p>Change the printer configurations.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">setPrinterSettings:</span><span class="p">(</span><span class="bp">NSDictionary</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">printerSettings</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>printerSettings</em></td>
+<td>Settings list you want to change. The key is <code>NSNumber</code> of <a href="#printersettingitem"><code>PrinterSettingItem</code></a> and the value is <code>NSString</code>. See <a href="../appendix/printer-configurations.html">Printer Configurations</a> for available values.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p><code>RET_TRUE</code> if success, otherwise <code>RET_FALSE</code>.</p>
+<h3 id="getprintersettingsrequire">getPrinterSettings:require:</h3>
+<p>Retrieves the current printer settings.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nf">getPrinterSettings:</span><span class="p">(</span><span class="bp">NSDictionary</span><span class="w"> </span><span class="o">**</span><span class="p">)</span><span class="nv">printerSettings</span><span class="w"> </span><span class="nf">require:</span><span class="p">(</span><span class="bp">NSArray</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">require</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>printerSettings</em></td>
+<td>A double pointer of <code>NSDictionary</code> to store the results. The key is <code>NSNumber</code> of <a href="#printersettingitem"><code>PrinterSettingItem</code></a> and the value is <code>NSString</code>.  See <a href="../appendix/printer-configurations.html">Printer Configurations</a> for available values.</td>
+</tr>
+<tr>
+<td><em>require</em></td>
+<td>Settings list you want to retrieve. The values of the array should be <code>NSNumber</code> of <a href="#printersettingitem"><code>PrinterSettingItem</code></a>.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>One of <a href="#error-codes">the error code</a>.</p>
+<h3 id="setprinternamefromstatus">setPrinterNameFromStatus:</h3>
+<p>Set printer name from <a href="brptouchprinterstatus.html"><code>BRPtouchPrinterStatus</code></a> instead of from <a href="#setprinternamestrprintername"><code>setPrinterName</code></a>.</p>
+<div class="admonition info">
+<p class="admonition-title">It is used when the model name cannot be determined by the search API, such as TD-2350D.</p>
+</div>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setPrinterNameFromStatus:</span><span class="p">(</span><span class="n">BRPtouchPrinterStatus</span><span class="o">*</span><span class="p">)</span><span class="nv">status</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>status</em></td>
+<td>Status returned by <a href="#getstatus"><code>getStatus:</code></a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="types">Types</h2>
+<h3 id="connection_type">CONNECTION_TYPE</h3>
+<p>enum to indicate connection types to the printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">typedef</span><span class="w"> </span><span class="n">NS_ENUM</span><span class="p">(</span><span class="n">NSUInteger</span><span class="p">,</span><span class="w"> </span><span class="n">CONNECTION_TYPE</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">CONNECTION_TYPE_WLAN</span><span class="p">,</span>
+<span class="w">    </span><span class="n">CONNECTION_TYPE_BLUETOOTH</span><span class="p">,</span>
+<span class="w">    </span><span class="n">CONNECTION_TYPE_BLE</span><span class="p">,</span>
+<span class="p">};</span>
+</code></pre></div>
+
+<h3 id="error-codes">Error Codes</h3>
+<p>Error codes are defined as macro in <code>BRPtouchPrinter.h</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Error Code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ERROR_NONE_</code></td>
+<td>Success</td>
+</tr>
+<tr>
+<td><code>ERROR_TIMEOUT</code></td>
+<td>Timeout</td>
+</tr>
+<tr>
+<td><code>ERROR_CREATESTREAM</code></td>
+<td>Failed to create a stream.</td>
+</tr>
+<tr>
+<td><code>ERROR_OPENSTREAM</code></td>
+<td>Failed to open a stream.</td>
+</tr>
+<tr>
+<td><code>ERROR_FILENOTEXIST</code></td>
+<td>Specified file does not exist.</td>
+</tr>
+<tr>
+<td><code>ERROR_PAGERANGEERROR</code></td>
+<td>Specified page range exceeds the maximum.</td>
+</tr>
+<tr>
+<td><code>ERROR_NOT_SAME_MODEL_</code></td>
+<td>Different printer model</td>
+</tr>
+<tr>
+<td><code>ERROR_BROTHER_PRINTER_NOT_FOUND_</code></td>
+<td>No Brother printer can be found.</td>
+</tr>
+<tr>
+<td><code>ERROR_PAPER_EMPTY_</code></td>
+<td>No paper</td>
+</tr>
+<tr>
+<td><code>ERROR_BATTERY_EMPTY_</code></td>
+<td>Insufficient battery level</td>
+</tr>
+<tr>
+<td><code>ERROR_COMMUNICATION_ERROR_</code></td>
+<td>Failed to retrieve printer status.</td>
+</tr>
+<tr>
+<td><code>ERROR_OVERHEAT_</code></td>
+<td>Overheating error</td>
+</tr>
+<tr>
+<td><code>ERROR_PAPER_JAM_</code></td>
+<td>Paper jam</td>
+</tr>
+<tr>
+<td><code>ERROR_HIGH_VOLTAGE_ADAPTER_</code></td>
+<td>High-voltage adapter</td>
+</tr>
+<tr>
+<td><code>ERROR_CHANGE_CASSETTE_</code></td>
+<td>Replace paper cassette while printing.</td>
+</tr>
+<tr>
+<td><code>ERROR_FEED_OR_CASSETTE_EMPTY_</code></td>
+<td>Feeding error or end of paper</td>
+</tr>
+<tr>
+<td><code>ERROR_SYSTEM_ERROR_</code></td>
+<td>System error</td>
+</tr>
+<tr>
+<td><code>ERROR_NO_CASSETTE_</code></td>
+<td>No paper cassette during a printing operation.</td>
+</tr>
+<tr>
+<td><code>ERROR_CREATE_SOCKET_FAILED_</code></td>
+<td>Failed to create socket.</td>
+</tr>
+<tr>
+<td><code>ERROR_CONNECT_SOCKET_FAILED_</code></td>
+<td>Failed to connect.</td>
+</tr>
+<tr>
+<td><code>ERROR_GET_OUTPUT_STREAM_FAILED_</code></td>
+<td>Failed to retrieve output stream.</td>
+</tr>
+<tr>
+<td><code>ERROR_GET_INPUT_STREAM_FAILED_</code></td>
+<td>Failed to retrieve input stream.</td>
+</tr>
+<tr>
+<td><code>ERROR_CLOSE_SOCKET_FAILED_</code></td>
+<td>Failed to close socket.</td>
+</tr>
+<tr>
+<td><code>ERROR_OUT_OF_MEMORY_</code></td>
+<td>Insufficient memory</td>
+</tr>
+<tr>
+<td><code>ERROR_SET_OVER_MARGIN_</code></td>
+<td>Exceeded the specified margin.</td>
+</tr>
+<tr>
+<td><code>ERROR_NO_SD_CARD_</code></td>
+<td>No SD card</td>
+</tr>
+<tr>
+<td><code>ERROR_FILE_NOT_SUPPORTED_</code></td>
+<td>Unsupported file</td>
+</tr>
+<tr>
+<td><code>ERROR_EVALUATION_TIMEUP_</code></td>
+<td>Trial period for PDF printing has ended.</td>
+</tr>
+<tr>
+<td><code>ERROR_WRONG_CUSTOM_INFO_</code></td>
+<td>Incorrect custom paper settings</td>
+</tr>
+<tr>
+<td><code>ERROR_NO_ADDRESS_</code></td>
+<td>IP address and MAC address are not specified.</td>
+</tr>
+<tr>
+<td><code>ERROR_FILE_NOT_FOUND_</code></td>
+<td>File does not exist.</td>
+</tr>
+<tr>
+<td><code>ERROR_TEMPLATE_FILE_NOT_MATCH_MODEL_</code></td>
+<td>Template file and printer model are incompatible.</td>
+</tr>
+<tr>
+<td><code>ERROR_TEMPLATE_NOT_TRANS_MODEL_</code></td>
+<td>Model incompatible with template transfer</td>
+</tr>
+<tr>
+<td><code>ERROR_COVER_OPEN_</code></td>
+<td>Cover open</td>
+</tr>
+<tr>
+<td><code>ERROR_WRONG_LABEL_</code></td>
+<td>Incorrect roll type</td>
+</tr>
+<tr>
+<td><code>ERROR_PORT_NOT_SUPPORTED_</code></td>
+<td>Unsupported interface</td>
+</tr>
+<tr>
+<td><code>ERROR_WRONG_TEMPLATE_KEY_</code></td>
+<td>A template with the specified key does not exist.</td>
+</tr>
+<tr>
+<td><code>ERROR_BUSY_</code></td>
+<td>Busy</td>
+</tr>
+<tr>
+<td><code>ERROR_TEMPLATE_NOT_PRINT_MODEL_</code></td>
+<td>Model incompatible with P-touch template printing</td>
+</tr>
+<tr>
+<td><code>TEMPLATE_NOT_PRINT_MODEL_</code></td>
+<td>Cancel</td>
+</tr>
+<tr>
+<td><code>ERROR_PRINTER_SETTING_NOT_SUPPORTED_</code></td>
+<td>Device settings function not supported</td>
+</tr>
+<tr>
+<td><code>ERROR_INVALID_PARAMETER_</code></td>
+<td>Invalid parameter</td>
+</tr>
+<tr>
+<td><code>ERROR_INTERNAL_ERROR_</code></td>
+<td>Internal device error</td>
+</tr>
+<tr>
+<td><code>ERROR_TEMPLATE_NOT_CONTROL_MODEL_</code></td>
+<td>Model incompatible with template deleting and retrieving</td>
+</tr>
+<tr>
+<td><code>ERROR_TEMPLATE_NOT_EXIST_</code></td>
+<td>Template does not exist.</td>
+</tr>
+<tr>
+<td><code>ERROR_BUFFER_FULL_</code></td>
+<td>Buffer full</td>
+</tr>
+<tr>
+<td><code>ERROR_TUBE_EMPTY_</code></td>
+<td>Tube empty</td>
+</tr>
+<tr>
+<td><code>ERROR_TUBE_RIBBON_EMPTY_</code></td>
+<td>Tube ribbon empty</td>
+</tr>
+<tr>
+<td><code>ERROR_MINIMUM_LENGTH_LIMIT_</code></td>
+<td>The length is too short to print</td>
+</tr>
+<tr>
+<td><code>ERROR_RESOLUTION_MODE_</code></td>
+<td>You can not use the High-resolution / draft printing</td>
+</tr>
+<tr>
+<td><code>ERROR_UNSUPPORTED_USB_CHARGER_</code></td>
+<td>The USB connected has not enough power supply capacity to print</td>
+</tr>
+<tr>
+<td><code>ERROR_UNSUPPORTED_OPTIONAL_EQUIPMENT_</code></td>
+<td>The optional equipment is not compatible with the printer.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="printersettingitem">PrinterSettingItem</h3>
+<p>The printer setting keys used in <a href="#getprintersettingsrequire"><code>getPrinterSettings:require</code></a> and  <a href="#setprintersettings"><code>setPrinterSettings:</code></a>.</p>
+<div class="codehilite"><pre><span></span><code><span class="k">typedef</span><span class="w"> </span><span class="n">NS_ENUM</span><span class="p">(</span><span class="n">NSUInteger</span><span class="p">,</span><span class="w"> </span><span class="n">PrinterSettingItem</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">PSI_NET_BOOTMODE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_INTERFACE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_USED_IPV6</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_PRIORITY_IPV6</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_IPV4_BOOTMETHOD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_STATIC_IPV4ADDRESS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_SUBNETMASK</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_GATEWAY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_DNS_IPV4_BOOTMETHOD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_PRIMARY_DNS_IPV4ADDRESS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_SECOND_DNS_IPV4ADDRESS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">11</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_IPV6_BOOTMETHOD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_STATIC_IPV6ADDRESS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_PRIMARY_DNS_IPV6ADDRESS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_SECOND_DNS_IPV6ADDRESS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_IPV6ADDRESS_LIST</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_COMMUNICATION_MODE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">17</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_SSID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_CHANNEL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">19</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_AUTHENTICATION_METHOD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_ENCRYPTIONMODE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">21</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_WEPKEY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_PASSPHRASE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_USER_ID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_PASSWORD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">25</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_NET_NODENAME</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">26</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_WIRELESSDIRECT_KEY_CREATE_MODE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">27</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_WIRELESSDIRECT_SSID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">28</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_WIRELESSDIRECT_NETWORK_KEY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">29</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_BT_ISDISCOVERABLE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_BT_DEVICENAME</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">31</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_BT_BOOTMODE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">34</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_PRINTER_POWEROFFTIME</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">35</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_PRINTER_POWEROFFTIME_BATTERY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">36</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_PRINT_JPEG_HALFTONE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">37</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_PRINT_JPEG_SCALE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">38</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_PRINT_DENSITY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">39</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_PRINT_SPEED</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_BT_POWERSAVEMODE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">41</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_BT_SSP</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_BT_AUTHMODE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">43</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PSI_BT_AUTO_CONNECTION</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">44</span><span class="p">,</span>
+<span class="p">}</span><span class="w"> </span><span class="p">;</span>
+</code></pre></div>
+
+<h2 id="notifications">Notifications</h2>
+<h3 id="transmission-progress-notification">Transmission Progress Notification</h3>
+<p>The following notification is sent immediately after the data could be transmitted on an each connection. If <code>BRBytesWrittenKey</code> is used, the cumulative total number of bytes in data transmitted to the printer is retrieved. This is the same if you want to retrieve the total number of bytes necessary for transmission.</p>
+<ul>
+<li><code>BRWLanConnectBytesWrittenNotification</code></li>
+<li><code>BRBluetoothSessionBytesWrittenNotification</code></li>
+<li><code>BRBLEBytesWrittenNotification</code></li>
+</ul>
+<h3 id="event-notification">Event Notification</h3>
+<p><code>BRPtouchPrinterKitMessageNotification</code> is sent for following events. Using <code>BRMessageKey</code> from userInfo, the event type can be retrieved as <code>NSString</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@"MESSAGE_START_COMMUNICATION_"</code></td>
+<td>Transmission started</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_START_CONNECT_"</code></td>
+<td>Socket connection started</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_END_CONNECTED_"</code></td>
+<td>Socket connected successfully</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_START_SEND_STATUS_REQUEST_"</code></td>
+<td>Status request transmission started</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_END_SEND_STATUS_REQUEST_"</code></td>
+<td>Status request transmission finished</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_START_READ_PRINTER_STATUS_"</code></td>
+<td>Status reception started</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_END_READ_PRINTER_STATUS_"</code></td>
+<td>Status reception finished</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_START_CREATE_DATA_"</code></td>
+<td>Data creation started</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_END_CREATE_DATA_"</code></td>
+<td>Data creation finished</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_START_SEND_DATA_"</code></td>
+<td>Data transmission started</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_END_SEND_DATA_"</code></td>
+<td>Data transmission finished</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_START_SEND_TEPLATE_"</code></td>
+<td>Template file transmission started</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_END_SEND_TEPLATE_"</code></td>
+<td>Template file transmission finished</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_PRINT_COMPLETE_"</code></td>
+<td>Printed successfully</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_PRINT_ERROR_"</code></td>
+<td>Error occurred</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_PAPER_EMPTY_"</code></td>
+<td>No paper</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_START_COOLING_"</code></td>
+<td>Cooling started</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_END_COOLING_"</code></td>
+<td>Cooling finished</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_WAIT_PEEL_"</code></td>
+<td>Waiting for peeling of label</td>
+</tr>
+<tr>
+<td><code>@"MESSAGE_CANCEL_"</code></td>
+<td>Job canceled</td>
+</tr>
+</tbody>
+</table>
+<h2 id="notes">Notes</h2>
+<h3 id="api-compatibility">API Compatibility</h3>
+<p>Some APIs of <code>BRPtouchPrinter</code> are supported only by specific printers. Refer to the following table.</p>
+<table>
+<thead>
+<tr>
+<th>Properties</th>
+<th>Supported Printer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>getBatteryInfo:</code></td>
+<td>RJ-4200 series</td>
+</tr>
+</tbody>
+</table>
+<h3 id="template-object-number-range">Template Object Number Range</h3>
+<table>
+<thead>
+<tr>
+<th>Object Number Range</th>
+<th>Printer Model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 - 50</td>
+<td>MW series, PT-P9xx, QL series</td>
+</tr>
+<tr>
+<td>1 - 200</td>
+<td>PJ-663</td>
+</tr>
+<tr>
+<td>1 - 99</td>
+<td>TD series, RJ series</td>
+</tr>
+<tr>
+<td>1 - 255</td>
+<td>PJ-7xx</td>
+</tr>
+</tbody>
+</table>
+<h2 id="deprecates">Deprecates</h2>
+<p><span class="deprecated">Deprecated</span></p>
+<h3 id="isprinterready"><del>isPrinterReady</del></h3>
+<p>Please use <a href="#startcommunication"><code>startCommunication</code></a> instead.</p>
+<h3 id="getptstatus"><del>getPTstatus:</del></h3>
+<p>Please use <a href="#getstatus"><code>getStatus:</code></a> instead.</p>
+<h3 id="setcredential">setCredential:</h3>
+<p>Set credential information for operations that require authentication.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setCredential:</span><span class="p">(</span><span class="n">BRLMChannelCredential</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="nv">credential</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>credential</em></td>
+<td>Credential information object. See <a href="../ios_v4/brlmchannelcredential.html"><code>BRLMChannelCredential</code></a> for details.</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      ©2020 Brother Industries, Ltd. All Rights Reserved.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.b78d2936.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
 from datetime import datetime, timedelta, timezone
+import math
 from bson import ObjectId
 from app.models.evento import EventoUpdate
 import app.config.database as database
@@ -154,9 +155,12 @@ async def admin_eventos_list(
     request: Request,
     busca: Optional[str] = None,
     status: Optional[str] = None,
-    periodo: Optional[str] = None
+    periodo: Optional[str] = None,
+    futuros_only: Optional[str] = None,
+    page: int = 1,
+    per_page: int = 12
 ):
-    """List eventos with filters"""
+    """List eventos with filters and pagination; switcher defaults to showing future events."""
     redirect = check_admin_session(request)
     if redirect:
         return redirect
@@ -174,14 +178,36 @@ async def admin_eventos_list(
     elif status == "inativo":
         query["ativo"] = False
     
+    # Determine whether to show future events by default (switcher on)
+    show_futuros = False
     if periodo == "futuros":
-        query["data_evento"] = {"$gte": datetime.now(timezone.utc)}
+        show_futuros = True
     elif periodo == "passados":
+        show_futuros = False
+    else:
+        # if periodo not explicitly set, use futuros_only param if present; default to True
+        if futuros_only is None:
+            show_futuros = True
+        else:
+            show_futuros = (futuros_only == "on")
+
+    if periodo == "passados":
         query["data_evento"] = {"$lt": datetime.now(timezone.utc)}
+    elif show_futuros:
+        query["data_evento"] = {"$gte": datetime.now(timezone.utc)}
     
-    # Get events
+    # Pagination
+    total = await db.eventos.count_documents(query)
+    total_pages = max(1, math.ceil(total / per_page))
+    if page < 1:
+        page = 1
+    if page > total_pages:
+        page = total_pages
+
     eventos = []
-    cursor = db.eventos.find(query).sort("data_evento", -1)
+    sort_order = 1 if show_futuros else -1
+    skip = (page - 1) * per_page
+    cursor = db.eventos.find(query).sort("data_evento", sort_order).skip(skip).limit(per_page)
     
     async for doc in cursor:
         doc["_id"] = str(doc["_id"])
@@ -196,7 +222,12 @@ async def admin_eventos_list(
             "eventos": eventos,
             "busca": busca or "",
             "status": status or "",
-            "periodo": periodo or ""
+            "periodo": periodo or "",
+            "futuros_only": "on" if show_futuros else "",
+            "page": page,
+            "per_page": per_page,
+            "total_pages": total_pages,
+            "total_count": total
         }
     )
 
