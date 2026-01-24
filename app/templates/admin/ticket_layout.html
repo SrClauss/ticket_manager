@@ -335,7 +335,18 @@
 
     // apply control values to DOM
     if (orientationEl) orientationEl.value = canvasOrientation;
-    if (fixedDimEl) fixedDimEl.value = (canvasOrientation === 'portrait' ? String(canvasMmWidth) : String(canvasMmHeight));
+    // ensure fixedDimSelect contains saved value (may be custom)
+    if (fixedDimEl) {
+        const desiredFixed = canvasOrientation === 'portrait' ? canvasMmWidth : canvasMmHeight;
+        // if desiredFixed not present in options, add it as custom
+        let found = false;
+        for (let i=0;i<fixedDimEl.options.length;i++){ if (parseInt(fixedDimEl.options[i].value,10)===desiredFixed) { found=true; break; } }
+        if (!found) {
+            const opt = document.createElement('option'); opt.value = String(desiredFixed); opt.text = String(desiredFixed) + ' (custom)';
+            fixedDimEl.appendChild(opt);
+        }
+        fixedDimEl.value = String(desiredFixed);
+    }
     if (variableDimEl) variableDimEl.value = (canvasOrientation === 'portrait' ? String(canvasMmHeight) : String(canvasMmWidth));
 
     const ticketCanvasEl = document.getElementById('ticketCanvas');
@@ -400,7 +411,7 @@
             variableDimEl.min = 70;
         }
         applyCanvasSize();
-        rescaleElements(oldOrientation==='portrait' ? oldW : oldW, oldOrientation==='portrait' ? oldH : oldH);
+        rescaleElements(oldW, oldH);
     });
 
     if (fixedDimEl) fixedDimEl.addEventListener('change', function() {
