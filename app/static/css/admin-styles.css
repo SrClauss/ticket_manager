@@ -253,51 +253,56 @@ h1, h2, h3, h4, h5, h6 {
 .table tbody tr {text-primary);
 }
 
-/* Tables (Neomorphism) */
+/* Tables (Glassmorphism, cleaner) */
 .table {
     color: var(--text-primary);
     border-collapse: separate;
     border-spacing: 0;
     width: 100%;
+    background: transparent;
 }
 
-/* Apply neomorph style when table is inside a glass-card */
+/* Apply glass look when table is inside a glass-card */
 .glass-card .table {
-    background: var(--bg-main);
+    background: rgba(255,255,255,0.04); /* subtle translucent surface */
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border-radius: 12px;
-    box-shadow: var(--shadow-light);
+    box-shadow: 0 6px 18px rgba(20,30,40,0.06); /* soft shadow */
     overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
 }
 
 .glass-card .table thead th {
-    background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(245,248,251,0.85));
+    background: rgba(255,255,255,0.03);
     color: var(--text-secondary);
     font-weight: 700;
     text-transform: uppercase;
     font-size: 0.75rem;
     padding: 12px 16px;
-    border-bottom: none;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 
 .glass-card .table tbody tr {
-    transition: background 0.15s ease, transform 0.12s ease, box-shadow 0.12s ease;
+    transition: background 0.12s ease, transform 0.12s ease, box-shadow 0.12s ease;
 }
 
 .glass-card .table tbody tr:hover {
-    background: rgba(94, 114, 228, 0.03);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 18px rgba(163,177,198,0.18), -8px -8px 18px rgba(255,255,255,0.45);
+    background: rgba(255,255,255,0.02);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(20,30,40,0.06);
 }
 
 .glass-card .table td, .glass-card .table th {
     padding: 12px 16px;
     vertical-align: middle;
     border: none;
+    color: var(--text-primary);
 }
 
 /* Subtle separators between rows */
 .glass-card .table tbody tr + tr td {
-    box-shadow: inset 0 1px 0 rgba(163,177,198,0.08);
+    border-top: 1px solid rgba(255,255,255,0.03);
 }
 
 /* Small responsive tweaks */
