@@ -1,355 +1,192 @@
 {% extends 'admin/base.html' %}
 {% block content %}
+<!-- Neomorphic planilhas UI (compact session) -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  .planilha-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-  }
-  .planilha-card {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 1.5rem;
-    background: #fff;
-  }
-  .planilha-card h3 {
-    margin-top: 0;
-  }
-  .campos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 0.5rem 1rem;
-    margin: 1rem 0;
-  }
-  .campo-item {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.95rem;
-  }
-  .status-chip {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.1rem 0.6rem;
-    border-radius: 999px;
-    font-size: 0.8rem;
-    text-transform: capitalize;
-  }
-  .status-completed { background: #d1f5e3; color: #126e3a; }
-  .status-partial { background: #fff4d7; color: #8c6d1d; }
-  .status-failed { background: #ffe1e1; color: #b3261e; }
-  .status-pending { background: #e0e0e0; color: #424242; }
-  .upload-area {
-    border: 1px dashed #bbb;
-    padding: 1rem;
-    border-radius: 8px;
-    background: #fafafa;
-  }
-  .history-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  .history-table th,
-  .history-table td {
-    border-bottom: 1px solid #e0e0e0;
-    padding: 0.75rem;
-    text-align: left;
-    vertical-align: top;
-  }
-  .history-table th {
-    background: #f5f5f5;
-  }
-  .relatorio-viewer {
-    margin-top: 1rem;
-    padding: 1rem;
-    border-radius: 8px;
-    background: #111;
-    color: #0f0;
-    max-height: 260px;
-    overflow: auto;
-  }
-  .alert-success {
-    background: #d1f5e3;
-    color: #0f5132;
-    border: 1px solid #a3e4c5;
-    padding: 0.75rem 1rem;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-  }
-  .btn-link {
-    background: none;
-    border: none;
-    color: #1a73e8;
-    cursor: pointer;
-    padding: 0;
-  }
-  .btn-link:hover {
-    text-decoration: underline;
-  }
+  body { font-family: 'Inter', sans-serif; color:#44474a; }
+  .nm-flat{ background:#e0e5ec; box-shadow:9px 9px 16px rgba(163,177,198,0.6), -9px -9px 16px rgba(255,255,255,0.5); }
+  .nm-inset{ background:#e0e5ec; box-shadow: inset 6px 6px 12px #bec3c9, inset -6px -6px 12px #ffffff; }
+  .nm-button{ background:#e0e5ec; box-shadow:6px 6px 12px #bec3c9, -6px -6px 12px #ffffff; transition:all .2s ease-in-out; }
+  .nm-button:active{ box-shadow: inset 4px 4px 8px #bec3c9, inset -4px -4px 8px #ffffff; transform:scale(.98); }
+  .nm-card{ border-radius:20px; padding:24px; border:1px solid rgba(255,255,255,0.2); }
+  .token-display{ word-break:break-all; font-family:monospace; font-size:0.8rem; color:#d1127c; }
+  .progress-bar-bg{ height:12px; border-radius:10px; background:#e0e5ec; box-shadow: inset 3px 3px 6px #bec3c9, inset -3px -3px 6px #ffffff; overflow:hidden; }
+  .progress-bar-fill{ height:100%; width:0%; background:linear-gradient(90deg,#3b82f6,#60a5fa); box-shadow:0 0 8px rgba(59,130,246,0.5); border-radius:10px; }
+  .page-header h1{ font-size:1.75rem; color:#374151; }
+  .grid{ display:grid; gap:1rem; }
+  .grid-cols-4{ grid-template-columns: repeat(4,1fr); }
+  .stack{ display:flex; gap:1rem; }
+  .upload-area input[type=file]{ display:inline-block; }
+  .toast{ position:fixed; right:20px; top:20px; background:#111827;color:#fff;padding:12px 16px;border-radius:8px; box-shadow: 6px 6px 12px rgba(0,0,0,0.15); display:none; z-index:1000; }
+  .tipo-list{ display:flex; flex-direction:column; gap:0.5rem; }
+  .tipo-item{ display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.5rem; border-radius:12px; background:#e9eef5; }
+  @media (max-width:900px){ .grid-cols-4{ grid-template-columns: 1fr; } }
 </style>
 
-<div class="page-header">
-  <h1>Planilhas – {{ evento.nome }}</h1>
-  <p>Configure os campos obrigatórios, gere o modelo, importe participantes e acompanhe o histórico.</p>
-</div>
+<div class="max-w-7xl mx-auto">
+  <header class="mb-6">
+    <h1>Planilhas – {{ evento.nome }}</h1>
+    <p class="text-slate-500">Campos, modelo, upload e histórico — tudo em uma sessão.</p>
+  </header>
 
-{% if saved %}
-  <div class="alert-success">Campos obrigatórios atualizados com sucesso.</div>
-{% endif %}
-{% if request.query_params.get('insc_saved') == '1' %}
-  <div class="alert-success">Configurações de inscrição atualizadas com sucesso.</div>
-{% elif request.query_params.get('insc_error') == '1' %}
-  <div class="alert-success" style="background:#ffe1e1;color:#b3261e;border-color:#f5c6cb">Não é possível ativar inscrições públicas: inclua Nome, Email e CPF nos campos obrigatórios.</div>
-{% endif %}
-
-<div class="planilha-grid">
-  <div class="planilha-card">
-    <h3>Modelo oficial</h3>
-    <p>Faça download do modelo atualizado contendo as colunas obrigatórias do evento.</p>
-    <a class="btn" href="/api/admin/eventos/{{ evento.id }}/planilha-modelo">Baixar modelo (.xlsx)</a>
-  </div>
-
-  <div class="planilha-card">
-    <h3>Campos obrigatórios da planilha</h3>
-    <form method="post" action="/admin/eventos/{{ evento.id }}/planilhas/campos">
-      <div class="campos-grid">
-        {% for campo in campos_base %}
-          <label class="campo-item">
-            <input type="checkbox" checked disabled>
-            {{ campo }} (fixo)
-          </label>
-        {% endfor %}
-
-        {% for campo in campos_opcionais %}
-          <label class="campo-item">
-            <input type="checkbox" name="campos" value="{{ campo }}" {% if campo in campos_atual %}checked{% endif %}>
-            {{ campo }}
-          </label>
-        {% endfor %}
-      </div>
-      <button class="btn" type="submit">Salvar campos</button>
-    </form>
-  </div>
-
-  <div class="planilha-card">
-    <h3>Inscrições públicas</h3>
-    <p>Ative inscrições públicas e gere o token público para o formulário de inscrição.</p>
-    <form method="post" action="/admin/eventos/{{ evento.id }}/planilhas/inscricoes">
-      <label class="campo-item">
-        <input type="checkbox" name="aceita_inscricoes" {% if evento.aceita_inscricoes %}checked{% endif %}>
-        Aceitar inscrições públicas
-      </label>
-      <div style="margin-top:0.75rem;">
-        <button class="btn" type="submit">Salvar</button>
-        <button class="btn" type="submit" name="regenerate" value="1">Gerar/Regenerar token</button>
-      </div>
-    </form>
-    <div style="margin-top:1rem;">
-      {% if evento.token_inscricao %}
-        <div>Link público: <a href="/inscricao/{{ evento.nome_normalizado or evento.id }}" target="_blank">/inscricao/{{ evento.nome_normalizado or evento.id }}</a></div>
-        <div>Token público: <code>{{ evento.token_inscricao }}</code></div>
-      {% else %}
-        <div>Token não gerado.</div>
-      {% endif %}
+  <div class="grid grid-cols-4 nm-card nm-flat">
+    <!-- Modelo oficial / Download -->
+    <div class="nm-card nm-flat nm-inset">
+      <h2 class="text-xl font-semibold mb-3">Modelo oficial</h2>
+      <p class="text-sm text-slate-500 mb-4">Baixe o modelo atualizado com as colunas necessárias.</p>
+      <button id="downloadModelBtn" class="nm-button w-full py-3 rounded-xl text-blue-600 font-medium">Baixar modelo (.xlsx)</button>
     </div>
-  </div>
 
-  <div class="planilha-card">
-    <h3>Upload por empresas</h3>
-    <p>Empresas parceiras podem enviar planilhas através de um link público dedicado. Gere links de upload e compartilhe com as empresas responsáveis.</p>
-    <div>
-      <a class="btn" href="/admin/eventos/{{ evento.id }}/planilhas/empresas">Gerenciar links de upload</a>
-    </div>
-  </div>
-</div>
-
-<div class="planilha-card upload-area">
-  <h3>Enviar planilha</h3>
-  <p>Envie um arquivo .xlsx ou .csv. Acompanhe o progresso abaixo enquanto a planilha é processada.</p>
-  <div style="display:flex;gap:0.5rem;align-items:center;">
-    <input type="file" id="planilhaFile" accept=".xlsx,.csv" />
-    <button class="btn" id="uploadBtn" type="button">Enviar</button>
-  </div>
-  <div id="uploadWrapper" style="margin-top:0.75rem;">
-    <div style="background:#eee;border-radius:6px;overflow:hidden;height:12px;">
-      <div id="uploadProgress" style="width:0%;height:12px;background:#1a73e8;"></div>
-    </div>
-    <div id="uploadStatus" style="margin-top:0.5rem;font-size:0.9rem;color:#424242;"></div>
-    <pre id="uploadResult" style="margin-top:0.5rem;max-height:200px;overflow:auto;background:#fff;padding:0.5rem;border:1px solid #eee;"></pre>
-  </div>
-</div>
-
-<div class="planilha-card">
-  <h3>Histórico de importações</h3>
-  {% if importacoes %}
-    <div class="table-responsive">
-      <table class="history-table">
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Arquivo</th>
-            <th>Status</th>
-            <th>Resumo</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for item in importacoes %}
-            <tr>
-              <td>{{ item.created_at_display }}</td>
-              <td>{{ item.filename }}</td>
-              <td>
-                <span class="status-chip status-{{ item.status|lower }}">{{ item.status }}</span>
-              </td>
-              <td>
-                <div>Total linhas: <strong>{{ item.stats.total }}</strong></div>
-                <div>Ingressos criados: <strong>{{ item.stats.criados }}</strong></div>
-                <div>Participantes criados: <strong>{{ item.stats.participantes }}</strong></div>
-                <div>Erros: <strong>{{ item.stats.erros }}</strong></div>
-              </td>
-              <td>
-                <button class="btn-link" type="button" data-import-id="{{ item.id }}" onclick="showReport(this)">Ver relatório</button><br/>
-                <button class="btn-link" type="button" data-import-id="{{ item.id }}" onclick="downloadReport(this)">Baixar JSON</button>
-              </td>
-            </tr>
+    <!-- Campos e Inscrições (single form) -->
+    <div class="nm-card nm-flat">
+      <h2 class="text-xl font-semibold mb-3">Campos e Inscrições</h2>
+      <p class="text-sm text-slate-500 mb-4">Defina campos obrigatórios e ative inscrições públicas em uma única sessão.</p>
+      <form id="settingsForm" method="post" action="/admin/eventos/{{ evento.id }}/planilhas/campos">
+        <div style="margin-bottom:8px; font-weight:600">Campos obrigatórios</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          {% for campo in campos_base %}
+            <label style="opacity:.7"><input type="checkbox" checked disabled> {{ campo }}</label>
           {% endfor %}
-        </tbody>
-      </table>
+          {% for campo in campos_opcionais %}
+            <label><input type="checkbox" name="campos" value="{{ campo }}" {% if campo in campos_atual %}checked{% endif %}> {{ campo }}</label>
+          {% endfor %}
+        </div>
+        <hr style="margin:12px 0">
+        <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" name="aceita_inscricoes" {% if evento.aceita_inscricoes %}checked{% endif %}> Aceitar inscrições públicas</label>
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button type="submit" class="nm-button px-4 py-2">Salvar</button>
+          <button type="button" id="regenerateTokenBtn" class="nm-button px-4 py-2">Gerar/Regenerar token</button>
+        </div>
+        {% if evento.token_inscricao %}
+          <div style="margin-top:10px" class="nm-inset p-3 rounded-lg">
+            <p class="text-[10px] uppercase font-bold text-slate-400 mb-1">Link Público</p>
+            <a href="/inscricao/{{ evento.nome_normalizado or evento.id }}" class="text-blue-500 text-xs underline block">/inscricao/{{ evento.nome_normalizado or evento.id }}</a>
+            <p class="text-[10px] uppercase font-bold text-slate-400 mt-2 mb-1">Token</p>
+            <div class="token-display">{{ evento.token_inscricao }}</div>
+          </div>
+        {% endif %}
+      </form>
     </div>
-  {% else %}
-    <p>Nenhum upload registrado para este evento.</p>
-  {% endif %}
 
-  <pre id="relatorioViewer" class="relatorio-viewer" hidden></pre>
+    <!-- Upload -->
+    <div class="nm-card nm-flat">
+      <h2 class="text-xl font-semibold mb-3">Enviar planilha</h2>
+      <p class="text-sm text-slate-500 mb-4">Envie .xlsx ou .csv e acompanhe o processamento.</p>
+      <div class="nm-inset p-4 rounded-xl" style="display:flex;gap:8px;align-items:center;">
+        <input type="file" id="planilhaFile" accept=".xlsx,.csv" />
+        <button id="uploadBtn" class="nm-button px-4 py-2">Enviar Arquivo</button>
+      </div>
+      <div class="progress-bar-bg mt-4"><div id="progressFill" class="progress-bar-fill"></div></div>
+      <p class="text-right text-[10px] mt-2 font-bold text-slate-400" id="progressText">PROCESSANDO 0%</p>
+    </div>
+
+    <!-- Empresas / Links -->
+    <div class="nm-card nm-flat">
+      <h2 class="text-xl font-semibold mb-3">Upload por empresas</h2>
+      <p class="text-sm text-slate-500 mb-4">Gerencie links dedicados para parceiros.</p>
+      <a href="/admin/eventos/{{ evento.id }}/planilhas/empresas" class="nm-button inline-block px-4 py-2">Gerenciar links</a>
+
+      <hr style="margin:12px 0">
+      <h3 class="font-semibold">Tipos de ingresso (definir padrão)</h3>
+      <div class="tipo-list" id="tipoList">
+        {% for t in evento.get('tipos_ingresso', []) %}
+          <div class="tipo-item">
+            <div>
+              <div style="font-weight:600">{{ t.descricao }}</div>
+              <div style="font-size:12px;color:#6b7280">Numero: {{ t.numero }} {% if t.padrao %}<strong>(Padrão)</strong>{% endif %}</div>
+            </div>
+            <div>
+              {% if not t.padrao %}
+                <button class="nm-button" onclick="setDefault('{{ t._id if t._id else t.id if t.id else t.numero }}')">Marcar como padrão</button>
+              {% else %}
+                <span style="font-weight:600;color:#0f5132">Padrão</span>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Histórico -->
+  <section class="nm-card nm-flat mt-6">
+    <h2 class="text-xl font-semibold mb-4">Histórico de importações</h2>
+    {% if importacoes %}
+      <div style="overflow:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <thead style="background:#f3f4f6">
+            <tr><th style="padding:8px">Arquivo</th><th>Data</th><th>Status</th><th>Resumo</th><th>Ações</th></tr>
+          </thead>
+          <tbody>
+            {% for item in importacoes %}
+              <tr style="border-bottom:1px solid #eef2f7">
+                <td style="padding:8px">{{ item.filename }}</td>
+                <td>{{ item.created_at_display }}</td>
+                <td>{{ item.status }}</td>
+                <td>Linhas: {{ item.stats.total }} • Erros: {{ item.stats.erros }}</td>
+                <td><button class="nm-button" onclick="downloadReport('{{ item.id }}')">Baixar JSON</button></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-slate-500">Nenhum upload registrado.</p>
+    {% endif %}
+  </section>
+
 </div>
+
+<div id="toast" class="toast"></div>
 
 <script>
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-}
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',4000); }
+function getCookie(name){ const v=`; ${document.cookie}`; const p=v.split(`; ${name}=`); if(p.length===2) return p.pop().split(';').shift(); }
 
-window.planilhaHistorico = {{ importacoes | tojson }};
+// Download model via fetch to avoid redirect error pages
+document.getElementById('downloadModelBtn').addEventListener('click', async function(){
+  try{
+    const resp = await fetch('/api/admin/eventos/{{ evento.id }}/planilha-modelo', { method:'GET' });
+    if(!resp.ok){ toast('Erro ao gerar modelo.'); return; }
+    const blob = await resp.blob();
+    const cd = resp.headers.get('Content-Disposition') || '';
+    let filename = 'modelo_{{ evento.id }}.xlsx';
+    const m = cd.match(/filename="?([^\";]+)"?/);
+    if(m) filename = m[1];
+    const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    toast('Download iniciado');
+  }catch(e){ console.error(e); toast('Erro de rede ao baixar modelo'); }
+});
 
-async function handleUpload() {
-  const fileInput = document.getElementById('planilhaFile');
-  const result = document.getElementById('uploadResult');
-  const statusDiv = document.getElementById('uploadStatus');
-  const progressBar = document.getElementById('uploadProgress');
-  result.textContent = '';
-  statusDiv.textContent = '';
-  progressBar.style.width = '0%';
+// regenerate token via simple POST to inscrições endpoint: submit form with regenerate
+document.getElementById('regenerateTokenBtn').addEventListener('click', function(){
+  const form = document.getElementById('settingsForm'); const input = document.createElement('input'); input.type='hidden'; input.name='regenerate'; input.value='1'; form.appendChild(input); form.submit();
+});
 
-  if (!fileInput.files.length) {
-    alert('Selecione um arquivo');
-    return;
-  }
-
-  const file = fileInput.files[0];
-  const form = new FormData();
-  form.append('file', file);
-
-  const token = getCookie('admin_jwt');
-  const headers = {};
-  if (token) headers['Authorization'] = 'Bearer ' + token;
-
-  const resp = await fetch(`/api/admin/eventos/{{ evento.id }}/planilha-upload`, {
-    method: 'POST',
-    body: form,
-    headers
-  });
-
-  let data;
-  try {
-    data = await resp.json();
-  } catch (e) {
-    result.textContent = 'Erro inesperado na resposta do servidor.';
-    return;
-  }
-
-  if (!resp.ok) {
-    result.textContent = JSON.stringify(data, null, 2);
-    return;
-  }
-
-  const importId = data.import_id;
-  if (!importId) {
-    result.textContent = JSON.stringify(data, null, 2);
-    setTimeout(() => window.location.reload(), 1500);
-    return;
-  }
-
-  statusDiv.textContent = 'Processando...';
+// Upload handling (reuse existing endpoint)
+async function handleUpload(){
+  const fileInput=document.getElementById('planilhaFile'); if(!fileInput.files.length){ toast('Selecione um arquivo'); return; }
+  const file=fileInput.files[0]; const form=new FormData(); form.append('file', file);
+  const token=getCookie('admin_jwt'); const headers={}; if(token) headers['Authorization']='Bearer '+token;
+  const resp = await fetch(`/api/admin/eventos/{{ evento.id }}/planilha-upload`, { method:'POST', body: form, headers });
+  if(!resp.ok){ const txt=await resp.text(); toast('Erro ao enviar: '+ (txt || resp.status)); return; }
+  const data = await resp.json(); const importId = data.import_id; if(!importId){ toast('Upload enviado'); setTimeout(()=>location.reload(),1200); return; }
+  toast('Processando...');
+  // poll
   const pollUrl = `/api/admin/eventos/{{ evento.id }}/planilha-importacao/${importId}`;
-  const interval = setInterval(async () => {
-    try {
-      const sresp = await fetch(pollUrl);
-      if (!sresp.ok) return;
-      const sdata = await sresp.json();
-      const processed = sdata.progress && sdata.progress.processed ? sdata.progress.processed : 0;
-      const total = sdata.progress && sdata.progress.total ? sdata.progress.total : null;
-      if (total) {
-        const pct = Math.min(100, Math.round((processed / total) * 100));
-        progressBar.style.width = pct + '%';
-        statusDiv.textContent = `Processados ${processed} de ${total}`;
-      } else {
-        progressBar.style.width = Math.min(100, (processed % 100)) + '%';
-        statusDiv.textContent = `Processados ${processed}`;
-      }
-      if (sdata.status && sdata.status !== 'processing') {
-        clearInterval(interval);
-        result.textContent = JSON.stringify(sdata.relatorio || sdata, null, 2);
-        statusDiv.textContent = 'Finalizado: ' + sdata.status;
-        setTimeout(() => window.location.reload(), 1500);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, 800);
-}
-
-function findReport(importId) {
-  return window.planilhaHistorico.find(item => item.id === importId);
-}
-
-function showReport(button) {
-  const importId = button.dataset.importId;
-  const viewer = document.getElementById('relatorioViewer');
-  const registro = findReport(importId);
-
-  if (!registro) {
-    viewer.hidden = false;
-    viewer.textContent = 'Relatório não encontrado.';
-    return;
-  }
-
-  viewer.hidden = false;
-  viewer.textContent = JSON.stringify(registro.relatorio, null, 2);
-  viewer.scrollIntoView({ behavior: 'smooth' });
-}
-
-function downloadReport(button) {
-  const importId = button.dataset.importId;
-  const registro = findReport(importId);
-  if (!registro) {
-    alert('Relatório não encontrado.');
-    return;
-  }
-
-  const blob = new Blob([JSON.stringify(registro.relatorio, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  const sanitizedName = (registro.filename || 'planilha').replace(/\s+/g, '_');
-  link.href = url;
-  link.download = `relatorio_${sanitizedName}_${importId}.json`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  const progressFill = document.getElementById('progressFill'); const progressText = document.getElementById('progressText');
+  const iv = setInterval(async ()=>{
+    try{ const r=await fetch(pollUrl); if(!r.ok) return; const s=await r.json(); const processed=(s.progress && s.progress.processed)||0; const total=(s.progress && s.progress.total)||null; const pct = total? Math.round((processed/total)*100): (processed%100); progressFill.style.width=pct+'%'; progressText.textContent=`PROCESSANDO ${pct}%`; if(s.status && s.status!=='processing'){ clearInterval(iv); toast('Processamento finalizado: '+s.status); setTimeout(()=>location.reload(),900); } }catch(e){ console.error(e); }
+  },800);
 }
 
 document.getElementById('uploadBtn').addEventListener('click', handleUpload);
+
+// Download report
+async function downloadReport(importId){ try{ const r = await fetch(`/api/admin/eventos/{{ evento.id }}/planilha-importacao/${importId}`); if(!r.ok){ toast('Erro ao obter relatório'); return; } const data=await r.json(); const blob=new Blob([JSON.stringify(data.relatorio||data, null,2)], {type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`relatorio_${importId}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('Download iniciado'); }catch(e){ console.error(e); toast('Erro ao baixar relatório'); } }
+
+// Set default tipo via PUT
+async function setDefault(tipoId){ try{ const token=getCookie('admin_jwt'); const headers={'Content-Type':'application/json'}; if(token) headers['Authorization']='Bearer '+token; const resp = await fetch(`/api/tipos-ingresso/${tipoId}`, { method:'PUT', headers, body: JSON.stringify({padrao:true}) }); if(!resp.ok){ const txt=await resp.text(); toast('Falha ao definir padrão: '+(txt||resp.status)); return; } toast('Tipo configurado como padrão'); setTimeout(()=>location.reload(),900); }catch(e){ console.error(e); toast('Erro ao definir padrão'); } }
 </script>
+
 {% endblock %}
