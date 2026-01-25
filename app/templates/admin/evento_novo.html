@@ -3,25 +3,18 @@
 {% block title %}Novo Evento - EventMaster Admin{% endblock %}
 
 {% block content %}
-<div class=" flex flex-wrap -mx-2  mb-4">
-    <div class=" w-full px-2 ">
-        <div class="md-card p-4">
-            <div class=" flex   justify-between   items-center ">
-                <div>
-                    <h1 class="text-slate-100 mb-0">Novo Evento</h1>
-                    <p class="text-slate-100-muted mb-0">Criar um novo evento</p>
-                </div>
-                <a href="/admin/eventos" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass">
-                    <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
-                    Voltar
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
+<header class="p-6 md:px-12 pt-8 flex justify-between items-center">
+  <div>
+    <h1 class="text-2xl font-semibold text-slate-100">Novo Evento</h1>
+    <p class="text-sm text-slate-400">Criar um novo evento</p>
+  </div>
+  <a href="/admin/eventos" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 text-slate-100 rounded-lg hover:bg-slate-600">
+    <span class="material-symbols-outlined">arrow_back</span>
+    Voltar
+  </a>
+</header>
 
-<div class=" flex flex-wrap -mx-2 ">
-    <div class="col-lg-8 mx-auto">
+<div class="max-w-3xl mx-auto px-4">
         <div class="md-card p-4">
             <form action="/admin/eventos/novo" method="POST" enctype="multipart/form-data" id="eventoForm">
                 <!-- Nome do Evento -->
@@ -46,40 +39,36 @@
                 <div class="mb-3">
                     <label for="logo" class="form-label text-slate-100">Logo do Evento</label>
                     <input type="file" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="logo" name="logo" accept=".png,.jpg,.jpeg">
-                    <div class="form-text text-slate-100-muted">
-                        <i data-lucide="info" style="width: 14px; height: 14px;"></i>
-                        Formatos aceitos: PNG, JPG. Tamanho máximo: 200KB
+                    <div class="text-xs text-slate-400 mt-2 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-slate-400">info</span>
+                        <span>Formatos aceitos: PNG, JPG. Tamanho máximo: 200KB</span>
                     </div>
-                    <div id="logoError" class="text-danger mt-2" style="display: none;"></div>
+                    <div id="logoError" class="text-red-400 mt-2" style="display: none;"></div>
                 </div>
                 
                 <!-- Preview do Logo -->
                 <div id="logoPreview" class="mb-3" style="display: none;">
-                    <label class="form-label text-slate-100">Preview</label>
+                    <label class="text-slate-100">Preview</label>
                     <div class="text-center p-3 md-card">
-                        <img id="logoPreviewImg" src="" alt="Preview" class="img-fluid rounded" style="max-height: 200px;">
+                        <img id="logoPreviewImg" src="" alt="Preview" class="mx-auto rounded max-h-48" />
                     </div>
                 </div>
                 
                 <!-- Status -->
                 <div class="mb-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="ativo" name="ativo" checked>
-                        <label class="form-check-label text-slate-100" for="ativo">
-                            Evento ativo
-                        </label>
-                    </div>
+                    <label class="inline-flex items-center gap-2 text-slate-100">
+                        <input type="checkbox" id="ativo" name="ativo" checked class="form-checkbox" />
+                        <span>Evento ativo</span>
+                    </label>
                 </div>
                 
                 <!-- Botões -->
-                <div class=" flex  gap-2">
-                    <button type="submit" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient flex-fill">
-                        <i data-lucide="save" style="width: 20px; height: 20px;"></i>
+                <div class="flex gap-2">
+                    <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg"> 
+                        <span class="material-symbols-outlined">save</span>
                         Salvar Evento
                     </button>
-                    <a href="/admin/eventos" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass flex-fill">
-                        Cancelar
-                    </a>
+                    <a href="/admin/eventos" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 text-slate-100 rounded-lg hover:bg-slate-600">Cancelar</a>
                 </div>
             </form>
         </div>
