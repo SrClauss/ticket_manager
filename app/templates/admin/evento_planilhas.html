@@ -1,137 +1,110 @@
 {% extends 'admin/base.html' %}
 {% block content %}
-<!-- Neomorphic planilhas UI (compact session) -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  body { font-family: 'Inter', sans-serif; color:#44474a; }
-  .nm-flat{ background:#e0e5ec; box-shadow:9px 9px 16px rgba(163,177,198,0.6), -9px -9px 16px rgba(255,255,255,0.5); }
-  .nm-inset{ background:#e0e5ec; box-shadow: inset 6px 6px 12px #bec3c9, inset -6px -6px 12px #ffffff; }
-  .nm-button{ background:#e0e5ec; box-shadow:6px 6px 12px #bec3c9, -6px -6px 12px #ffffff; transition:all .2s ease-in-out; }
-  .nm-button:active{ box-shadow: inset 4px 4px 8px #bec3c9, inset -4px -4px 8px #ffffff; transform:scale(.98); }
-  .nm-card{ border-radius:20px; padding:24px; border:1px solid rgba(255,255,255,0.2); }
-  .token-display{ word-break:break-all; font-family:monospace; font-size:0.8rem; color:#d1127c; }
-  .progress-bar-bg{ height:12px; border-radius:10px; background:#e0e5ec; box-shadow: inset 3px 3px 6px #bec3c9, inset -3px -3px 6px #ffffff; overflow:hidden; }
-  .progress-bar-fill{ height:100%; width:0%; background:linear-gradient(90deg,#3b82f6,#60a5fa); box-shadow:0 0 8px rgba(59,130,246,0.5); border-radius:10px; }
-  .page-header h1{ font-size:1.75rem; color:#374151; }
-  .grid{ display:grid; gap:1rem; }
-  .grid-cols-4{ grid-template-columns: repeat(4,1fr); }
-  .stack{ display:flex; gap:1rem; }
-  .upload-area input[type=file]{ display:inline-block; }
-  .toast{ position:fixed; right:20px; top:20px; background:#111827;color:#fff;padding:12px 16px;border-radius:8px; box-shadow: 6px 6px 12px rgba(0,0,0,0.15); display:none; z-index:1000; }
-  .tipo-list{ display:flex; flex-direction:column; gap:0.5rem; }
-  .tipo-item{ display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.5rem; border-radius:12px; background:#e9eef5; }
-  @media (max-width:900px){ .grid-cols-4{ grid-template-columns: 1fr; } }
-</style>
+<header class="p-6 md:px-12 pt-8">
+  <h1 class="text-3xl font-light text-slate-100">Planilhas – {{ evento.nome }}</h1>
+  <p class="text-sm text-slate-400 mt-2">Campos, modelo, upload e histórico.</p>
+</header>
 
-<div class="max-w-7xl mx-auto">
-  <header class="mb-6">
-    <h1>Planilhas – {{ evento.nome }}</h1>
-    <p class="text-slate-500">Campos, modelo, upload e histórico — tudo em uma sessão.</p>
-  </header>
-
+<main class="px-4 md:px-12 pb-24">
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <!-- Campos e Inscrições (single form) -->
-    <div class="md:col-span-1">
-      <div class="nm-card nm-flat">
-        <h2 class="text-xl font-semibold mb-3">Campos e Inscrições</h2>
-        <p class="text-sm text-slate-500 mb-4">Defina campos obrigatórios e ative inscrições públicas em uma única sessão.</p>
-        <form id="settingsForm" method="post" action="/admin/eventos/{{ evento.id }}/planilhas/campos">
-          <div style="margin-bottom:8px; font-weight:600">Campos obrigatórios</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;">
-            {% for campo in campos_base %}
-              <label style="opacity:.7"><input type="checkbox" checked disabled> {{ campo }}</label>
-            {% endfor %}
-            {% for campo in campos_opcionais %}
-              <label><input type="checkbox" name="campos" value="{{ campo }}" {% if campo in campos_atual %}checked{% endif %}> {{ campo }}</label>
-            {% endfor %}
-          </div>
-          <hr style="margin:12px 0">
-          <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" name="aceita_inscricoes" {% if evento.aceita_inscricoes %}checked{% endif %}> Aceitar inscrições públicas</label>
-          <div style="margin-top:10px; display:flex; gap:8px;">
-            <button type="submit" class="nm-button px-4 py-2">Salvar</button>
-            <button type="button" id="regenerateTokenBtn" class="nm-button px-4 py-2">Gerar/Regenerar token</button>
-          </div>
-          {% if evento.token_inscricao %}
-            <div style="margin-top:10px" class="nm-inset p-3 rounded-lg">
-              <p class="text-[10px] uppercase font-bold text-slate-400 mb-1">Link Público</p>
-              <a href="/inscricao/{{ evento.nome_normalizado or evento.id }}" class="text-blue-500 text-xs underline block">/inscricao/{{ evento.nome_normalizado or evento.id }}</a>
-              <p class="text-[10px] uppercase font-bold text-slate-400 mt-2 mb-1">Token</p>
-              <div class="token-display">{{ evento.token_inscricao }}</div>
-            </div>
-          {% endif %}
-        </form>
+    <!-- Settings -->
+    <section class="md:col-span-1 md-card p-4">
+      <h2 class="text-lg font-semibold text-slate-100 mb-2">Campos e Inscrições</h2>
+      <p class="text-sm text-slate-400 mb-4">Defina os campos obrigatórios e controle inscrições públicas.</p>
+      <form id="settingsForm" method="post" action="/admin/eventos/{{ evento.id }}/planilhas/campos" class="space-y-3">
+        <div class="text-sm font-medium text-slate-300">Campos obrigatórios</div>
+        <div class="flex flex-wrap gap-2">
+          {% for campo in campos_base %}
+            <label class="inline-flex items-center gap-2 text-slate-300 opacity-75"><input type="checkbox" checked disabled class="form-checkbox"/> {{ campo }}</label>
+          {% endfor %}
+          {% for campo in campos_opcionais %}
+            <label class="inline-flex items-center gap-2 text-slate-300"><input type="checkbox" name="campos" value="{{ campo }}" {% if campo in campos_atual %}checked{% endif %} class="form-checkbox"/> {{ campo }}</label>
+          {% endfor %}
+        </div>
+
+        <div class="pt-3 border-t border-slate-700/50">
+          <label class="inline-flex items-center gap-2 text-slate-300"><input type="checkbox" name="aceita_inscricoes" {% if evento.aceita_inscricoes %}checked{% endif %} class="form-checkbox"/> Aceitar inscrições públicas</label>
+        </div>
+
+        <div class="flex gap-2 mt-3">
+          <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg">Salvar</button>
+          <button type="button" id="regenerateTokenBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 text-slate-100 rounded-lg">Gerar/Regenerar token</button>
+        </div>
+
+        {% if evento.token_inscricao %}
+        <div class="mt-3 bg-slate-800 p-3 rounded-lg border border-slate-700">
+          <div class="text-xs text-slate-400 uppercase font-semibold">Link Público</div>
+          <a href="/inscricao/{{ evento.nome_normalizado or evento.id }}" class="text-blue-400 underline block truncate">/inscricao/{{ evento.nome_normalizado or evento.id }}</a>
+          <div class="text-xs text-slate-400 mt-2">Token</div>
+          <div class="text-slate-100 font-mono text-sm break-all">{{ evento.token_inscricao }}</div>
+        </div>
+        {% endif %}
+      </form>
+    </section>
+
+    <!-- Combined: modelo, upload, histórico -->
+    <section class="md:col-span-2 md-card p-4">
+      <div class="flex justify-between items-start">
+        <div>
+          <h2 class="text-lg font-semibold text-slate-100">Modelo, Upload e Histórico</h2>
+          <p class="text-sm text-slate-400">Baixe o modelo, gerencie links por empresa e acompanhe importações.</p>
+        </div>
+        <div class="hidden md:flex items-center gap-2">
+          <a href="/admin/eventos/{{ evento.id }}/planilhas/empresas" class="px-3 py-2 bg-slate-700 text-slate-100 rounded-lg">Gerenciar links</a>
+        </div>
       </div>
-    </div>
 
-    <!-- Combined container: Modelo oficial, Upload por empresas, Enviar planilha, Histórico -->
-    <div class="md:col-span-2">
-      <div class="nm-card nm-flat">
-        <h2 class="text-xl font-semibold mb-3">Modelo, Upload por Empresas e Histórico</h2>
-        <p class="text-sm text-slate-500 mb-4">Baixe o modelo, gerencie links de upload por empresa, envie uma planilha e acompanhe o histórico — tudo num único lugar.</p>
-
-        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
-          <div style="flex:1;min-width:220px">
-            <h3 class="font-semibold mb-2">Modelo oficial</h3>
-            <p class="text-sm text-slate-500 mb-3">Baixe o modelo atualizado com as colunas necessárias.</p>
-            <button id="downloadModelBtn" class="nm-button w-full py-2 rounded-xl text-blue-600 font-medium">Baixar modelo (.xlsx)</button>
-          </div>
-
-          <div style="flex:1;min-width:220px">
-            <h3 class="font-semibold mb-2">Upload por empresas</h3>
-            <p class="text-sm text-slate-500 mb-3">Gerencie links dedicados para parceiros.</p>
-            <a href="/admin/eventos/{{ evento.id }}/planilhas/empresas" class="nm-button inline-block px-4 py-2">Gerenciar links</a>
-          </div>
-
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <div class="p-3 bg-slate-800 rounded-lg border border-slate-700">
+          <h3 class="text-sm text-slate-400">Modelo oficial</h3>
+          <p class="text-xs text-slate-400 mb-3">Baixe o arquivo .xlsx com as colunas recomendadas.</p>
+          <button id="downloadModelBtn" class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 text-slate-900 rounded-lg">Baixar modelo (.xlsx)</button>
         </div>
 
-        <hr style="margin:12px 0">
-
-        <div style="margin-top:10px">
-          <h3 class="font-semibold mb-2">Enviar planilha</h3>
-          <p class="text-sm text-slate-500 mb-3">Envie .xlsx ou .csv e acompanhe o processamento.</p>
-          <div class="nm-inset p-4 rounded-xl" style="display:flex;gap:8px;align-items:center;">
-            <input type="file" id="planilhaFile" accept=".xlsx,.csv" />
-            <button id="uploadBtn" class="nm-button px-4 py-2">Enviar Arquivo</button>
+        <div class="p-3 bg-slate-800 rounded-lg border border-slate-700 md:col-span-2">
+          <h3 class="text-sm text-slate-400">Enviar planilha</h3>
+          <p class="text-xs text-slate-400 mb-3">Envie arquivos .xlsx ou .csv. O arquivo será validado antes de persistir.</p>
+          <div class="flex items-center gap-3">
+            <input id="planilhaFile" type="file" accept=".xlsx,.csv" class="text-sm text-slate-200" />
+            <button id="uploadBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg">Enviar Arquivo</button>
           </div>
-          <div class="progress-bar-bg mt-4"><div id="progressFill" class="progress-bar-fill"></div></div>
-          <p class="text-right text-[10px] mt-2 font-bold text-slate-400" id="progressText">PROCESSANDO 0%</p>
-        </div>
-
-        <hr style="margin:12px 0">
-
-        <div style="margin-top:12px">
-          <h3 class="font-semibold mb-3">Histórico de importações</h3>
-          {% if importacoes %}
-            <div style="overflow:auto">
-              <table style="width:100%;border-collapse:collapse">
-                <thead style="background:#f3f4f6">
-                  <tr><th style="padding:8px">Arquivo</th><th>Data</th><th>Status</th><th>Resumo</th><th>Ações</th></tr>
-                </thead>
-                <tbody>
-                  {% for item in importacoes %}
-                    <tr style="border-bottom:1px solid #eef2f7">
-                      <td style="padding:8px">{{ item.filename }}</td>
-                      <td>{{ item.created_at_display }}</td>
-                      <td>{{ item.status }}</td>
-                      <td>Linhas: {{ item.stats.total }} • Erros: {{ item.stats.erros }}</td>
-                      <td><button class="nm-button" onclick="downloadReport('{{ item.id }}')">Baixar JSON</button></td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+          <div class="mt-4">
+            <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden">
+              <div id="progressFill" class="h-2 bg-gradient-to-r from-blue-500 to-blue-400" style="width:0%"></div>
             </div>
-          {% else %}
-            <p class="text-slate-500">Nenhum upload registrado.</p>
-          {% endif %}
+            <div class="text-right text-xs text-slate-400 mt-1" id="progressText">PROCESSANDO 0%</div>
+          </div>
         </div>
-
       </div>
-    </div>
+
+      <div class="mt-6">
+        <h3 class="text-sm text-slate-100 mb-3">Histórico de importações</h3>
+        {% if importacoes %}
+        <div class="overflow-x-auto bg-slate-800 rounded-lg border border-slate-700 p-2">
+          <table class="w-full text-left">
+            <thead class="text-slate-400 text-xs uppercase">
+              <tr><th class="px-3 py-2">Arquivo</th><th class="px-3 py-2">Data</th><th class="px-3 py-2">Status</th><th class="px-3 py-2">Resumo</th><th class="px-3 py-2 text-right">Ações</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700/50">
+              {% for item in importacoes %}
+              <tr class="hover:bg-slate-700/30 transition-colors">
+                <td class="px-3 py-2 text-slate-100">{{ item.filename }}</td>
+                <td class="px-3 py-2 text-slate-400">{{ item.created_at_display }}</td>
+                <td class="px-3 py-2 text-slate-400">{{ item.status }}</td>
+                <td class="px-3 py-2 text-slate-400">Linhas: {{ item.stats.total }} • Erros: {{ item.stats.erros }}</td>
+                <td class="px-3 py-2 text-right"><button class="inline-flex items-center gap-2 px-3 py-1 bg-slate-700 text-slate-100 rounded-lg" onclick="downloadReport('{{ item.id }}')">Baixar JSON</button></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-slate-400">Nenhum upload registrado.</p>
+        {% endif %}
+      </div>
+    </section>
   </div>
-
-</div>
-
-<div id="toast" class="toast"></div>
+</main>
 
 <script>
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',4000); }
