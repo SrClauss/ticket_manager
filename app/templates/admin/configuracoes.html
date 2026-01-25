@@ -51,7 +51,7 @@
     <div class="modal-content md-card">
       <div class="modal-header border-0">
         <h5 class="modal-title text-slate-100">Novo Administrador</h5>
-        <button type="button" class="btn-close  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="inline-flex items-center p-2 bg-slate-700 text-slate-100 rounded-md" data-bs-dismiss="modal" aria-label="Close">×</button>
       </div>
       <div class="modal-body">
         <form id="addAdminForm">
@@ -71,9 +71,8 @@
             <label class="form-label text-slate-100">Senha</label>
             <input id="add_password" type="password" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " required />
           </div>
-          <div class="mb-3 form-check">
-            <input id="add_ativo" type="checkbox" class="form-check-input" checked />
-            <label class="form-check-label text-slate-100" for="add_ativo">Ativo</label>
+          <div class="mb-3">
+            <label class="inline-flex items-center gap-2 text-slate-100"><input id="add_ativo" type="checkbox" class="form-checkbox" checked /> Ativo</label>
           </div>
         </form>
       </div>
@@ -91,7 +90,7 @@
     <div class="modal-content md-card">
       <div class="modal-header border-0">
         <h5 class="modal-title text-slate-100">Editar Administrador</h5>
-        <button type="button" class="btn-close  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="inline-flex items-center p-2 bg-slate-700 text-slate-100 rounded-md" data-bs-dismiss="modal" aria-label="Close">×</button>
       </div>
       <div class="modal-body">
         <form id="editAdminForm">
@@ -113,9 +112,8 @@
             <input id="edit_password" type="password" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " />
             <div id="edit_pwd_feedback" class="form-text text-danger small" style="display:none;"></div>
           </div>
-          <div class="mb-3 form-check">
-            <input id="edit_ativo" type="checkbox" class="form-check-input" />
-            <label class="form-check-label text-slate-100" for="edit_ativo">Ativo</label>
+          <div class="mb-3">
+            <label class="inline-flex items-center gap-2 text-slate-100"><input id="edit_ativo" type="checkbox" class="form-checkbox" /> Ativo</label>
           </div>
         </form>
       </div>
