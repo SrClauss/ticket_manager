@@ -331,6 +331,76 @@ async def get_participante(
     return Participante(**participante)
 
 
+class ParticipantesListResponse(BaseModel):
+    """Response model for paginated participants list"""
+    participantes: List[Participante]
+    total_count: int
+    total_pages: int
+    current_page: int
+    per_page: int
+
+
+@router.get("/participantes/list", response_model=ParticipantesListResponse)
+async def listar_participantes(
+    page: int = 1,
+    per_page: int = 20,
+    nome: str = None,
+    evento_id: str = Depends(verify_token_bilheteria)
+):
+    """
+    Retorna uma lista paginada de participantes do evento.
+    
+    Query parameters:
+    - page: número da página (padrão: 1)
+    - per_page: itens por página (padrão: 20, máximo: 100)
+    - nome: filtro opcional por nome (case insensitive regex)
+    """
+    db = get_database()
+    
+    # Validate and limit per_page
+    if per_page > 100:
+        per_page = 100
+    if per_page < 1:
+        per_page = 20
+    
+    # Validate page number
+    if page < 1:
+        page = 1
+    
+    # Build query
+    query = {}
+    if nome and nome.strip():
+        query["nome"] = {"$regex": nome, "$options": "i"}
+    
+    # Get total count
+    total_count = await db.participantes.count_documents(query)
+    
+    # Calculate total pages
+    total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
+    
+    # Ensure page is within valid range
+    if page > total_pages and total_pages > 0:
+        page = total_pages
+    
+    # Calculate skip
+    skip = (page - 1) * per_page
+    
+    # Fetch participants with pagination
+    participantes = []
+    cursor = db.participantes.find(query).skip(skip).limit(per_page)
+    async for participante in cursor:
+        participante["_id"] = str(participante["_id"])
+        participantes.append(Participante(**participante))
+    
+    return ParticipantesListResponse(
+        participantes=participantes,
+        total_count=total_count,
+        total_pages=total_pages,
+        current_page=page,
+        per_page=per_page
+    )
+
+
 @router.get("/participantes/buscar", response_model=List[Participante])
 async def buscar_participantes(
     nome: str = None,
