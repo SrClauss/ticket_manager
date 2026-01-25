@@ -52,3 +52,11 @@ input[type=file], input[type=text], select, textarea{ background:transparent; bo
 .relative .material-symbols-outlined.absolute{ left:0.75rem; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; font-size:1.05rem; z-index:2; }
 .relative input[type="text"], .relative input[type="password"], .relative input[type="email"], .relative input, .md-input{ padding-left:3rem !important; }
 .md-input{ height:44px; }
+
+/* Modal styles to replace Bootstrap modals (hidden by default) */
+.modal{ display:none; }
+.modal.show{ display:flex; align-items:center; justify-content:center; position:fixed; inset:0; z-index:1000; padding:1.5rem; }
+.modal .modal-dialog{ max-width:760px; width:100%; margin:0 1rem; }
+.modal .modal-content{ background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.12)); border-radius:12px; padding:1rem; border:1px solid rgba(148,163,184,0.04); }
+.modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:900; }
+

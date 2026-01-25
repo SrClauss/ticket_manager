@@ -52,12 +52,53 @@
         lucide.createIcons();
     </script>
     
-    <!-- Show simple toasts (no bootstrap dependency) -->
+    <!-- Show simple toasts (no bootstrap dependency) and lightweight modal handler -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.toast').forEach(function(t){
                 t.style.display = 'block';
                 setTimeout(function(){ t.style.display = 'none'; }, 4500);
+            });
+
+            // Modal helpers: support data-bs-toggle and data-bs-dismiss used in templates
+            function showModal(modal){
+                if(!modal) return;
+                // create backdrop
+                const backdrop = document.createElement('div');
+                backdrop.className = 'modal-backdrop';
+                backdrop.addEventListener('click', ()=> hideModal(modal));
+                document.body.appendChild(backdrop);
+                modal.dataset.backdropId = 'modal-backdrop-' + Date.now();
+                modal.classList.add('show');
+                // prevent body scroll
+                document.body.style.overflow = 'hidden';
+            }
+            function hideModal(modal){
+                if(!modal) return;
+                modal.classList.remove('show');
+                // remove any backdrop
+                document.querySelectorAll('.modal-backdrop').forEach(function(b){ b.remove(); });
+                document.body.style.overflow = '';
+            }
+
+            // delegate clicks for toggles and dismiss
+            document.body.addEventListener('click', function(ev){
+                const toggle = ev.target.closest('[data-bs-toggle="modal"]');
+                if(toggle){
+                    ev.preventDefault();
+                    const target = toggle.getAttribute('data-bs-target') || toggle.dataset.bsTarget;
+                    if(target){
+                        const modal = document.querySelector(target);
+                        showModal(modal);
+                    }
+                    return;
+                }
+                const dismiss = ev.target.closest('[data-bs-dismiss="modal"]');
+                if(dismiss){
+                    // find nearest modal ancestor
+                    const modal = ev.target.closest('.modal') || document.querySelector(dismiss.getAttribute('data-bs-target'));
+                    if(modal){ hideModal(modal); }
+                }
             });
         });
     </script>
