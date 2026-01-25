@@ -1,4 +1,5 @@
 {% extends "admin/base.html" %}
+{% set active_page = 'eventos' %}
 
 {% block title %}Eventos - EventMaster Admin{% endblock %}
 
@@ -97,7 +98,7 @@
 </main>
 
 <!-- Modal de confirmação de exclusão (se necessário) -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
+<div class="modal" id="deleteModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content md-card">
       <div class="p-6">
