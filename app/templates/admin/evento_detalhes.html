@@ -3,274 +3,179 @@
 {% block title %}{{ evento.nome }} - Detalhes{% endblock %}
 
 {% block content %}
-<div class=" flex flex-wrap -mx-2  mb-4">
-    <div class=" w-full px-2 ">
-        <div class="md-card p-4">
-            <div class=" flex   justify-between   items-center ">
-                <div>
-                    <h1 class="text-slate-100 mb-1">{{ evento.nome }}</h1>
-                    <p class="text-slate-100-muted mb-0">{{ evento.descricao }}</p>
-                </div>
-                <a href="/admin/eventos" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass">
-                    <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
-                    Voltar
-                </a>
-            </div>
-        </div>
+<header class="p-6 md:px-12 pt-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+  <div>
+    <h1 class="text-2xl font-semibold text-slate-100">{{ evento.nome }}</h1>
+    <p class="text-sm text-slate-400 mt-1">{{ evento.descricao }}</p>
+  </div>
+  <div class="flex items-center gap-3">
+    <a href="/admin/eventos" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 rounded-lg">
+      <span class="material-symbols-outlined">arrow_back</span>
+      Voltar
+    </a>
+  </div>
+</header>
+
+<main class="px-4 md:px-12 pb-24 space-y-6">
+  <!-- Top stats -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="md-card p-4 text-center">
+      <span class="material-symbols-outlined text-3xl text-slate-100">calendar_month</span>
+      <div class="mt-2 text-sm text-slate-400">Data do Evento</div>
+      <div class="mt-1 text-lg text-slate-100 font-medium">{{ evento.data_evento.strftime('%d/%m/%Y %H:%M') }}</div>
     </div>
+
+    <div class="md-card p-4 text-center">
+      <span class="material-symbols-outlined text-3xl text-slate-100">key</span>
+      <div class="mt-2 text-sm text-slate-400">Token Bilheteria</div>
+      <div class="mt-1 flex items-center justify-center gap-2">
+        <code class="text-slate-100 truncate max-w-[14rem]">{{ evento.token_bilheteria[:20] }}...</code>
+        <button data-token="{{ evento.token_bilheteria }}" class="copy-token-btn inline-flex items-center p-2 bg-slate-700 hover:bg-slate-600 rounded-md text-slate-100" title="Copiar token bilheteria">
+          <span class="material-symbols-outlined">content_copy</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="md-card p-4 text-center">
+      <span class="material-symbols-outlined text-3xl text-slate-100">shield</span>
+      <div class="mt-2 text-sm text-slate-400">Token Portaria</div>
+      <div class="mt-1 flex items-center justify-center gap-2">
+        <code class="text-slate-100 truncate max-w-[14rem]">{{ evento.token_portaria[:20] }}...</code>
+        <button data-token="{{ evento.token_portaria }}" class="copy-token-btn inline-flex items-center p-2 bg-slate-700 hover:bg-slate-600 rounded-md text-slate-100" title="Copiar token portaria">
+          <span class="material-symbols-outlined">content_copy</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick links -->
+  <div class="md-card p-4">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="flex flex-wrap gap-3">
+        <a href="/admin/eventos/layout/{{ evento.id }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg hover:bg-blue-400 transition">Editor de Layout</a>
+        <a href="/admin/eventos/{{ evento.id }}/planilhas" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 text-slate-100 rounded-lg hover:bg-slate-600">Configurar Planilhas</a>
+        <a href="/admin/eventos/{{ evento.id }}/participantes" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 text-slate-100 rounded-lg hover:bg-slate-600">Gerenciar Participantes</a>
+      </div>
+      <div class="text-sm text-slate-400">Página pública: <a href="/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso" class="text-blue-400 underline">/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso</a></div>
+    </div>
+  </div>
+
+  <!-- Ilhas/Setores -->
+  <section class="md-card p-4">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg text-slate-100">Ilhas / Setores</h3>
+      <button data-bs-toggle="#addIlhaModal" data-bs-target="#addIlhaModal" class="inline-flex items-center gap-2 px-3 py-2 bg-slate-700 text-slate-100 rounded-md">Adicionar Ilha</button>
+    </div>
+    {% if ilhas %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for ilha in ilhas %}
+      <div class="p-3 bg-slate-800 rounded-lg border border-slate-700">
+        <h5 class="text-slate-100">{{ ilha.nome_setor }}</h5>
+        <p class="text-sm text-slate-400">Capacidade: {{ ilha.capacidade_maxima }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-slate-400 text-center">Nenhuma ilha cadastrada</p>
+    {% endif %}
+  </section>
+
+  <!-- Tipos de Ingresso -->
+  <section class="md-card p-4">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg text-slate-100">Tipos de Ingresso</h3>
+      <button data-bs-toggle="#addTipoIngressoModal" data-bs-target="#addTipoIngressoModal" class="inline-flex items-center gap-2 px-3 py-2 bg-slate-700 text-slate-100 rounded-md">Adicionar Tipo</button>
+    </div>
+    {% if tipos_ingresso %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead class="text-slate-400 text-xs uppercase">
+          <tr>
+            <th class="px-4 py-2">Descrição</th>
+            <th class="px-4 py-2">Valor</th>
+            <th class="px-4 py-2">Permissões</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-700/50">
+          {% for tipo in tipos_ingresso %}
+          <tr class="hover:bg-slate-700/30 transition-colors">
+            <td class="px-4 py-2 text-slate-100">{{ tipo.descricao }}</td>
+            <td class="px-4 py-2 text-slate-100">R$ {{ "%.2f"|format(tipo.valor) }}</td>
+            <td class="px-4 py-2"><span class="badge bg-primary">{{ tipo.permissoes|length }} ilha(s)</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-slate-400 text-center">Nenhum tipo de ingresso cadastrado</p>
+    {% endif %}
+  </section>
+</main>
+
+<!-- Modals (unchanged structure, JS handler will show/hide) -->
+<div class="modal" id="addIlhaModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content md-card">
+      <div class="p-4">
+        <h5 class="text-slate-100 mb-3">Adicionar Ilha/Setor</h5>
+        <form id="addIlhaForm" class="space-y-3">
+          <div>
+            <label class="text-sm text-slate-100">Nome do Setor *</label>
+            <input type="text" id="ilhaNome" required class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
+          </div>
+          <div>
+            <label class="text-sm text-slate-100">Capacidade Máxima *</label>
+            <input type="number" id="ilhaCapacidade" min="1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
+          </div>
+          <div class="flex justify-end gap-2">
+            <button type="button" data-bs-dismiss="modal" class="px-4 py-2 bg-slate-700 rounded-md text-slate-100">Cancelar</button>
+            <button type="button" onclick="addIlha()" class="px-4 py-2 bg-blue-500 text-slate-900 rounded-md">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Event Info -->
-<div class=" flex flex-wrap -mx-2  mb-4 gy-4">
-    <!-- Top row: 3 cards on large screens -->
-    <div class=" w-full px-2 ">
-        <div class=" flex flex-wrap -mx-2  g-3">
-            <div class=" w-full px-2  col-md-6 col-lg-4  flex ">
-                <div class="md-card p-3 text-center h-100 w-100">
-                    <i data-lucide="calendar" class="text-slate-100 mb-2" style="width: 32px; height: 32px;"></i>
-                    <h6 class="text-slate-100-muted mb-1">Data do Evento</h6>
-                    <h5 class="text-slate-100">{{ evento.data_evento.strftime('%d/%m/%Y %H:%M') }}</h5>
-                </div>
+<div class="modal" id="addTipoIngressoModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content md-card">
+      <div class="p-4">
+        <h5 class="text-slate-100 mb-3">Adicionar Tipo de Ingresso</h5>
+        <form id="addTipoIngressoForm" class="space-y-3">
+          <div>
+            <label class="text-sm text-slate-100">Descrição *</label>
+            <input type="text" id="tipoDescricao" required class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
+          </div>
+          <div>
+            <label class="text-sm text-slate-100">Valor (R$) *</label>
+            <input type="number" id="tipoValor" min="0" step="0.01" required class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
+          </div>
+          <div>
+            <label class="text-sm text-slate-100">Permissões de Acesso</label>
+            <div class="space-y-2">
+              {% for ilha in ilhas %}
+              <label class="inline-flex items-center gap-2 text-slate-100">
+                <input type="checkbox" id="ilha_{{ ilha.id }}" class="form-checkbox" value="{{ ilha.id }}" />
+                {{ ilha.nome_setor }}
+              </label>
+              {% endfor %}
+              {% if not ilhas %}
+              <p class="text-slate-400">Nenhuma ilha disponível. Adicione ilhas primeiro.</p>
+              {% endif %}
             </div>
-            <div class=" w-full px-2  col-md-6 col-lg-4  flex ">
-                <div class="md-card p-3 text-center h-100 w-100">
-                    <i data-lucide="key" class="text-slate-100 mb-2" style="width: 32px; height: 32px;"></i>
-                    <h6 class="text-slate-100-muted mb-1">Token Bilheteria</h6>
-                    <div class=" flex  justify-content-center  items-center  gap-2">
-                        <code class="text-slate-100 small" id="token-bilheteria">{{ evento.token_bilheteria[:20] }}...</code>
-                        <button type="button" class="btn btn-sm btn-glass copy-token- inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 " data-token="{{ evento.token_bilheteria }}" title="Copiar token da bilheteria">
-                            <i data-lucide="copy" style="width:16px;height:16px;"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class=" w-full px-2  col-md-6 col-lg-4  flex ">
-                <div class="md-card p-3 text-center h-100 w-100">
-                    <i data-lucide="shield" class="text-slate-100 mb-2" style="width: 32px; height: 32px;"></i>
-                    <h6 class="text-slate-100-muted mb-1">Token Portaria</h6>
-                    <div class=" flex  justify-content-center  items-center  gap-2">
-                        <code class="text-slate-100 small" id="token-portaria">{{ evento.token_portaria[:20] }}...</code>
-                        <button type="button" class="btn btn-sm btn-glass copy-token- inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 " data-token="{{ evento.token_portaria }}" title="Copiar token da portaria">
-                            <i data-lucide="copy" style="width:16px;height:16px;"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button type="button" data-bs-dismiss="modal" class="px-4 py-2 bg-slate-700 rounded-md text-slate-100">Cancelar</button>
+            <button type="button" onclick="addTipoIngresso()" class="px-4 py-2 bg-blue-500 text-slate-900 rounded-md">Salvar</button>
+          </div>
+        </form>
+      </div>
     </div>
-
-    <!-- Bottom row: 2 cards centered on large screens -->
-    <div class=" w-full px-2 ">
-        <div class=" flex flex-wrap -mx-2  g-3 justify-content-center">
-            <div class=" w-full px-2  col-md-6 col-lg-4  flex ">
-                <div class="md-card p-3 text-center h-100 w-100">
-                    <i data-lucide="ticket-plus" class="text-slate-100 mb-2" style="width: 32px; height: 32px;"></i>
-                    <h6 class="text-slate-100-muted mb-1">Página de Cadastro do Evento</h6>
-                    <div class=" flex  justify-content-center  items-center  gap-2">
-                        <code class="text-slate-100 small truncate-path" id="evento-public-link" title="/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso" style="display:inline-block;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso</code>
-                        <button type="button" class="btn btn-sm btn-glass copy-link- inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 " data-link="/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso" title="Copiar link público do evento">
-                            <i data-lucide="copy" style="width:16px;height:16px;"></i>
-                        </button>
-                    </div>
-                    <div class="mt-2">
-                        <a href="/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso" class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -outline">Abrir</a>
-                    </div>
-                </div>
-            </div>
-            <div class=" w-full px-2  col-md-6 col-lg-4  flex ">
-                <div class="md-card p-3 text-center h-100 w-100">
-                    <i data-lucide="link" class="text-slate-100 mb-2" style="width: 32px; height: 32px;"></i>
-                    <h6 class="text-slate-100-muted mb-1">Autorizações de Upload</h6>
-                    <div class=" flex  justify-content-center  items-center  gap-2">
-                        <code class="text-slate-100 small truncate-path" id="evento-upload-link" title="/admin/eventos/{{ evento.id }}/planilhas/empresas" style="display:inline-block;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">/admin/eventos/{{ evento.id }}/planilhas/empresas</code>
-                        <button type="button" class="btn btn-sm btn-glass copy-link- inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 " data-link="/admin/eventos/{{ evento.id }}/planilhas/empresas" title="Copiar link para gerenciamento de autorizações">
-                            <i data-lucide="copy" style="width:16px;height:16px;"></i>
-                        </button>
-                    </div>
-                    <div class="mt-2">
-                        <a href="/admin/eventos/{{ evento.id }}/planilhas/empresas" class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -outline">Gerenciar</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+  </div>
 </div>
 
-<!-- Quick Actions (removidos links de abertura de bilheteria/portaria) -->
-<div class=" flex flex-wrap -mx-2  mb-4">
-    <div class=" w-full px-2 ">
-        <div class="md-card p-3">
-            <div class=" flex flex-wrap -mx-2  g-2">
-                <div class=" w-full px-2   flex  gap-2 justify-content-center flex-wrap">
-                    <a href="/admin/eventos/layout/{{ evento.id }}" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient">
-                        <i data-lucide="layout" style="width: 20px; height: 20px;"></i>
-                        Editor de Layout
-                    </a>
-                    <a href="/admin/eventos/{{ evento.id }}/planilhas" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -outline" title="Configurar campos obrigatórios e inscrições públicas">
-                        <i data-lucide="file-text" style="width: 20px; height: 20px;"></i>
-                        Configurar Planilhas
-                    </a>
-                    <a href="/admin/eventos/{{ evento.id }}/participantes" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -outline">
-                        <i data-lucide="users" style="width: 20px; height: 20px;"></i>
-                        Gerenciar Participantes
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Ilhas/Setores -->
-<div class=" flex flex-wrap -mx-2  mb-4">
-    <div class=" w-full px-2 ">
-        <div class="md-card p-4">
-            <div class=" flex   justify-between   items-center  mb-3">
-                <h5 class="text-slate-100 mb-0">Ilhas/Setores</h5>
-                <button class="btn btn-gradient  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -sm" data-bs-toggle="modal" data-bs-target="#addIlhaModal">
-                    <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
-                    Adicionar Ilha
-                </button>
-            </div>
-            
-            {% if ilhas %}
-            <div class=" flex flex-wrap -mx-2 ">
-                {% for ilha in ilhas %}
-                <div class="col-md-6 mb-3">
-                    <div class="md-card p-3">
-                        <h6 class="text-slate-100">{{ ilha.nome_setor }}</h6>
-                        <p class="text-slate-100-muted mb-0 small">
-                            <i data-lucide="users" style="width: 14px; height: 14px;"></i>
-                            Capacidade: {{ ilha.capacidade_maxima }}
-                        </p>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p class="text-slate-100-muted text-center">Nenhuma ilha cadastrada</p>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<!-- Tipos de Ingresso -->
-<div class=" flex flex-wrap -mx-2  mb-4">
-    <div class=" w-full px-2 ">
-        <div class="md-card p-4">
-            <div class=" flex   justify-between   items-center  mb-3">
-                <h5 class="text-slate-100 mb-0">Tipos de Ingresso</h5>
-                <button class="btn btn-gradient  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -sm" data-bs-toggle="modal" data-bs-target="#addTipoIngressoModal">
-                    <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
-                    Adicionar Tipo
-                </button>
-            </div>
-            
-            {% if tipos_ingresso %}
-            <div class="overflow-x-auto">
-                <table class="table">
-                    <thead>
-                        <tr class="text-slate-100-muted">
-                            <th>Descrição</th>
-                            <th>Valor</th>
-                            <th>Permissões</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for tipo in tipos_ingresso %}
-                        <tr class="text-slate-100">
-                            <td>{{ tipo.descricao }}</td>
-                            <td>R$ {{ "%.2f"|format(tipo.valor) }}</td>
-                            <td>
-                                <span class="badge bg-primary">{{ tipo.permissoes|length }} ilha(s)</span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <p class="text-slate-100-muted text-center">Nenhum tipo de ingresso cadastrado</p>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<!-- Add Ilha Modal -->
-<div class="modal fade" id="addIlhaModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content md-card">
-            <div class="modal-header border-0">
-                <h5 class="modal-title text-slate-100">Adicionar Ilha/Setor</h5>
-                <button type="button" class="btn-close  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addIlhaForm">
-                    <div class="mb-3">
-                        <label class="form-label text-slate-100">Nome do Setor *</label>
-                        <input type="text" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="ilhaNome" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-slate-100">Capacidade Máxima *</label>
-                        <input type="number" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="ilhaCapacidade" min="1" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient" onclick="addIlha()">
-                    <i data-lucide="save" style="width: 16px; height: 16px;"></i>
-                    Salvar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add Tipo Ingresso Modal -->
-<div class="modal fade" id="addTipoIngressoModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content md-card">
-            <div class="modal-header border-0">
-                <h5 class="modal-title text-slate-100">Adicionar Tipo de Ingresso</h5>
-                <button type="button" class="btn-close  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addTipoIngressoForm">
-                    <div class="mb-3">
-                        <label class="form-label text-slate-100">Descrição *</label>
-                        <input type="text" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="tipoDescricao" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-slate-100">Valor (R$) *</label>
-                        <input type="number" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="tipoValor" min="0" step="0.01" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-slate-100">Permissões de Acesso</label>
-                        {% for ilha in ilhas %}
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="{{ ilha.id }}" id="ilha_{{ ilha.id }}">
-                            <label class="form-check-label text-slate-100" for="ilha_{{ ilha.id }}">
-                                {{ ilha.nome_setor }}
-                            </label>
-                        </div>
-                        {% endfor %}
-                        {% if not ilhas %}
-                        <p class="text-slate-100-muted small">Nenhuma ilha disponível. Adicione ilhas primeiro.</p>
-                        {% endif %}
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient" onclick="addTipoIngresso()">
-                    <i data-lucide="save" style="width: 16px; height: 16px;"></i>
-                    Salvar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
