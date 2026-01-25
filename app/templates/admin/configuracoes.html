@@ -11,8 +11,8 @@
                 <p class="text-slate-100-muted mb-0">Gerenciamento de administradores</p>
             </div>
             <div>
-                <button class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient" data-bs-toggle="modal" data-bs-target="#addAdminModal">
-                    <i data-lucide="user-plus" style="width:18px;height:18px;"></i>
+                <button class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg hover:bg-blue-400" data-bs-toggle="#addAdminModal" data-bs-target="#addAdminModal">
+                    <span class="material-symbols-outlined">person_add</span>
                     Novo Administrador
                 </button>
             </div>
@@ -152,7 +152,7 @@
             const toast = document.createElement('div');
             toast.className = 'toast align-items-center show';
             toast.setAttribute('role', 'alert');
-            toast.innerHTML = `<div class=" flex "><div class="toast-body">${message}</div><button type="button" class=" inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -close me-2 ms-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>`;
+            toast.innerHTML = `<div class="flex"><div class="toast-body">${message}</div><button type="button" class="inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 ml-auto" data-bs-dismiss="toast" aria-label="Close">×</button></div>`;
             container.appendChild(toast);
             setTimeout(() => { try { toast.remove(); } catch(e){} }, 3000);
         }
@@ -180,11 +180,11 @@
                         <td class="text-slate-100-muted">${a.ativo ? 'Sim' : 'Não'}</td>
                         <td class="text-slate-100-muted">${a.ultimo_login || '-'}</td>
                         <td>
-                            <button class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass me-1" onclick='openEditModal(${JSON.stringify(a)})'>
-                                <i data-lucide="edit" style="width:14px;height:14px;"></i>
+                            <button class="inline-flex items-center px-3 py-1 bg-slate-700 text-slate-100 rounded-md mr-2" onclick='openEditModal(${JSON.stringify(a)})'>
+                                <span class="material-symbols-outlined">edit</span>
                             </button>
-                            <button class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass" onclick='confirmDelete("${a.id || a._id}", "${a.username}")'>
-                                <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+                            <button class="inline-flex items-center px-3 py-1 bg-red-600 text-white rounded-md" onclick='confirmDelete("${a.id || a._id}", "${a.username}")'>
+                                <span class="material-symbols-outlined">delete</span>
                             </button>
                         </td>`;
                     tbody.appendChild(tr);
@@ -217,9 +217,9 @@
                     throw new Error(err.detail || 'Erro ao criar admin');
                 }
                 showToast('Administrador criado');
+                // close modal (no Bootstrap)
                 var modalEl = document.getElementById('addAdminModal');
-                var modal = bootstrap.Modal.getInstance(modalEl);
-                modal.hide();
+                if(modalEl){ modalEl.classList.remove('show'); document.querySelectorAll('.modal-backdrop').forEach(b=>b.remove()); document.body.style.overflow = ''; }
                 loadAdmins();
             } catch (err) {
                 console.error(err);
@@ -240,8 +240,8 @@
             const pwdFeedback = document.getElementById('edit_pwd_feedback');
             if (pwdFeedback) pwdFeedback.style.display = 'none';
             document.getElementById('edit_ativo').checked = !!admin.ativo;
-            var modal = new bootstrap.Modal(modalEl);
-            modal.show();
+            // show modal (no Bootstrap)
+            if(modalEl){ const backdrop = document.createElement('div'); backdrop.className='modal-backdrop'; document.body.appendChild(backdrop); modalEl.classList.add('show'); document.body.style.overflow='hidden'; }
             lucide.createIcons();
         };
 
@@ -287,8 +287,7 @@
                 }
                 showToast('Administrador atualizado');
                 var modalEl = document.getElementById('editAdminModal');
-                var modal = bootstrap.Modal.getInstance(modalEl);
-                modal.hide();
+                if(modalEl){ modalEl.classList.remove('show'); document.querySelectorAll('.modal-backdrop').forEach(b=>b.remove()); document.body.style.overflow = ''; }
                 loadAdmins();
             } catch (err) {
                 console.error(err);
