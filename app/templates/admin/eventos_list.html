@@ -3,81 +3,117 @@
 {% block title %}Eventos - EventMaster Admin{% endblock %}
 
 {% block content %}
-<div class=" flex flex-wrap -mx-2  mb-4">
-    <div class=" w-full px-2 ">
-        <div class="md-card p-4">
-            <div class=" flex   justify-between   items-center ">
-                <div>
-                    <h1 class="text-slate-100 mb-0">Eventos</h1>
-                    <p class="text-slate-100-muted mb-0">Gerenciar eventos</p>
+<header class="p-6 md:px-12 pt-8 flex justify-between items-center">
+  <div>
+    <h1 class="text-3xl font-light text-slate-100">Eventos</h1>
+    <p class="text-sm text-slate-400 font-light">Gerenciar eventos do sistema</p>
+  </div>
+  <a href="/admin/eventos/novo" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 font-semibold rounded-lg hover:bg-blue-400 transition">
+    <span class="material-symbols-outlined">add</span>
+    Novo Evento
+  </a>
+</header>
+
+<main class="px-4 md:px-12 pb-24">
+  <!-- Filtros -->
+  <div class="md-card p-5 mb-6 border border-slate-700/50">
+    <form action="/admin/eventos" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div>
+        <input type="text" name="busca" placeholder="Buscar por nome..." value="{{ busca }}"
+               class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100 focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <select name="status" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100">
+          <option value="">Todos os status</option>
+          <option value="ativo" {% if status == 'ativo' %}selected{% endif %}>Ativos</option>
+          <option value="inativo" {% if status == 'inativo' %}selected{% endif %}>Inativos</option>
+        </select>
+      </div>
+      <div>
+        <select name="periodo" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100">
+          <option value="">Todos os períodos</option>
+          <option value="futuros" {% if periodo == 'futuros' %}selected{% endif %}>Futuros</option>
+          <option value="passados" {% if periodo == 'passados' %}selected{% endif %}>Passados</option>
+        </select>
+      </div>
+      <div>
+        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 rounded-lg transition">
+          <span class="material-symbols-outlined">search</span>
+          Filtrar
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Lista de Eventos -->
+  {% if eventos %}
+  <div class="md-card overflow-hidden border border-slate-700/50">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead class="bg-slate-900/50 text-slate-400 text-xs uppercase tracking-wider">
+          <tr>
+            <th class="px-6 py-4 font-semibold">Evento</th>
+            <th class="px-6 py-4 font-semibold">Data</th>
+            <th class="px-6 py-4 font-semibold text-center">Status</th>
+            <th class="px-6 py-4 font-semibold text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-700/50">
+          {% for evento in eventos %}
+          <tr class="hover:bg-slate-700/30 transition-colors">
+            <td class="px-6 py-5">
+              <div class="flex items-center">
+                <div class="h-10 w-10 bg-slate-700 rounded-lg mr-3 flex items-center justify-center text-slate-500">
+                  <span class="material-symbols-outlined">event</span>
                 </div>
-                <a href="/admin/eventos/novo" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient">
-                    <i data-lucide="plus" style="width: 20px; height: 20px;"></i>
-                    Novo Evento
-                </a>
-            </div>
-        </div>
+                <span class="font-medium text-slate-200">{{ evento.nome }}</span>
+              </div>
+            </td>
+            <td class="px-6 py-5 text-slate-400">{{ evento.data_evento.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td class="px-6 py-5 text-center">
+              {% if evento.ativo %}
+              <span class="bg-green-900/50 text-green-300 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase border border-green-800/50">Ativo</span>
+              {% else %}
+              <span class="bg-gray-700 text-gray-300 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase border border-gray-600/50">Inativo</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-5 text-right">
+              <a href="/admin/eventos/{{ evento.id }}" class="p-2 text-slate-500 hover:text-blue-400 hover:bg-blue-900/30 rounded-full transition-all inline-flex items-center">
+                <span class="material-symbols-outlined text-xl">visibility</span>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
+  </div>
+  {% else %}
+  <div class="md-card p-8 text-center border border-slate-700/50">
+    <span class="material-symbols-outlined text-6xl text-slate-600 mb-4">event_busy</span>
+    <p class="text-slate-400">Nenhum evento encontrado.</p>
+  </div>
+  {% endif %}
+</main>
+
+<!-- Modal de confirmação de exclusão (se necessário) -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content md-card">
+      <div class="p-6">
+        <h3 class="text-lg font-semibold text-slate-100 mb-4">Confirmar Exclusão</h3>
+        <p class="text-slate-400 mb-6">Tem certeza que deseja excluir os eventos passados?</p>
+        <div class="flex justify-end gap-3">
+          <button type="button" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 rounded-lg" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Filtros -->
-<div class=" flex flex-wrap -mx-2  mb-3">
-    <div class=" w-full px-2 ">
-        <div class="md-card p-3">
-            <form action="/admin/eventos" method="GET" class=" flex flex-wrap -mx-2  g-2">
-                <div class="col-md-4">
-                    <input type="text" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " name="busca" 
-                           placeholder="Buscar por nome..." value="{{ busca }}">
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" name="status">
-                        <option value="">Todos os status</option>
-                        <option value="ativo" {% if status == 'ativo' %}selected{% endif %}>Ativos</option>
-                        <option value="inativo" {% if status == 'inativo' %}selected{% endif %}>Inativos</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" name="periodo">
-                        <option value="">Todos os períodos</option>
-                        <option value="futuros" {% if periodo == 'futuros' %}selected{% endif %}>Futuros</option>
-                        <option value="passados" {% if periodo == 'passados' %}selected{% endif %}>Passados</option>
-                    </select>
-                </div>
-                <div class="col-md-3  flex   items-center ">
-                    <div class="form-check form-switch ms-2">
-                        <input class="form-check-input" type="checkbox" role="switch" id="futuros_only" name="futuros_only" {% if futuros_only %}checked{% endif %}>
-                        <label class="form-check-label text-slate-100-muted" for="futuros_only">Mostrar apenas eventos futuros</label>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass w-100">
-                        <i data-lucide="search" style="width: 16px; height: 16px;"></i>
-                        Filtrar
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+{% endblock %}
 
-<!-- Ações em Massa -->
-{% if periodo == 'passados' and eventos|length > 0 %}
-<div class=" flex flex-wrap -mx-2  mb-3">
-    <div class=" w-full px-2 ">
-        <div class="md-card p-3">
-            <div class=" flex   justify-between   items-center ">
-                <span class="text-slate-100">
-                    <i data-lucide="alert-circle" class="me-2" style="width: 20px; height: 20px;"></i>
-                    {{ eventos|length }} evento(s) passado(s) encontrado(s)
-                </span>
-                <button type="button" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                    <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
-                    Limpar Eventos Passados
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 {% endif %}
 
 <!-- Lista de Eventos -->
