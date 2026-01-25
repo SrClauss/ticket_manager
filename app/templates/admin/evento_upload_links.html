@@ -1,45 +1,45 @@
 {% extends 'admin/base.html' %}
 {% block content %}
 <div class="md-card p-4">
-  <h2>Links de Upload - {{ evento.nome }}</h2>
-  <p>Gere links públicos para que empresas possam enviar planilhas para este evento.</p>
+  <h2 class="text-lg font-semibold text-slate-100">Links de Upload - {{ evento.nome }}</h2>
+  <p class="text-sm text-slate-400">Gere links públicos para que empresas possam enviar planilhas para este evento.</p>
 
-  <form id="generate-link-form" method="post" action="/admin/eventos/{{ evento.id }}/planilhas/empresas/generate" style="margin-bottom:1rem;">
-    <label class="form-label">Descrição do link (opcional)</label>
-    <input type="text" name="descricao" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " />
-    <div class="mt-2">
-      <button id="generate-link-btn" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient">Gerar link de upload</button>
-      <span id="generate-loading" style="display:none;margin-left:8px;">Gerando...</span>
+  <form id="generate-link-form" method="post" action="/admin/eventos/{{ evento.id }}/planilhas/empresas/generate" class="mt-4 mb-4">
+    <label class="text-sm text-slate-300">Descrição do link (opcional)</label>
+    <input type="text" name="descricao" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
+    <div class="mt-2 flex items-center gap-3">
+      <button id="generate-link-btn" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg">Gerar link de upload</button>
+      <span id="generate-loading" class="text-slate-400" style="display:none">Gerando...</span>
     </div>
   </form>
 
   {% if links %}
-    <div class=" flex flex-wrap -mx-2 ">
+    <div id="linksContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4">
       {% for l in links %}
-      <div class="col-md-4 mb-3" data-token="{{ l.token }}">
-        <div class="md-card p-3  flex  flex-column align-items-start">
-          <div class="w-100  flex   justify-between  align-items-start">
+      <div class="mb-3" data-token="{{ l.token }}">
+        <div class="md-card p-3 flex flex-col">
+          <div class="w-full flex justify-between items-start">
             <div>
-              <div class="small text-muted">Token</div>
-              <code>{{ l.token[:12] }}...</code>
+              <div class="text-xs text-slate-400">Token</div>
+              <code class="text-slate-100">{{ l.token[:12] }}...</code>
             </div>
-            <div>
-              <button class="btn btn-sm btn-glass copy-link- inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 " data-link="{{ url_root }}/upload/{{ l.token }}">Copiar</button>
-              <a class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -outline ms-1" href="{{ url_root }}/upload/{{ l.token }}" target="_blank" rel="noopener">Abrir</a>
-              <button class="btn btn-sm btn-danger ms-1 delete-link- inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 " data-token="{{ l.token }}" title="Excluir link">Excluir</button>
+            <div class="flex items-center gap-2">
+              <button class="copy-link-btn inline-flex items-center px-3 py-1 bg-slate-700 text-slate-100 rounded-md" data-link="{{ url_root }}/upload/{{ l.token }}">Copiar</button>
+              <a class="inline-flex items-center px-3 py-1 bg-slate-700 text-slate-100 rounded-md" href="{{ url_root }}/upload/{{ l.token }}" target="_blank" rel="noopener">Abrir</a>
+              <button class="delete-link-btn inline-flex items-center px-3 py-1 bg-red-600 text-white rounded-md" data-token="{{ l.token }}" title="Excluir link">Excluir</button>
             </div>
           </div>
-          <div class="mt-2 w-100">
-            <div class="small text-muted">Link</div>
-            <div style="word-break:break-all;"><a href="{{ url_root }}/upload/{{ l.token }}" target="_blank" rel="noopener">{{ url_root }}/upload/{{ l.token }}</a></div>
-            <div class="text-muted small mt-2">Criado: {{ l.created }}</div>
+          <div class="mt-2 w-full">
+            <div class="text-xs text-slate-400">Link</div>
+            <div style="word-break:break-all;"><a class="text-blue-400 underline" href="{{ url_root }}/upload/{{ l.token }}" target="_blank" rel="noopener">{{ url_root }}/upload/{{ l.token }}</a></div>
+            <div class="text-slate-400 text-xs mt-2">Criado: {{ l.created }}</div>
           </div>
         </div>
       </div>
       {% endfor %}
     </div>
   {% else %}
-    <p>Nenhum link gerado ainda.</p>
+    <p class="text-slate-400">Nenhum link gerado ainda.</p>
   {% endif %}
 </div>
 
@@ -86,62 +86,59 @@
           if (!resp.ok) throw new Error('Failed to generate');
           const data = await resp.json();
           // prepend new card to list
-          const row = document.querySelector('.row');
-          if (row) {
-            const col = document.createElement('div'); col.className = 'col-md-4 mb-3';
-            const card = document.createElement('div'); card.className = 'md-card p-3 d-flex flex-column align-items-start';
+          const container = document.getElementById('linksContainer');
+          if (container) {
+            const col = document.createElement('div'); col.className = 'mb-3';
+            const card = document.createElement('div'); card.className = 'md-card p-3 flex flex-col';
             card.innerHTML = `
-              <div class="w-100  flex   justify-between  align-items-start">
+              <div class="w-full flex justify-between items-start">
                 <div>
-                  <div class="small text-muted">Token</div>
-                  <code>${data.token.slice(0,12)}...</code>
+                  <div class="text-xs text-slate-400">Token</div>
+                  <code class="text-slate-100">${data.token.slice(0,12)}...</code>
                 </div>
-                <div>
-                  <button class="btn btn-sm btn-glass copy-link- inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 " data-link="${data.url}">Copiar</button>
-                  <a class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -outline ms-1" href="${data.url}" target="_blank" rel="noopener">Abrir</a>
+                <div class="flex items-center gap-2">
+                  <button class="copy-link-btn inline-flex items-center px-3 py-1 bg-slate-700 text-slate-100 rounded-md" data-link="${data.url}">Copiar</button>
+                  <a class="inline-flex items-center px-3 py-1 bg-slate-700 text-slate-100 rounded-md" href="${data.url}" target="_blank" rel="noopener">Abrir</a>
                 </div>
               </div>
-              <div class="mt-2 w-100">
-                <div class="small text-muted">Link</div>
-                <div style="word-break:break-all;"><a href="${data.url}" target="_blank" rel="noopener">${data.url}</a></div>
-                <div class="text-muted small mt-2">Criado: ${new Date(data.created).toLocaleString()}</div>
+              <div class="mt-2 w-full">
+                <div class="text-xs text-slate-400">Link</div>
+                <div style="word-break:break-all;"><a class="text-blue-400 underline" href="${data.url}" target="_blank" rel="noopener">${data.url}</a></div>
+                <div class="text-slate-400 text-xs mt-2">Criado: ${new Date(data.created).toLocaleString()}</div>
               </div>
             `;
             col.appendChild(card);
             // insert at top
-            row.insertBefore(col, row.firstChild);
+            container.insertBefore(col, container.firstChild);
 
-            // attach copy handler
-    // attach copy handlers for existing buttons
-    document.querySelectorAll('.copy-link-btn').forEach(btn => {
-      btn.addEventListener('click', async function(){ const link = this.dataset.link; await copyToClipboard(link); alert('Link copiado'); });
-    });
+            // attach copy handlers
+            document.querySelectorAll('.copy-link-btn').forEach(btn => {
+              btn.addEventListener('click', async function(){ const link = this.dataset.link; await copyToClipboard(link); alert('Link copiado'); });
+            });
 
-    // attach delete handlers
-    document.querySelectorAll('.delete-link-btn').forEach(btn => {
-      btn.addEventListener('click', async function(){
-        if (!confirm('Confirma exclusão deste link de upload?')) return;
-        const token = this.dataset.token;
-        const eventoId = '{{ evento.id }}';
-        try {
-          const resp = await fetch(`/admin/eventos/${eventoId}/planilhas/empresas/${token}`, { method: 'DELETE', headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } });
-          if (!resp.ok) throw new Error('delete failed');
-          const data = await resp.json();
-          if (data.deleted) {
-            // remove the card
-            const col = this.closest('[data-token]');
-            if (col) col.remove();
-            alert('Link excluído');
-          } else {
-            alert('Link não encontrado');
-          }
-        } catch (err) {
-          alert('Falha ao excluir link');
-        }
-      });
-    });
-
-            copyBtn.addEventListener('click', async function(){ await copyToClipboard(this.dataset.link); alert('Link copiado'); });
+            // attach delete handlers
+            document.querySelectorAll('.delete-link-btn').forEach(btn => {
+              btn.addEventListener('click', async function(){
+                if (!confirm('Confirma exclusão deste link de upload?')) return;
+                const token = this.dataset.token;
+                const eventoId = '{{ evento.id }}';
+                try {
+                  const resp = await fetch(`/admin/eventos/${eventoId}/planilhas/empresas/${token}`, { method: 'DELETE', headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } });
+                  if (!resp.ok) throw new Error('delete failed');
+                  const data = await resp.json();
+                  if (data.deleted) {
+                    // remove the card
+                    const col = this.closest('[data-token]');
+                    if (col) col.remove();
+                    alert('Link excluído');
+                  } else {
+                    alert('Link não encontrado');
+                  }
+                } catch (err) {
+                  alert('Falha ao excluir link');
+                }
+              });
+            });
           }
         } catch (err) {
           alert('Falha ao gerar link');
