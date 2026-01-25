@@ -68,4 +68,21 @@ body{
 /* override Bootstrap light backgrounds used in templates */
 .card, .card-body { background: transparent; border: none; }
 
+/* Small layout tweaks for admin/evento_detalhes */
+.evento-header .logo { width:80px; height:80px; border-radius:12px; overflow:hidden; background:rgba(255,255,255,0.02); display:flex; align-items:center; justify-content:center; }
+.token-box { background: rgba(17,24,39,0.6); border:1px solid rgba(148,163,184,0.06); padding:6px 10px; border-radius:8px; font-family:monospace; max-width:100%; }
+.token-box code { font-family:monospace; color:var(--text); font-size:0.9rem; }
+.quick-links a { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:10px; }
+.copy-token-btn.active { transform:scale(0.96); box-shadow:0 6px 14px rgba(0,0,0,0.2) inset; }
+.chip { padding:6px 10px; border-radius:999px; font-weight:700; font-size:0.85rem; }
+.chip-ativo { background:rgba(16,185,129,0.12); color:#bbf7d0; border:1px solid rgba(16,185,129,0.12); }
+.chip-failed { background:rgba(220,38,38,0.08); color:#fecaca; border:1px solid rgba(220,38,38,0.08); }
+/* smaller table spacing for tipos */
+.glass-card .table td { padding: 10px 12px; }
+
+/* ensure modal forms look consistent */
+.modal .md-card { padding: 12px; }
+
+/* end tweaks */
+
 /* end of md-dark.css */
