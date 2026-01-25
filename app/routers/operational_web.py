@@ -15,7 +15,7 @@ templates = Jinja2Templates(directory="app/templates")
 
 # ==================== LEAD COLLECTOR ====================
 
-@router.get("/leads/coletor", response_class=HTMLResponse)
+# endpoint removed: @router.get("/leads/coletor", response_class=HTMLResponse)
 async def lead_collector_page(request: Request):
     """Lead Collector interface"""
     return templates.TemplateResponse(
@@ -26,7 +26,7 @@ async def lead_collector_page(request: Request):
 
 # ==================== SELF-CREDENTIALING ====================
 
-@router.get("/auto-credenciamento", response_class=HTMLResponse)
+# endpoint removed: @router.get("/auto-credenciamento", response_class=HTMLResponse)
 async def auto_credenciamento_page(
     request: Request,
     evento_id: Optional[str] = Query(None, description="ID do evento")

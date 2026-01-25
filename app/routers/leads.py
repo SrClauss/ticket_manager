@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 router = APIRouter()
 
 
-@router.post("/coletar", response_model=LeadInteracao, status_code=status.HTTP_201_CREATED)
+# endpoint removed: @router.post("/coletar", response_model=LeadInteracao, status_code=status.HTTP_201_CREATED)
 async def coletar_lead(interacao: LeadInteracaoCreate):
     """
     Lê o QR Code de um participante e salva a interação 
@@ -51,7 +51,7 @@ async def coletar_lead(interacao: LeadInteracaoCreate):
     return LeadInteracao(**created_interacao)
 
 
-@router.get("/interacoes/{evento_id}")
+# endpoint removed: @router.get("/interacoes/{evento_id}")
 async def listar_interacoes(evento_id: str, origem: str = None):
     """Lista todas as interações de um evento, opcionalmente filtradas por origem"""
     db = database.get_database()
@@ -85,7 +85,7 @@ async def listar_interacoes(evento_id: str, origem: str = None):
     return interacoes
 
 
-@router.get("/estatisticas/{evento_id}")
+# endpoint removed: @router.get("/estatisticas/{evento_id}")
 async def estatisticas_leads(evento_id: str):
     """Retorna estatísticas de coleta de leads"""
     db = database.get_database()
