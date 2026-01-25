@@ -29,111 +29,105 @@
     <p class="text-slate-500">Campos, modelo, upload e histórico — tudo em uma sessão.</p>
   </header>
 
-  <div class="grid grid-cols-4 nm-card nm-flat">
-    <!-- Modelo oficial / Download -->
-    <div class="nm-card nm-flat nm-inset">
-      <h2 class="text-xl font-semibold mb-3">Modelo oficial</h2>
-      <p class="text-sm text-slate-500 mb-4">Baixe o modelo atualizado com as colunas necessárias.</p>
-      <button id="downloadModelBtn" class="nm-button w-full py-3 rounded-xl text-blue-600 font-medium">Baixar modelo (.xlsx)</button>
-    </div>
-
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <!-- Campos e Inscrições (single form) -->
-    <div class="nm-card nm-flat">
-      <h2 class="text-xl font-semibold mb-3">Campos e Inscrições</h2>
-      <p class="text-sm text-slate-500 mb-4">Defina campos obrigatórios e ative inscrições públicas em uma única sessão.</p>
-      <form id="settingsForm" method="post" action="/admin/eventos/{{ evento.id }}/planilhas/campos">
-        <div style="margin-bottom:8px; font-weight:600">Campos obrigatórios</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;">
-          {% for campo in campos_base %}
-            <label style="opacity:.7"><input type="checkbox" checked disabled> {{ campo }}</label>
-          {% endfor %}
-          {% for campo in campos_opcionais %}
-            <label><input type="checkbox" name="campos" value="{{ campo }}" {% if campo in campos_atual %}checked{% endif %}> {{ campo }}</label>
-          {% endfor %}
-        </div>
-        <hr style="margin:12px 0">
-        <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" name="aceita_inscricoes" {% if evento.aceita_inscricoes %}checked{% endif %}> Aceitar inscrições públicas</label>
-        <div style="margin-top:10px; display:flex; gap:8px;">
-          <button type="submit" class="nm-button px-4 py-2">Salvar</button>
-          <button type="button" id="regenerateTokenBtn" class="nm-button px-4 py-2">Gerar/Regenerar token</button>
-        </div>
-        {% if evento.token_inscricao %}
-          <div style="margin-top:10px" class="nm-inset p-3 rounded-lg">
-            <p class="text-[10px] uppercase font-bold text-slate-400 mb-1">Link Público</p>
-            <a href="/inscricao/{{ evento.nome_normalizado or evento.id }}" class="text-blue-500 text-xs underline block">/inscricao/{{ evento.nome_normalizado or evento.id }}</a>
-            <p class="text-[10px] uppercase font-bold text-slate-400 mt-2 mb-1">Token</p>
-            <div class="token-display">{{ evento.token_inscricao }}</div>
+    <div class="md:col-span-1">
+      <div class="nm-card nm-flat">
+        <h2 class="text-xl font-semibold mb-3">Campos e Inscrições</h2>
+        <p class="text-sm text-slate-500 mb-4">Defina campos obrigatórios e ative inscrições públicas em uma única sessão.</p>
+        <form id="settingsForm" method="post" action="/admin/eventos/{{ evento.id }}/planilhas/campos">
+          <div style="margin-bottom:8px; font-weight:600">Campos obrigatórios</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            {% for campo in campos_base %}
+              <label style="opacity:.7"><input type="checkbox" checked disabled> {{ campo }}</label>
+            {% endfor %}
+            {% for campo in campos_opcionais %}
+              <label><input type="checkbox" name="campos" value="{{ campo }}" {% if campo in campos_atual %}checked{% endif %}> {{ campo }}</label>
+            {% endfor %}
           </div>
-        {% endif %}
-      </form>
-    </div>
-
-    <!-- Upload -->
-    <div class="nm-card nm-flat">
-      <h2 class="text-xl font-semibold mb-3">Enviar planilha</h2>
-      <p class="text-sm text-slate-500 mb-4">Envie .xlsx ou .csv e acompanhe o processamento.</p>
-      <div class="nm-inset p-4 rounded-xl" style="display:flex;gap:8px;align-items:center;">
-        <input type="file" id="planilhaFile" accept=".xlsx,.csv" />
-        <button id="uploadBtn" class="nm-button px-4 py-2">Enviar Arquivo</button>
+          <hr style="margin:12px 0">
+          <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" name="aceita_inscricoes" {% if evento.aceita_inscricoes %}checked{% endif %}> Aceitar inscrições públicas</label>
+          <div style="margin-top:10px; display:flex; gap:8px;">
+            <button type="submit" class="nm-button px-4 py-2">Salvar</button>
+            <button type="button" id="regenerateTokenBtn" class="nm-button px-4 py-2">Gerar/Regenerar token</button>
+          </div>
+          {% if evento.token_inscricao %}
+            <div style="margin-top:10px" class="nm-inset p-3 rounded-lg">
+              <p class="text-[10px] uppercase font-bold text-slate-400 mb-1">Link Público</p>
+              <a href="/inscricao/{{ evento.nome_normalizado or evento.id }}" class="text-blue-500 text-xs underline block">/inscricao/{{ evento.nome_normalizado or evento.id }}</a>
+              <p class="text-[10px] uppercase font-bold text-slate-400 mt-2 mb-1">Token</p>
+              <div class="token-display">{{ evento.token_inscricao }}</div>
+            </div>
+          {% endif %}
+        </form>
       </div>
-      <div class="progress-bar-bg mt-4"><div id="progressFill" class="progress-bar-fill"></div></div>
-      <p class="text-right text-[10px] mt-2 font-bold text-slate-400" id="progressText">PROCESSANDO 0%</p>
     </div>
 
-    <!-- Empresas / Links -->
-    <div class="nm-card nm-flat">
-      <h2 class="text-xl font-semibold mb-3">Upload por empresas</h2>
-      <p class="text-sm text-slate-500 mb-4">Gerencie links dedicados para parceiros.</p>
-      <a href="/admin/eventos/{{ evento.id }}/planilhas/empresas" class="nm-button inline-block px-4 py-2">Gerenciar links</a>
+    <!-- Combined container: Modelo oficial, Upload por empresas, Enviar planilha, Histórico -->
+    <div class="md:col-span-2">
+      <div class="nm-card nm-flat">
+        <h2 class="text-xl font-semibold mb-3">Modelo, Upload por Empresas e Histórico</h2>
+        <p class="text-sm text-slate-500 mb-4">Baixe o modelo, gerencie links de upload por empresa, envie uma planilha e acompanhe o histórico — tudo num único lugar.</p>
 
-      <hr style="margin:12px 0">
-      <h3 class="font-semibold">Tipos de ingresso (definir padrão)</h3>
-      <div class="tipo-list" id="tipoList">
-        {% for t in evento.get('tipos_ingresso', []) %}
-          <div class="tipo-item">
-            <div>
-              <div style="font-weight:600">{{ t.descricao }}</div>
-              <div style="font-size:12px;color:#6b7280">Numero: {{ t.numero }} {% if t.padrao %}<strong>(Padrão)</strong>{% endif %}</div>
-            </div>
-            <div>
-              {% if not t.padrao %}
-                <button class="nm-button" onclick="setDefault('{{ t._id if t._id else t.id if t.id else t.numero }}')">Marcar como padrão</button>
-              {% else %}
-                <span style="font-weight:600;color:#0f5132">Padrão</span>
-              {% endif %}
-            </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+          <div style="flex:1;min-width:220px">
+            <h3 class="font-semibold mb-2">Modelo oficial</h3>
+            <p class="text-sm text-slate-500 mb-3">Baixe o modelo atualizado com as colunas necessárias.</p>
+            <button id="downloadModelBtn" class="nm-button w-full py-2 rounded-xl text-blue-600 font-medium">Baixar modelo (.xlsx)</button>
           </div>
-        {% endfor %}
+
+          <div style="flex:1;min-width:220px">
+            <h3 class="font-semibold mb-2">Upload por empresas</h3>
+            <p class="text-sm text-slate-500 mb-3">Gerencie links dedicados para parceiros.</p>
+            <a href="/admin/eventos/{{ evento.id }}/planilhas/empresas" class="nm-button inline-block px-4 py-2">Gerenciar links</a>
+          </div>
+
+        </div>
+
+        <hr style="margin:12px 0">
+
+        <div style="margin-top:10px">
+          <h3 class="font-semibold mb-2">Enviar planilha</h3>
+          <p class="text-sm text-slate-500 mb-3">Envie .xlsx ou .csv e acompanhe o processamento.</p>
+          <div class="nm-inset p-4 rounded-xl" style="display:flex;gap:8px;align-items:center;">
+            <input type="file" id="planilhaFile" accept=".xlsx,.csv" />
+            <button id="uploadBtn" class="nm-button px-4 py-2">Enviar Arquivo</button>
+          </div>
+          <div class="progress-bar-bg mt-4"><div id="progressFill" class="progress-bar-fill"></div></div>
+          <p class="text-right text-[10px] mt-2 font-bold text-slate-400" id="progressText">PROCESSANDO 0%</p>
+        </div>
+
+        <hr style="margin:12px 0">
+
+        <div style="margin-top:12px">
+          <h3 class="font-semibold mb-3">Histórico de importações</h3>
+          {% if importacoes %}
+            <div style="overflow:auto">
+              <table style="width:100%;border-collapse:collapse">
+                <thead style="background:#f3f4f6">
+                  <tr><th style="padding:8px">Arquivo</th><th>Data</th><th>Status</th><th>Resumo</th><th>Ações</th></tr>
+                </thead>
+                <tbody>
+                  {% for item in importacoes %}
+                    <tr style="border-bottom:1px solid #eef2f7">
+                      <td style="padding:8px">{{ item.filename }}</td>
+                      <td>{{ item.created_at_display }}</td>
+                      <td>{{ item.status }}</td>
+                      <td>Linhas: {{ item.stats.total }} • Erros: {{ item.stats.erros }}</td>
+                      <td><button class="nm-button" onclick="downloadReport('{{ item.id }}')">Baixar JSON</button></td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-slate-500">Nenhum upload registrado.</p>
+          {% endif %}
+        </div>
+
       </div>
     </div>
   </div>
-
-  <!-- Histórico -->
-  <section class="nm-card nm-flat mt-6">
-    <h2 class="text-xl font-semibold mb-4">Histórico de importações</h2>
-    {% if importacoes %}
-      <div style="overflow:auto">
-        <table style="width:100%;border-collapse:collapse">
-          <thead style="background:#f3f4f6">
-            <tr><th style="padding:8px">Arquivo</th><th>Data</th><th>Status</th><th>Resumo</th><th>Ações</th></tr>
-          </thead>
-          <tbody>
-            {% for item in importacoes %}
-              <tr style="border-bottom:1px solid #eef2f7">
-                <td style="padding:8px">{{ item.filename }}</td>
-                <td>{{ item.created_at_display }}</td>
-                <td>{{ item.status }}</td>
-                <td>Linhas: {{ item.stats.total }} • Erros: {{ item.stats.erros }}</td>
-                <td><button class="nm-button" onclick="downloadReport('{{ item.id }}')">Baixar JSON</button></td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% else %}
-      <p class="text-slate-500">Nenhum upload registrado.</p>
-    {% endif %}
-  </section>
 
 </div>
 
@@ -185,8 +179,6 @@ document.getElementById('uploadBtn').addEventListener('click', handleUpload);
 // Download report
 async function downloadReport(importId){ try{ const r = await fetch(`/api/admin/eventos/{{ evento.id }}/planilha-importacao/${importId}`); if(!r.ok){ toast('Erro ao obter relatório'); return; } const data=await r.json(); const blob=new Blob([JSON.stringify(data.relatorio||data, null,2)], {type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`relatorio_${importId}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('Download iniciado'); }catch(e){ console.error(e); toast('Erro ao baixar relatório'); } }
 
-// Set default tipo via PUT
-async function setDefault(tipoId){ try{ const token=getCookie('admin_jwt'); const headers={'Content-Type':'application/json'}; if(token) headers['Authorization']='Bearer '+token; const resp = await fetch(`/api/tipos-ingresso/${tipoId}`, { method:'PUT', headers, body: JSON.stringify({padrao:true}) }); if(!resp.ok){ const txt=await resp.text(); toast('Falha ao definir padrão: '+(txt||resp.status)); return; } toast('Tipo configurado como padrão'); setTimeout(()=>location.reload(),900); }catch(e){ console.error(e); toast('Erro ao definir padrão'); } }
 </script>
 
 {% endblock %}
