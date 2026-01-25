@@ -3,130 +3,104 @@
 {% block title %}Participantes - {{ evento.nome }}{% endblock %}
 
 {% block content %}
-<div class=" flex flex-wrap -mx-2  mb-4">
-    <div class=" w-full px-2 ">
-        <div class="md-card p-4">
-            <div class=" flex   justify-between   items-center ">
-                <div>
-                    <h1 class="text-slate-100 mb-1">Participantes - {{ evento.nome }}</h1>
-                    <p class="text-slate-100-muted mb-0">{{ total_participantes }} participante(s) cadastrado(s)</p>
-                </div>
-                <a href="/admin/eventos/{{ evento.id }}" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass">
-                    <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
-                    Voltar
-                </a>
-            </div>
-        </div>
+<header class="p-6 md:px-12 pt-8 flex justify-between items-center">
+  <div>
+    <h1 class="text-2xl font-semibold text-slate-100">Participantes - {{ evento.nome }}</h1>
+    <p class="text-sm text-slate-400">{{ total_participantes }} participante(s) cadastrado(s)</p>
+  </div>
+  <a href="/admin/eventos/{{ evento.id }}" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 text-slate-100 rounded-lg hover:bg-slate-600"> 
+    <span class="material-symbols-outlined">arrow_back</span>
+    Voltar
+  </a>
+</header>
+
+<main class="px-4 md:px-12 pb-24">
+  <section class="md-card p-4 mb-6">
+    <form action="/admin/eventos/{{ evento.id }}/participantes" method="GET" class="grid grid-cols-1 md:grid-cols-6 gap-3 items-center">
+      <div class="md:col-span-4">
+        <input type="text" name="busca" placeholder="Buscar por nome, email ou CPF..." value="{{ busca }}" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
+      </div>
+      <div class="md:col-span-2">
+        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg"> 
+          <span class="material-symbols-outlined">search</span>
+          Buscar
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="md-card p-4">
+    {% if participantes %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead class="text-slate-400 text-xs uppercase">
+          <tr>
+            <th class="px-3 py-2">Nome</th>
+            <th class="px-3 py-2">Email</th>
+            <th class="px-3 py-2">CPF</th>
+            <th class="px-3 py-2">Ingressos</th>
+            <th class="px-3 py-2 text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-700/50">
+          {% for participante in participantes %}
+          <tr class="hover:bg-slate-700/30 transition-colors">
+            <td class="px-3 py-2 text-slate-100">{{ participante.nome }}</td>
+            <td class="px-3 py-2 text-slate-400">{{ participante.email }}</td>
+            <td class="px-3 py-2 text-slate-400">{{ participante.cpf or '-' }}</td>
+            <td class="px-3 py-2">
+              {% if participante.ingressos_count > 0 %}
+              <span class="inline-flex items-center px-2 py-1 rounded-full bg-green-700 text-green-100 text-xs font-semibold">{{ participante.ingressos_count }}</span>
+              {% else %}
+              <span class="inline-flex items-center px-2 py-1 rounded-full bg-slate-700 text-slate-200 text-xs font-semibold">0</span>
+              {% endif %}
+            </td>
+            <td class="px-3 py-2 text-right">
+              <form action="/admin/eventos/{{ evento.id }}/participantes/{{ participante.id }}/delete" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este participante e todos os seus ingressos? Esta ação não pode ser desfeita.');" class="inline">
+                <button type="submit" class="inline-flex items-center gap-2 px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded-md">
+                  <span class="material-symbols-outlined">delete</span>
+                  Excluir
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-</div>
-
-<!-- Filtros de Busca -->
-<div class=" flex flex-wrap -mx-2  mb-3">
-    <div class=" w-full px-2 ">
-        <div class="md-card p-3">
-            <form action="/admin/eventos/{{ evento.id }}/participantes" method="GET" class=" flex flex-wrap -mx-2  g-2">
-                <div class="col-md-5">
-                    <input type="text" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " name="busca" 
-                           placeholder="Buscar por nome, email ou CPF..." value="{{ busca }}">
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass w-100">
-                        <i data-lucide="search" style="width: 16px; height: 16px;"></i>
-                        Buscar
-                    </button>
-                </div>
-            </form>
-        </div>
+    {% else %}
+    <div class="text-center p-8">
+      <span class="material-symbols-outlined text-6xl text-slate-600 mb-4 block">groups</span>
+      <h4 class="text-slate-100">Nenhum participante encontrado</h4>
+      <p class="text-slate-400">{% if busca %}Tente ajustar os filtros de busca{% else %}Os participantes aparecerão aqui quando forem cadastrados{% endif %}</p>
+      {% if debug_info %}
+      <div class="mt-3 text-left text-xs text-red-400">
+        <strong>DEBUG:</strong>
+        <div>Participantes obtidos: {{ debug_info.participants }}</div>
+        <div>Participante IDs encontrados em ingressos_emitidos: {{ debug_info.pids_found }}</div>
+      </div>
+      {% endif %}
     </div>
-</div>
+    {% endif %}
 
-<!-- Lista de Participantes -->
-<div class=" flex flex-wrap -mx-2 ">
-    <div class=" w-full px-2 ">
-        <div class="md-card p-4">
-            {% if participantes %}
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr>
-                            <th class="text-slate-100">Nome</th>
-                            <th class="text-slate-100">Email</th>
-                            <th class="text-slate-100">CPF</th>
-                            <th class="text-slate-100">Ingressos</th>
-                            <th class="text-slate-100 text-end">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for participante in participantes %}
-                        <tr>
-                            <td class="text-slate-100">{{ participante.nome }}</td>
-                            <td class="text-slate-100-muted small">{{ participante.email }}</td>
-                            <td class="text-slate-100-muted small">{{ participante.cpf or '-' }}</td>
-                            <td>
-                                {% if participante.ingressos_count > 0 %}
-                                <span class="badge bg-success">{{ participante.ingressos_count }}</span>
-                                {% else %}
-                                <span class="badge bg-secondary">0</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-end">
-                                <!-- TEMPORARY: botão de exclusão via UI administrativa -->
-                                <form action="/admin/eventos/{{ evento.id }}/participantes/{{ participante.id }}/delete" 
-                                      method="POST" 
-                                      onsubmit="return confirm('Tem certeza que deseja excluir este participante e todos os seus ingressos? Esta ação não pode ser desfeita.');"
-                                      class="d-inline">
-                                    <button type="submit" class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -danger">
-                                        <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
-                                        Excluir
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="text-center p-5">
-                <i data-lucide="users" class="text-slate-100 mb-3" style="width: 64px; height: 64px;"></i>
-                <h4 class="text-slate-100">Nenhum participante encontrado</h4>
-                <p class="text-slate-100-muted">{% if busca %}Tente ajustar os filtros de busca{% else %}Os participantes aparecerão aqui quando forem cadastrados{% endif %}</p>
-                {% if debug_info %}
-                <div class="mt-3 text-start small text-danger">
-                    <strong>DEBUG:</strong>
-                    <div>Participantes obtidos: {{ debug_info.participants }}</div>
-                    <div>Participante IDs encontrados em ingressos_emitidos: {{ debug_info.pids_found }}</div>
-                </div>
-                {% endif %}
-            </div>
-            {% endif %}
-
-            <!-- Paginação -->
-            {% if total_pages and total_pages > 1 %}
-            <div class=" flex flex-wrap -mx-2  mt-3">
-                <div class=" w-full px-2 ">
-                    <nav aria-label="Participants pagination">
-                        <ul class="pagination justify-content-center">
-                            {% if page and page > 1 %}
-                            <li class="page-item">
-                                <a class="page-link" href="?busca={{ busca }}&page={{ page - 1 }}">Anterior</a>
-                            </li>
-                            {% endif %}
-                            {% for p in range(1, total_pages + 1) %}
-                            <li class="page-item {% if p == page %}active{% endif %}"><a class="page-link" href="?busca={{ busca }}&page={{ p }}">{{ p }}</a></li>
-                            {% endfor %}
-                            {% if page and page < total_pages %}
-                            <li class="page-item">
-                                <a class="page-link" href="?busca={{ busca }}&page={{ page + 1 }}">Próximo</a>
-                            </li>
-                            {% endif %}
-                        </ul>
-                    </nav>
-                </div>
-            </div>
-            {% endif %}
-
-        </div>
+    {% if total_pages and total_pages > 1 %}
+    <div class="mt-4 flex justify-center">
+      <nav>
+        <ul class="inline-flex items-center space-x-2">
+          {% if page and page > 1 %}
+          <li><a href="?busca={{ busca }}&page={{ page - 1 }}" class="px-3 py-1 bg-slate-700 text-slate-100 rounded">Anterior</a></li>
+          {% endif %}
+          {% for p in range(1, total_pages + 1) %}
+          <li><a href="?busca={{ busca }}&page={{ p }}" class="px-3 py-1 {% if p == page %}bg-blue-500 text-slate-900{% else %}bg-slate-800 text-slate-100{% endif %} rounded">{{ p }}</a></li>
+          {% endfor %}
+          {% if page and page < total_pages %}
+          <li><a href="?busca={{ busca }}&page={{ page + 1 }}" class="px-3 py-1 bg-slate-700 text-slate-100 rounded">Próximo</a></li>
+          {% endif %}
+        </ul>
+      </nav>
     </div>
-</div>
+    {% endif %}
+
+  </section>
+</main>
 {% endblock %}
