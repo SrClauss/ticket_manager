@@ -169,7 +169,10 @@ class FakeCursor:
     
     def __aiter__(self):
         """Suporte para iteração assíncrona."""
-        self._iter_docs = iter(self.docs[self._skip:self._limit] if self._limit else self.docs[self._skip:])
+        if self._limit:
+            self._iter_docs = iter(self.docs[self._skip:self._skip + self._limit])
+        else:
+            self._iter_docs = iter(self.docs[self._skip:])
         return self
     
     async def __anext__(self):
