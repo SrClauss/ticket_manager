@@ -26,37 +26,25 @@
     </div>
     
     <!-- Bottom Navigation -->
-    <nav class="bottom-nav glass-nav">
-        <div class="container">
-            <div class="row text-center">
-                <div class="col">
-                    <a href="/admin/dashboard" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
-                        <i data-lucide="layout-dashboard"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </div>
-                <div class="col">
-                    <a href="/admin/eventos" class="nav-link {% if active_page == 'eventos' %}active{% endif %}">
-                        <i data-lucide="calendar"></i>
-                        <span>Eventos</span>
-                    </a>
-                </div>
-                <div class="col">
-                    <a href="/admin/configuracoes" class="nav-link {% if active_page == 'configuracoes' %}active{% endif %}">
-                        <i data-lucide="settings"></i>
-                        <span>Config</span>
-                    </a>
-                </div>
-                <div class="col">
-                    <a href="/admin/logout" class="nav-link">
-                        <i data-lucide="log-out"></i>
-                        <span>Sair</span>
-                    </a>
-                </div>
-            </div>
-        </div>
+    <nav class="fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur-md border-t border-slate-700 h-20 flex justify-around items-center px-4 z-50">
+        <a href="/admin/dashboard" class="flex flex-col items-center {% if active_page == 'dashboard' %}nav-active{% endif %} px-3 py-1 rounded-full">
+            <span class="material-symbols-outlined">grid_view</span>
+            <span class="text-[11px] font-medium">Início</span>
+        </a>
+        <a href="/admin/eventos" class="flex flex-col items-center text-slate-400 hover:text-slate-100 px-3 py-1 rounded-full">
+            <span class="material-symbols-outlined">calendar_today</span>
+            <span class="text-[11px] font-medium">Eventos</span>
+        </a>
+        <a href="/admin/configuracoes" class="flex flex-col items-center text-slate-400 hover:text-slate-100 px-3 py-1 rounded-full">
+            <span class="material-symbols-outlined">settings</span>
+            <span class="text-[11px] font-medium">Config</span>
+        </a>
+        <a href="/admin/logout" class="flex flex-col items-center text-slate-400 hover:text-red-400 px-3 py-1 rounded-full">
+            <span class="material-symbols-outlined">logout</span>
+            <span class="text-[11px] font-medium">Sair</span>
+        </a>
     </nav>
-    
+
 
     
     <!-- Initialize Lucide Icons -->
