@@ -3,15 +3,15 @@
 {% block title %}Participantes - {{ evento.nome }}{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="glass-card p-4">
-            <div class="d-flex justify-content-between align-items-center">
+<div class=" flex flex-wrap -mx-2  mb-4">
+    <div class=" w-full px-2 ">
+        <div class="md-card p-4">
+            <div class=" flex   justify-between   items-center ">
                 <div>
-                    <h1 class="text-glass mb-1">Participantes - {{ evento.nome }}</h1>
-                    <p class="text-glass-muted mb-0">{{ total_participantes }} participante(s) cadastrado(s)</p>
+                    <h1 class="text-slate-100 mb-1">Participantes - {{ evento.nome }}</h1>
+                    <p class="text-slate-100-muted mb-0">{{ total_participantes }} participante(s) cadastrado(s)</p>
                 </div>
-                <a href="/admin/eventos/{{ evento.id }}" class="btn btn-glass">
+                <a href="/admin/eventos/{{ evento.id }}" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass">
                     <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
                     Voltar
                 </a>
@@ -21,16 +21,16 @@
 </div>
 
 <!-- Filtros de Busca -->
-<div class="row mb-3">
-    <div class="col-12">
-        <div class="glass-card p-3">
-            <form action="/admin/eventos/{{ evento.id }}/participantes" method="GET" class="row g-2">
+<div class=" flex flex-wrap -mx-2  mb-3">
+    <div class=" w-full px-2 ">
+        <div class="md-card p-3">
+            <form action="/admin/eventos/{{ evento.id }}/participantes" method="GET" class=" flex flex-wrap -mx-2  g-2">
                 <div class="col-md-5">
-                    <input type="text" class="form-control" name="busca" 
+                    <input type="text" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " name="busca" 
                            placeholder="Buscar por nome, email ou CPF..." value="{{ busca }}">
                 </div>
                 <div class="col-md-2">
-                    <button type="submit" class="btn btn-glass w-100">
+                    <button type="submit" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass w-100">
                         <i data-lucide="search" style="width: 16px; height: 16px;"></i>
                         Buscar
                     </button>
@@ -41,27 +41,27 @@
 </div>
 
 <!-- Lista de Participantes -->
-<div class="row">
-    <div class="col-12">
-        <div class="glass-card p-4">
+<div class=" flex flex-wrap -mx-2 ">
+    <div class=" w-full px-2 ">
+        <div class="md-card p-4">
             {% if participantes %}
-            <div class="table-responsive">
-                <table class="table table-hover">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
                     <thead>
                         <tr>
-                            <th class="text-glass">Nome</th>
-                            <th class="text-glass">Email</th>
-                            <th class="text-glass">CPF</th>
-                            <th class="text-glass">Ingressos</th>
-                            <th class="text-glass text-end">Ações</th>
+                            <th class="text-slate-100">Nome</th>
+                            <th class="text-slate-100">Email</th>
+                            <th class="text-slate-100">CPF</th>
+                            <th class="text-slate-100">Ingressos</th>
+                            <th class="text-slate-100 text-end">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for participante in participantes %}
                         <tr>
-                            <td class="text-glass">{{ participante.nome }}</td>
-                            <td class="text-glass-muted small">{{ participante.email }}</td>
-                            <td class="text-glass-muted small">{{ participante.cpf or '-' }}</td>
+                            <td class="text-slate-100">{{ participante.nome }}</td>
+                            <td class="text-slate-100-muted small">{{ participante.email }}</td>
+                            <td class="text-slate-100-muted small">{{ participante.cpf or '-' }}</td>
                             <td>
                                 {% if participante.ingressos_count > 0 %}
                                 <span class="badge bg-success">{{ participante.ingressos_count }}</span>
@@ -75,7 +75,7 @@
                                       method="POST" 
                                       onsubmit="return confirm('Tem certeza que deseja excluir este participante e todos os seus ingressos? Esta ação não pode ser desfeita.');"
                                       class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-danger">
+                                    <button type="submit" class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -danger">
                                         <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                                         Excluir
                                     </button>
@@ -88,9 +88,9 @@
             </div>
             {% else %}
             <div class="text-center p-5">
-                <i data-lucide="users" class="text-glass mb-3" style="width: 64px; height: 64px;"></i>
-                <h4 class="text-glass">Nenhum participante encontrado</h4>
-                <p class="text-glass-muted">{% if busca %}Tente ajustar os filtros de busca{% else %}Os participantes aparecerão aqui quando forem cadastrados{% endif %}</p>
+                <i data-lucide="users" class="text-slate-100 mb-3" style="width: 64px; height: 64px;"></i>
+                <h4 class="text-slate-100">Nenhum participante encontrado</h4>
+                <p class="text-slate-100-muted">{% if busca %}Tente ajustar os filtros de busca{% else %}Os participantes aparecerão aqui quando forem cadastrados{% endif %}</p>
                 {% if debug_info %}
                 <div class="mt-3 text-start small text-danger">
                     <strong>DEBUG:</strong>
@@ -103,8 +103,8 @@
 
             <!-- Paginação -->
             {% if total_pages and total_pages > 1 %}
-            <div class="row mt-3">
-                <div class="col-12">
+            <div class=" flex flex-wrap -mx-2  mt-3">
+                <div class=" w-full px-2 ">
                     <nav aria-label="Participants pagination">
                         <ul class="pagination justify-content-center">
                             {% if page and page > 1 %}

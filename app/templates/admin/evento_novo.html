@@ -3,15 +3,15 @@
 {% block title %}Novo Evento - EventMaster Admin{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="glass-card p-4">
-            <div class="d-flex justify-content-between align-items-center">
+<div class=" flex flex-wrap -mx-2  mb-4">
+    <div class=" w-full px-2 ">
+        <div class="md-card p-4">
+            <div class=" flex   justify-between   items-center ">
                 <div>
-                    <h1 class="text-glass mb-0">Novo Evento</h1>
-                    <p class="text-glass-muted mb-0">Criar um novo evento</p>
+                    <h1 class="text-slate-100 mb-0">Novo Evento</h1>
+                    <p class="text-slate-100-muted mb-0">Criar um novo evento</p>
                 </div>
-                <a href="/admin/eventos" class="btn btn-glass">
+                <a href="/admin/eventos" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass">
                     <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
                     Voltar
                 </a>
@@ -20,33 +20,33 @@
     </div>
 </div>
 
-<div class="row">
+<div class=" flex flex-wrap -mx-2 ">
     <div class="col-lg-8 mx-auto">
-        <div class="glass-card p-4">
+        <div class="md-card p-4">
             <form action="/admin/eventos/novo" method="POST" enctype="multipart/form-data" id="eventoForm">
                 <!-- Nome do Evento -->
                 <div class="mb-3">
-                    <label for="nome" class="form-label text-glass">Nome do Evento *</label>
-                    <input type="text" class="form-control" id="nome" name="nome" required maxlength="200">
+                    <label for="nome" class="form-label text-slate-100">Nome do Evento *</label>
+                    <input type="text" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="nome" name="nome" required maxlength="200">
                 </div>
                 
                 <!-- Descrição -->
                 <div class="mb-3">
-                    <label for="descricao" class="form-label text-glass">Descrição *</label>
-                    <textarea class="form-control" id="descricao" name="descricao" rows="4" required></textarea>
+                    <label for="descricao" class="form-label text-slate-100">Descrição *</label>
+                    <textarea class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="descricao" name="descricao" rows="4" required></textarea>
                 </div>
                 
                 <!-- Data do Evento -->
                 <div class="mb-3">
-                    <label for="data_evento" class="form-label text-glass">Data e Hora do Evento *</label>
-                    <input type="datetime-local" class="form-control" id="data_evento" name="data_evento" required>
+                    <label for="data_evento" class="form-label text-slate-100">Data e Hora do Evento *</label>
+                    <input type="datetime-local" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="data_evento" name="data_evento" required>
                 </div>
                 
                 <!-- Upload de Logo -->
                 <div class="mb-3">
-                    <label for="logo" class="form-label text-glass">Logo do Evento</label>
-                    <input type="file" class="form-control" id="logo" name="logo" accept=".png,.jpg,.jpeg">
-                    <div class="form-text text-glass-muted">
+                    <label for="logo" class="form-label text-slate-100">Logo do Evento</label>
+                    <input type="file" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="logo" name="logo" accept=".png,.jpg,.jpeg">
+                    <div class="form-text text-slate-100-muted">
                         <i data-lucide="info" style="width: 14px; height: 14px;"></i>
                         Formatos aceitos: PNG, JPG. Tamanho máximo: 200KB
                     </div>
@@ -55,8 +55,8 @@
                 
                 <!-- Preview do Logo -->
                 <div id="logoPreview" class="mb-3" style="display: none;">
-                    <label class="form-label text-glass">Preview</label>
-                    <div class="text-center p-3 glass-card">
+                    <label class="form-label text-slate-100">Preview</label>
+                    <div class="text-center p-3 md-card">
                         <img id="logoPreviewImg" src="" alt="Preview" class="img-fluid rounded" style="max-height: 200px;">
                     </div>
                 </div>
@@ -65,19 +65,19 @@
                 <div class="mb-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="ativo" name="ativo" checked>
-                        <label class="form-check-label text-glass" for="ativo">
+                        <label class="form-check-label text-slate-100" for="ativo">
                             Evento ativo
                         </label>
                     </div>
                 </div>
                 
                 <!-- Botões -->
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-gradient flex-fill">
+                <div class=" flex  gap-2">
+                    <button type="submit" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient flex-fill">
                         <i data-lucide="save" style="width: 20px; height: 20px;"></i>
                         Salvar Evento
                     </button>
-                    <a href="/admin/eventos" class="btn btn-glass flex-fill">
+                    <a href="/admin/eventos" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass flex-fill">
                         Cancelar
                     </a>
                 </div>

@@ -23,15 +23,15 @@
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class=" container mx-auto px-4  py-4">
     <!-- Header -->
-    <div class="glass-card p-4 mb-4">
-        <div class="d-flex justify-content-between align-items-center">
+    <div class="md-card p-4 mb-4">
+        <div class=" flex   justify-between   items-center ">
             <div>
-                <h2 class="text-glass mb-1">Coletor de Leads</h2>
-                <p class="text-glass-muted mb-0">Capture contatos via QR Code</p>
+                <h2 class="text-slate-100 mb-1">Coletor de Leads</h2>
+                <p class="text-slate-100-muted mb-0">Capture contatos via QR Code</p>
             </div>
-            <button class="btn btn-gradient" onclick="exportLeads()">
+            <button class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient" onclick="exportLeads()">
                 <i data-lucide="download" style="width: 20px; height: 20px;"></i>
                 Exportar
             </button>
@@ -39,43 +39,43 @@
     </div>
     
     <!-- Stats -->
-    <div class="row stats-row">
+    <div class="row stats- flex flex-wrap -mx-2 ">
         <div class="col-6">
-            <div class="glass-card p-3 text-center">
-                <h3 class="text-glass" id="leadsCount">0</h3>
-                <small class="text-glass-muted">Leads Coletados</small>
+            <div class="md-card p-3 text-center">
+                <h3 class="text-slate-100" id="leadsCount">0</h3>
+                <small class="text-slate-100-muted">Leads Coletados</small>
             </div>
         </div>
         <div class="col-6">
-            <div class="glass-card p-3 text-center">
-                <h3 class="text-glass" id="todayCount">0</h3>
-                <small class="text-glass-muted">Hoje</small>
+            <div class="md-card p-3 text-center">
+                <h3 class="text-slate-100" id="todayCount">0</h3>
+                <small class="text-slate-100-muted">Hoje</small>
             </div>
         </div>
     </div>
     
     <!-- QR Scanner -->
-    <div class="glass-card p-4 text-center mb-4">
-        <h5 class="text-glass mb-3">Scanner QR Code</h5>
+    <div class="md-card p-4 text-center mb-4">
+        <h5 class="text-slate-100 mb-3">Scanner QR Code</h5>
         <div id="qr-reader-lead"></div>
-        <p class="text-glass-muted mt-3" id="scannerStatus">Clique no botão para iniciar</p>
-        <button class="btn btn-gradient mt-3" id="toggleCameraLead">
+        <p class="text-slate-100-muted mt-3" id="scannerStatus">Clique no botão para iniciar</p>
+        <button class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient mt-3" id="toggleCameraLead">
             <i data-lucide="camera" style="width: 20px; height: 20px;"></i>
             Iniciar Scanner
         </button>
     </div>
     
     <!-- Leads List -->
-    <div class="glass-card p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="text-glass mb-0">Leads Capturados</h5>
-            <button class="btn btn-glass btn-sm" onclick="clearLeads()">
+    <div class="md-card p-4">
+        <div class=" flex   justify-between   items-center  mb-3">
+            <h5 class="text-slate-100 mb-0">Leads Capturados</h5>
+            <button class="btn btn-glass  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -sm" onclick="clearLeads()">
                 <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
                 Limpar
             </button>
         </div>
         <div id="leadsList">
-            <p class="text-glass-muted text-center">Nenhum lead capturado ainda</p>
+            <p class="text-slate-100-muted text-center">Nenhum lead capturado ainda</p>
         </div>
     </div>
 </div>
@@ -177,7 +177,7 @@
         const container = document.getElementById('leadsList');
         
         if (leads.length === 0) {
-            container.innerHTML = '<p class="text-glass-muted text-center">Nenhum lead capturado ainda</p>';
+            container.innerHTML = '<p class="text-slate-100-muted text-center">Nenhum lead capturado ainda</p>';
             return;
         }
         
@@ -185,14 +185,14 @@
         leads.forEach((lead, index) => {
             const date = new Date(lead.timestamp);
             html += `
-                <div class="glass-card p-3 lead-card">
-                    <div class="d-flex justify-content-between align-items-center">
+                <div class="md-card p-3 lead-card">
+                    <div class=" flex   justify-between   items-center ">
                         <div>
-                            <small class="text-glass-muted d-block">Lead #${leads.length - index}</small>
-                            <code class="text-glass">${lead.qrcode.substring(0, 40)}...</code>
-                            <small class="text-glass-muted d-block mt-1">${date.toLocaleString('pt-BR')}</small>
+                            <small class="text-slate-100-muted d-block">Lead #${leads.length - index}</small>
+                            <code class="text-slate-100">${lead.qrcode.substring(0, 40)}...</code>
+                            <small class="text-slate-100-muted d-block mt-1">${date.toLocaleString('pt-BR')}</small>
                         </div>
-                        <button class="btn btn-glass btn-sm" onclick="removeLead(${index})">
+                        <button class="btn btn-glass  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -sm" onclick="removeLead(${index})">
                             <i data-lucide="x" style="width: 16px; height: 16px;"></i>
                         </button>
                     </div>

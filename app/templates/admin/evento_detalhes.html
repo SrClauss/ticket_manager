@@ -3,15 +3,15 @@
 {% block title %}{{ evento.nome }} - Detalhes{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="glass-card p-4">
-            <div class="d-flex justify-content-between align-items-center">
+<div class=" flex flex-wrap -mx-2  mb-4">
+    <div class=" w-full px-2 ">
+        <div class="md-card p-4">
+            <div class=" flex   justify-between   items-center ">
                 <div>
-                    <h1 class="text-glass mb-1">{{ evento.nome }}</h1>
-                    <p class="text-glass-muted mb-0">{{ evento.descricao }}</p>
+                    <h1 class="text-slate-100 mb-1">{{ evento.nome }}</h1>
+                    <p class="text-slate-100-muted mb-0">{{ evento.descricao }}</p>
                 </div>
-                <a href="/admin/eventos" class="btn btn-glass">
+                <a href="/admin/eventos" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass">
                     <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
                     Voltar
                 </a>
@@ -21,36 +21,36 @@
 </div>
 
 <!-- Event Info -->
-<div class="row mb-4 gy-4">
+<div class=" flex flex-wrap -mx-2  mb-4 gy-4">
     <!-- Top row: 3 cards on large screens -->
-    <div class="col-12">
-        <div class="row g-3">
-            <div class="col-12 col-md-6 col-lg-4 d-flex">
-                <div class="glass-card p-3 text-center h-100 w-100">
-                    <i data-lucide="calendar" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>
-                    <h6 class="text-glass-muted mb-1">Data do Evento</h6>
-                    <h5 class="text-glass">{{ evento.data_evento.strftime('%d/%m/%Y %H:%M') }}</h5>
+    <div class=" w-full px-2 ">
+        <div class=" flex flex-wrap -mx-2  g-3">
+            <div class=" w-full px-2  col-md-6 col-lg-4  flex ">
+                <div class="md-card p-3 text-center h-100 w-100">
+                    <i data-lucide="calendar" class="text-slate-100 mb-2" style="width: 32px; height: 32px;"></i>
+                    <h6 class="text-slate-100-muted mb-1">Data do Evento</h6>
+                    <h5 class="text-slate-100">{{ evento.data_evento.strftime('%d/%m/%Y %H:%M') }}</h5>
                 </div>
             </div>
-            <div class="col-12 col-md-6 col-lg-4 d-flex">
-                <div class="glass-card p-3 text-center h-100 w-100">
-                    <i data-lucide="key" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>
-                    <h6 class="text-glass-muted mb-1">Token Bilheteria</h6>
-                    <div class="d-flex justify-content-center align-items-center gap-2">
-                        <code class="text-glass small" id="token-bilheteria">{{ evento.token_bilheteria[:20] }}...</code>
-                        <button type="button" class="btn btn-sm btn-glass copy-token-btn" data-token="{{ evento.token_bilheteria }}" title="Copiar token da bilheteria">
+            <div class=" w-full px-2  col-md-6 col-lg-4  flex ">
+                <div class="md-card p-3 text-center h-100 w-100">
+                    <i data-lucide="key" class="text-slate-100 mb-2" style="width: 32px; height: 32px;"></i>
+                    <h6 class="text-slate-100-muted mb-1">Token Bilheteria</h6>
+                    <div class=" flex  justify-content-center  items-center  gap-2">
+                        <code class="text-slate-100 small" id="token-bilheteria">{{ evento.token_bilheteria[:20] }}...</code>
+                        <button type="button" class="btn btn-sm btn-glass copy-token- inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 " data-token="{{ evento.token_bilheteria }}" title="Copiar token da bilheteria">
                             <i data-lucide="copy" style="width:16px;height:16px;"></i>
                         </button>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-md-6 col-lg-4 d-flex">
-                <div class="glass-card p-3 text-center h-100 w-100">
-                    <i data-lucide="shield" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>
-                    <h6 class="text-glass-muted mb-1">Token Portaria</h6>
-                    <div class="d-flex justify-content-center align-items-center gap-2">
-                        <code class="text-glass small" id="token-portaria">{{ evento.token_portaria[:20] }}...</code>
-                        <button type="button" class="btn btn-sm btn-glass copy-token-btn" data-token="{{ evento.token_portaria }}" title="Copiar token da portaria">
+            <div class=" w-full px-2  col-md-6 col-lg-4  flex ">
+                <div class="md-card p-3 text-center h-100 w-100">
+                    <i data-lucide="shield" class="text-slate-100 mb-2" style="width: 32px; height: 32px;"></i>
+                    <h6 class="text-slate-100-muted mb-1">Token Portaria</h6>
+                    <div class=" flex  justify-content-center  items-center  gap-2">
+                        <code class="text-slate-100 small" id="token-portaria">{{ evento.token_portaria[:20] }}...</code>
+                        <button type="button" class="btn btn-sm btn-glass copy-token- inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 " data-token="{{ evento.token_portaria }}" title="Copiar token da portaria">
                             <i data-lucide="copy" style="width:16px;height:16px;"></i>
                         </button>
                     </div>
@@ -60,35 +60,35 @@
     </div>
 
     <!-- Bottom row: 2 cards centered on large screens -->
-    <div class="col-12">
-        <div class="row g-3 justify-content-center">
-            <div class="col-12 col-md-6 col-lg-4 d-flex">
-                <div class="glass-card p-3 text-center h-100 w-100">
-                    <i data-lucide="ticket-plus" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>
-                    <h6 class="text-glass-muted mb-1">Página de Cadastro do Evento</h6>
-                    <div class="d-flex justify-content-center align-items-center gap-2">
-                        <code class="text-glass small truncate-path" id="evento-public-link" title="/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso" style="display:inline-block;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso</code>
-                        <button type="button" class="btn btn-sm btn-glass copy-link-btn" data-link="/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso" title="Copiar link público do evento">
+    <div class=" w-full px-2 ">
+        <div class=" flex flex-wrap -mx-2  g-3 justify-content-center">
+            <div class=" w-full px-2  col-md-6 col-lg-4  flex ">
+                <div class="md-card p-3 text-center h-100 w-100">
+                    <i data-lucide="ticket-plus" class="text-slate-100 mb-2" style="width: 32px; height: 32px;"></i>
+                    <h6 class="text-slate-100-muted mb-1">Página de Cadastro do Evento</h6>
+                    <div class=" flex  justify-content-center  items-center  gap-2">
+                        <code class="text-slate-100 small truncate-path" id="evento-public-link" title="/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso" style="display:inline-block;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso</code>
+                        <button type="button" class="btn btn-sm btn-glass copy-link- inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 " data-link="/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso" title="Copiar link público do evento">
                             <i data-lucide="copy" style="width:16px;height:16px;"></i>
                         </button>
                     </div>
                     <div class="mt-2">
-                        <a href="/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso" class="btn btn-sm btn-outline">Abrir</a>
+                        <a href="/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso" class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -outline">Abrir</a>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-md-6 col-lg-4 d-flex">
-                <div class="glass-card p-3 text-center h-100 w-100">
-                    <i data-lucide="link" class="text-glass mb-2" style="width: 32px; height: 32px;"></i>
-                    <h6 class="text-glass-muted mb-1">Autorizações de Upload</h6>
-                    <div class="d-flex justify-content-center align-items-center gap-2">
-                        <code class="text-glass small truncate-path" id="evento-upload-link" title="/admin/eventos/{{ evento.id }}/planilhas/empresas" style="display:inline-block;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">/admin/eventos/{{ evento.id }}/planilhas/empresas</code>
-                        <button type="button" class="btn btn-sm btn-glass copy-link-btn" data-link="/admin/eventos/{{ evento.id }}/planilhas/empresas" title="Copiar link para gerenciamento de autorizações">
+            <div class=" w-full px-2  col-md-6 col-lg-4  flex ">
+                <div class="md-card p-3 text-center h-100 w-100">
+                    <i data-lucide="link" class="text-slate-100 mb-2" style="width: 32px; height: 32px;"></i>
+                    <h6 class="text-slate-100-muted mb-1">Autorizações de Upload</h6>
+                    <div class=" flex  justify-content-center  items-center  gap-2">
+                        <code class="text-slate-100 small truncate-path" id="evento-upload-link" title="/admin/eventos/{{ evento.id }}/planilhas/empresas" style="display:inline-block;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">/admin/eventos/{{ evento.id }}/planilhas/empresas</code>
+                        <button type="button" class="btn btn-sm btn-glass copy-link- inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 " data-link="/admin/eventos/{{ evento.id }}/planilhas/empresas" title="Copiar link para gerenciamento de autorizações">
                             <i data-lucide="copy" style="width:16px;height:16px;"></i>
                         </button>
                     </div>
                     <div class="mt-2">
-                        <a href="/admin/eventos/{{ evento.id }}/planilhas/empresas" class="btn btn-sm btn-outline">Gerenciar</a>
+                        <a href="/admin/eventos/{{ evento.id }}/planilhas/empresas" class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -outline">Gerenciar</a>
                     </div>
                 </div>
             </div>
@@ -98,20 +98,20 @@
 </div>
 
 <!-- Quick Actions (removidos links de abertura de bilheteria/portaria) -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="glass-card p-3">
-            <div class="row g-2">
-                <div class="col-12 d-flex gap-2 justify-content-center flex-wrap">
-                    <a href="/admin/eventos/layout/{{ evento.id }}" class="btn btn-gradient">
+<div class=" flex flex-wrap -mx-2  mb-4">
+    <div class=" w-full px-2 ">
+        <div class="md-card p-3">
+            <div class=" flex flex-wrap -mx-2  g-2">
+                <div class=" w-full px-2   flex  gap-2 justify-content-center flex-wrap">
+                    <a href="/admin/eventos/layout/{{ evento.id }}" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient">
                         <i data-lucide="layout" style="width: 20px; height: 20px;"></i>
                         Editor de Layout
                     </a>
-                    <a href="/admin/eventos/{{ evento.id }}/planilhas" class="btn btn-outline" title="Configurar campos obrigatórios e inscrições públicas">
+                    <a href="/admin/eventos/{{ evento.id }}/planilhas" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -outline" title="Configurar campos obrigatórios e inscrições públicas">
                         <i data-lucide="file-text" style="width: 20px; height: 20px;"></i>
                         Configurar Planilhas
                     </a>
-                    <a href="/admin/eventos/{{ evento.id }}/participantes" class="btn btn-outline">
+                    <a href="/admin/eventos/{{ evento.id }}/participantes" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -outline">
                         <i data-lucide="users" style="width: 20px; height: 20px;"></i>
                         Gerenciar Participantes
                     </a>
@@ -122,24 +122,24 @@
 </div>
 
 <!-- Ilhas/Setores -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="glass-card p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="text-glass mb-0">Ilhas/Setores</h5>
-                <button class="btn btn-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#addIlhaModal">
+<div class=" flex flex-wrap -mx-2  mb-4">
+    <div class=" w-full px-2 ">
+        <div class="md-card p-4">
+            <div class=" flex   justify-between   items-center  mb-3">
+                <h5 class="text-slate-100 mb-0">Ilhas/Setores</h5>
+                <button class="btn btn-gradient  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -sm" data-bs-toggle="modal" data-bs-target="#addIlhaModal">
                     <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
                     Adicionar Ilha
                 </button>
             </div>
             
             {% if ilhas %}
-            <div class="row">
+            <div class=" flex flex-wrap -mx-2 ">
                 {% for ilha in ilhas %}
                 <div class="col-md-6 mb-3">
-                    <div class="glass-card p-3">
-                        <h6 class="text-glass">{{ ilha.nome_setor }}</h6>
-                        <p class="text-glass-muted mb-0 small">
+                    <div class="md-card p-3">
+                        <h6 class="text-slate-100">{{ ilha.nome_setor }}</h6>
+                        <p class="text-slate-100-muted mb-0 small">
                             <i data-lucide="users" style="width: 14px; height: 14px;"></i>
                             Capacidade: {{ ilha.capacidade_maxima }}
                         </p>
@@ -148,29 +148,29 @@
                 {% endfor %}
             </div>
             {% else %}
-            <p class="text-glass-muted text-center">Nenhuma ilha cadastrada</p>
+            <p class="text-slate-100-muted text-center">Nenhuma ilha cadastrada</p>
             {% endif %}
         </div>
     </div>
 </div>
 
 <!-- Tipos de Ingresso -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="glass-card p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="text-glass mb-0">Tipos de Ingresso</h5>
-                <button class="btn btn-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#addTipoIngressoModal">
+<div class=" flex flex-wrap -mx-2  mb-4">
+    <div class=" w-full px-2 ">
+        <div class="md-card p-4">
+            <div class=" flex   justify-between   items-center  mb-3">
+                <h5 class="text-slate-100 mb-0">Tipos de Ingresso</h5>
+                <button class="btn btn-gradient  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -sm" data-bs-toggle="modal" data-bs-target="#addTipoIngressoModal">
                     <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
                     Adicionar Tipo
                 </button>
             </div>
             
             {% if tipos_ingresso %}
-            <div class="table-responsive">
+            <div class="overflow-x-auto">
                 <table class="table">
                     <thead>
-                        <tr class="text-glass-muted">
+                        <tr class="text-slate-100-muted">
                             <th>Descrição</th>
                             <th>Valor</th>
                             <th>Permissões</th>
@@ -178,7 +178,7 @@
                     </thead>
                     <tbody>
                         {% for tipo in tipos_ingresso %}
-                        <tr class="text-glass">
+                        <tr class="text-slate-100">
                             <td>{{ tipo.descricao }}</td>
                             <td>R$ {{ "%.2f"|format(tipo.valor) }}</td>
                             <td>
@@ -190,7 +190,7 @@
                 </table>
             </div>
             {% else %}
-            <p class="text-glass-muted text-center">Nenhum tipo de ingresso cadastrado</p>
+            <p class="text-slate-100-muted text-center">Nenhum tipo de ingresso cadastrado</p>
             {% endif %}
         </div>
     </div>
@@ -199,26 +199,26 @@
 <!-- Add Ilha Modal -->
 <div class="modal fade" id="addIlhaModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content glass-card">
+        <div class="modal-content md-card">
             <div class="modal-header border-0">
-                <h5 class="modal-title text-glass">Adicionar Ilha/Setor</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title text-slate-100">Adicionar Ilha/Setor</h5>
+                <button type="button" class="btn-close  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="addIlhaForm">
                     <div class="mb-3">
-                        <label class="form-label text-glass">Nome do Setor *</label>
-                        <input type="text" class="form-control" id="ilhaNome" required>
+                        <label class="form-label text-slate-100">Nome do Setor *</label>
+                        <input type="text" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="ilhaNome" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-glass">Capacidade Máxima *</label>
-                        <input type="number" class="form-control" id="ilhaCapacidade" min="1" required>
+                        <label class="form-label text-slate-100">Capacidade Máxima *</label>
+                        <input type="number" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="ilhaCapacidade" min="1" required>
                     </div>
                 </form>
             </div>
             <div class="modal-footer border-0">
-                <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-gradient" onclick="addIlha()">
+                <button type="button" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient" onclick="addIlha()">
                     <i data-lucide="save" style="width: 16px; height: 16px;"></i>
                     Salvar
                 </button>
@@ -230,40 +230,40 @@
 <!-- Add Tipo Ingresso Modal -->
 <div class="modal fade" id="addTipoIngressoModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content glass-card">
+        <div class="modal-content md-card">
             <div class="modal-header border-0">
-                <h5 class="modal-title text-glass">Adicionar Tipo de Ingresso</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title text-slate-100">Adicionar Tipo de Ingresso</h5>
+                <button type="button" class="btn-close  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="addTipoIngressoForm">
                     <div class="mb-3">
-                        <label class="form-label text-glass">Descrição *</label>
-                        <input type="text" class="form-control" id="tipoDescricao" required>
+                        <label class="form-label text-slate-100">Descrição *</label>
+                        <input type="text" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="tipoDescricao" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-glass">Valor (R$) *</label>
-                        <input type="number" class="form-control" id="tipoValor" min="0" step="0.01" required>
+                        <label class="form-label text-slate-100">Valor (R$) *</label>
+                        <input type="number" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="tipoValor" min="0" step="0.01" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-glass">Permissões de Acesso</label>
+                        <label class="form-label text-slate-100">Permissões de Acesso</label>
                         {% for ilha in ilhas %}
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" value="{{ ilha.id }}" id="ilha_{{ ilha.id }}">
-                            <label class="form-check-label text-glass" for="ilha_{{ ilha.id }}">
+                            <label class="form-check-label text-slate-100" for="ilha_{{ ilha.id }}">
                                 {{ ilha.nome_setor }}
                             </label>
                         </div>
                         {% endfor %}
                         {% if not ilhas %}
-                        <p class="text-glass-muted small">Nenhuma ilha disponível. Adicione ilhas primeiro.</p>
+                        <p class="text-slate-100-muted small">Nenhuma ilha disponível. Adicione ilhas primeiro.</p>
                         {% endif %}
                     </div>
                 </form>
             </div>
             <div class="modal-footer border-0">
-                <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-gradient" onclick="addTipoIngresso()">
+                <button type="button" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient" onclick="addTipoIngresso()">
                     <i data-lucide="save" style="width: 16px; height: 16px;"></i>
                     Salvar
                 </button>
@@ -388,7 +388,7 @@
         const toast = document.createElement('div');
         toast.className = 'toast align-items-center show';
         toast.setAttribute('role', 'alert');
-        toast.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close me-2 ms-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>`;
+        toast.innerHTML = `<div class=" flex "><div class="toast-body">${message}</div><button type="button" class=" inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -close me-2 ms-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>`;
         container.appendChild(toast);
         // Auto-remove
         setTimeout(() => { try { toast.remove(); } catch(e){} }, 3000);

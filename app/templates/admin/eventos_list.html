@@ -3,15 +3,15 @@
 {% block title %}Eventos - EventMaster Admin{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="glass-card p-4">
-            <div class="d-flex justify-content-between align-items-center">
+<div class=" flex flex-wrap -mx-2  mb-4">
+    <div class=" w-full px-2 ">
+        <div class="md-card p-4">
+            <div class=" flex   justify-between   items-center ">
                 <div>
-                    <h1 class="text-glass mb-0">Eventos</h1>
-                    <p class="text-glass-muted mb-0">Gerenciar eventos</p>
+                    <h1 class="text-slate-100 mb-0">Eventos</h1>
+                    <p class="text-slate-100-muted mb-0">Gerenciar eventos</p>
                 </div>
-                <a href="/admin/eventos/novo" class="btn btn-gradient">
+                <a href="/admin/eventos/novo" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient">
                     <i data-lucide="plus" style="width: 20px; height: 20px;"></i>
                     Novo Evento
                 </a>
@@ -21,12 +21,12 @@
 </div>
 
 <!-- Filtros -->
-<div class="row mb-3">
-    <div class="col-12">
-        <div class="glass-card p-3">
-            <form action="/admin/eventos" method="GET" class="row g-2">
+<div class=" flex flex-wrap -mx-2  mb-3">
+    <div class=" w-full px-2 ">
+        <div class="md-card p-3">
+            <form action="/admin/eventos" method="GET" class=" flex flex-wrap -mx-2  g-2">
                 <div class="col-md-4">
-                    <input type="text" class="form-control" name="busca" 
+                    <input type="text" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " name="busca" 
                            placeholder="Buscar por nome..." value="{{ busca }}">
                 </div>
                 <div class="col-md-3">
@@ -43,14 +43,14 @@
                         <option value="passados" {% if periodo == 'passados' %}selected{% endif %}>Passados</option>
                     </select>
                 </div>
-                <div class="col-md-3 d-flex align-items-center">
+                <div class="col-md-3  flex   items-center ">
                     <div class="form-check form-switch ms-2">
                         <input class="form-check-input" type="checkbox" role="switch" id="futuros_only" name="futuros_only" {% if futuros_only %}checked{% endif %}>
-                        <label class="form-check-label text-glass-muted" for="futuros_only">Mostrar apenas eventos futuros</label>
+                        <label class="form-check-label text-slate-100-muted" for="futuros_only">Mostrar apenas eventos futuros</label>
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <button type="submit" class="btn btn-glass w-100">
+                    <button type="submit" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass w-100">
                         <i data-lucide="search" style="width: 16px; height: 16px;"></i>
                         Filtrar
                     </button>
@@ -62,15 +62,15 @@
 
 <!-- Ações em Massa -->
 {% if periodo == 'passados' and eventos|length > 0 %}
-<div class="row mb-3">
-    <div class="col-12">
-        <div class="glass-card p-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="text-glass">
+<div class=" flex flex-wrap -mx-2  mb-3">
+    <div class=" w-full px-2 ">
+        <div class="md-card p-3">
+            <div class=" flex   justify-between   items-center ">
+                <span class="text-slate-100">
                     <i data-lucide="alert-circle" class="me-2" style="width: 20px; height: 20px;"></i>
                     {{ eventos|length }} evento(s) passado(s) encontrado(s)
                 </span>
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                <button type="button" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                     <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
                     Limpar Eventos Passados
                 </button>
@@ -81,10 +81,10 @@
 {% endif %}
 
 <!-- Lista de Eventos -->
-<div class="row">
+<div class=" flex flex-wrap -mx-2 ">
     {% for evento in eventos %}
     <div class="col-md-6 col-lg-4 mb-3">
-        <div class="glass-card p-3 h-100">
+        <div class="md-card p-3 h-100">
             {% if evento.logo_base64 %}
             <div class="text-center mb-3">
                 <img src="data:image/png;base64,{{ evento.logo_base64 }}" 
@@ -92,11 +92,11 @@
             </div>
             {% endif %}
             
-            <h5 class="text-glass">{{ evento.nome }}</h5>
-            <p class="text-glass-muted small">{{ evento.descricao[:100] }}{% if evento.descricao|length > 100 %}...{% endif %}</p>
+            <h5 class="text-slate-100">{{ evento.nome }}</h5>
+            <p class="text-slate-100-muted small">{{ evento.descricao[:100] }}{% if evento.descricao|length > 100 %}...{% endif %}</p>
             
             <div class="mb-2">
-                <small class="text-glass-muted">
+                <small class="text-slate-100-muted">
                     <i data-lucide="calendar" style="width: 14px; height: 14px;"></i>
                     {{ evento.data_evento.strftime('%d/%m/%Y %H:%M') }}
                 </small>
@@ -110,14 +110,14 @@
                 {% endif %}
             </div>
             
-            <div class="d-flex gap-2">
-                <a href="/admin/eventos/{{ evento.id }}" class="btn btn-sm btn-glass flex-fill">
+            <div class=" flex  gap-2">
+                <a href="/admin/eventos/{{ evento.id }}" class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass flex-fill">
                     <i data-lucide="eye" style="width: 14px; height: 14px;"></i>
                     Ver
                 </a>
                 <!-- TEMPORARY: botão de exclusão definitiva via UI; componente temporário, reverter depois -->
                 <form action="/admin/eventos/{{ evento.id }}/delete" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.');" class="d-inline">
-                    <button type="submit" class="btn btn-sm btn-danger">
+                    <button type="submit" class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -danger">
                         <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                         Excluir
                     </button>
@@ -126,12 +126,12 @@
         </div>
     </div>
     {% else %}
-    <div class="col-12">
-        <div class="glass-card p-5 text-center">
-            <i data-lucide="inbox" class="text-glass mb-3" style="width: 64px; height: 64px;"></i>
-            <h4 class="text-glass">Nenhum evento encontrado</h4>
-            <p class="text-glass-muted">Crie seu primeiro evento para começar</p>
-            <a href="/admin/eventos/novo" class="btn btn-gradient mt-3">
+    <div class=" w-full px-2 ">
+        <div class="md-card p-5 text-center">
+            <i data-lucide="inbox" class="text-slate-100 mb-3" style="width: 64px; height: 64px;"></i>
+            <h4 class="text-slate-100">Nenhum evento encontrado</h4>
+            <p class="text-slate-100-muted">Crie seu primeiro evento para começar</p>
+            <a href="/admin/eventos/novo" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient mt-3">
                 <i data-lucide="plus" style="width: 20px; height: 20px;"></i>
                 Criar Evento
             </a>
@@ -141,8 +141,8 @@
 </div>
 
 <!-- Paginação -->
-<div class="row mt-3">
-    <div class="col-12">
+<div class=" flex flex-wrap -mx-2  mt-3">
+    <div class=" w-full px-2 ">
         <nav aria-label="Event pagination">
             <ul class="pagination justify-content-center">
                 {% if page and page > 1 %}
@@ -166,20 +166,20 @@
 <!-- Modal de Confirmação de Exclusão -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content glass-card">
+        <div class="modal-content md-card">
             <div class="modal-header border-0">
-                <h5 class="modal-title text-glass" id="deleteModalLabel">Confirmar Exclusão</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title text-slate-100" id="deleteModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body text-glass-muted">
+            <div class="modal-body text-slate-100-muted">
                 Tem certeza que deseja excluir todos os eventos passados? Esta ação não pode ser desfeita.
                 <br><br>
                 <strong>Nota:</strong> Os eventos serão marcados como inativos (soft delete) e não serão removidos permanentemente.
             </div>
             <div class="modal-footer border-0">
-                <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass" data-bs-dismiss="modal">Cancelar</button>
                 <form action="/admin/eventos/limpar-passados" method="POST" class="d-inline">
-                    <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
+                    <button type="submit" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -danger">Confirmar Exclusão</button>
                 </form>
             </div>
         </div>

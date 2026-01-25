@@ -99,15 +99,15 @@
 {% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="glass-card p-4">
-            <div class="d-flex justify-content-between align-items-center">
+<div class=" flex flex-wrap -mx-2  mb-4">
+    <div class=" w-full px-2 ">
+        <div class="md-card p-4">
+            <div class=" flex   justify-between   items-center ">
                 <div>
-                    <h1 class="text-glass mb-0">Editor de Layout</h1>
-                    <p class="text-glass-muted mb-0">{{ evento.nome }}</p>
+                    <h1 class="text-slate-100 mb-0">Editor de Layout</h1>
+                    <p class="text-slate-100-muted mb-0">{{ evento.nome }}</p>
                 </div>
-                <a href="/admin/eventos" class="btn btn-glass">
+                <a href="/admin/eventos" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass">
                     <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
                     Voltar
                 </a>
@@ -116,37 +116,37 @@
     </div>
 </div>
 
-<div class="row">
+<div class=" flex flex-wrap -mx-2 ">
     <!-- Frame A: Control Panel -->
     <div class="col-lg-4 mb-4">
-        <div class="glass-card p-4 control-panel">
-            <h5 class="text-glass mb-3">Painel de Controle</h5>
+        <div class="md-card p-4 control-panel">
+            <h5 class="text-slate-100 mb-3">Painel de Controle</h5>
             
             <!-- Canvas orientation and fixed size controls -->
             <div class="mb-3">
-                <label class="form-label text-glass">Orientação</label>
+                <label class="form-label text-slate-100">Orientação</label>
                 <select class="form-select" id="canvasOrientation">
                     <option value="portrait">Portrait</option>
                     <option value="landscape">Landscape</option>
                 </select>
             </div>
             <div class="mb-3">
-                <label class="form-label text-glass" id="fixedDimLabel">Dimensão fixa (mm)</label>
+                <label class="form-label text-slate-100" id="fixedDimLabel">Dimensão fixa (mm)</label>
                 <select class="form-select" id="fixedDimSelect">
                     <option value="29">29</option>
                     <option value="62" selected>62</option>
                 </select>
-                <small class="text-glass-muted" id="variableDimHint">Dimensão variável pode ser ajustada abaixo.</small>
+                <small class="text-slate-100-muted" id="variableDimHint">Dimensão variável pode ser ajustada abaixo.</small>
             </div>
             <div class="mb-3">
-                <label class="form-label text-glass" id="variableDimLabel">Altura do Canvas (mm)</label>
-                <input type="number" class="form-control" id="variableDimInput" value="120" min="10" step="1">
-                <small class="text-glass-muted">Altura livre (mínimo 10 mm). Para landscape a largura mínima recomendada é 70 mm.</small>
+                <label class="form-label text-slate-100" id="variableDimLabel">Altura do Canvas (mm)</label>
+                <input type="number" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="variableDimInput" value="120" min="10" step="1">
+                <small class="text-slate-100-muted">Altura livre (mínimo 10 mm). Para landscape a largura mínima recomendada é 70 mm.</small>
             </div>
 
             <!-- Element Type -->
             <div class="mb-3">
-                <label class="form-label text-glass">Tipo de Elemento</label>
+                <label class="form-label text-slate-100">Tipo de Elemento</label>
                 <select class="form-select" id="elementType">
                     <option value="text">Texto</option>
                     <option value="qrcode">QR Code</option>
@@ -156,12 +156,12 @@
             
             <!-- Content Field -->
             <div class="mb-3" id="contentField">
-                <label class="form-label text-glass">Conteúdo</label>
-                <input type="text" class="form-control" id="elementContent" placeholder="Digite o texto">
+                <label class="form-label text-slate-100">Conteúdo</label>
+                <input type="text" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="elementContent" placeholder="Digite o texto">
                 
                 <!-- Template Variables -->
                 <div class="mt-2">
-                    <small class="text-glass-muted d-block mb-2">Tags Inteligentes:</small>
+                    <small class="text-slate-100-muted d-block mb-2">Tags Inteligentes:</small>
                     <div id="templateTags">
                         <span class="template-tag" data-tag="{NOME}">{NOME}</span>
                         <span class="template-tag" data-tag="{CPF}">{CPF}</span>
@@ -176,12 +176,12 @@
             
             <!-- Font Size (for text) -->
             <div class="mb-3" id="fontSizeField">
-                <label class="form-label text-glass">Tamanho da Fonte</label>
-                <input type="number" class="form-control" id="fontSize" value="12" min="8" max="72">
+                <label class="form-label text-slate-100">Tamanho da Fonte</label>
+                <input type="number" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="fontSize" value="12" min="8" max="72">
             </div>
             
             <!-- Add Button -->
-            <button type="button" class="btn btn-gradient w-100 mb-3" id="addElementBtn">
+            <button type="button" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient w-100 mb-3" id="addElementBtn">
                 <i data-lucide="plus" style="width: 20px; height: 20px;"></i>
                 Adicionar ao Layout
             </button>
@@ -189,21 +189,21 @@
             <hr class="border-light">
             
             <!-- Elements List -->
-            <h6 class="text-glass mb-3">Elementos no Layout</h6>
-            <div id="elementsList" class="text-glass-muted">
+            <h6 class="text-slate-100 mb-3">Elementos no Layout</h6>
+            <div id="elementsList" class="text-slate-100-muted">
                 <small>Nenhum elemento adicionado</small>
             </div>
             
             <hr class="border-light">
             
             <!-- Save Button (hidden, kept for backward compatibility) -->
-            <button type="button" class="btn btn-gradient w-100 mb-2 d-none" id="saveLayoutBtnOld">
+            <button type="button" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient w-100 mb-2 d-none" id="saveLayoutBtnOld">
                 <i data-lucide="save" style="width: 20px; height: 20px;"></i>
                 Salvar Layout
             </button>
             
             <!-- Clear Button (hidden, kept for backward compatibility) -->
-            <button type="button" class="btn btn-danger w-100 d-none" id="clearLayoutBtnOld">
+            <button type="button" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -danger w-100 d-none" id="clearLayoutBtnOld">
                 <i data-lucide="trash-2" style="width: 20px; height: 20px;"></i>
                 Limpar Tudo
             </button>
@@ -212,26 +212,26 @@
     
     <!-- Frame B: Ticket Canvas -->
     <div class="col-lg-8">
-        <div class="glass-card p-4">
-            <h5 class="text-glass mb-3 text-center" id="canvasHeader">Canvas do Ingresso</h5>
+        <div class="md-card p-4">
+            <h5 class="text-slate-100 mb-3 text-center" id="canvasHeader">Canvas do Ingresso</h5>
             
-            <div class="canvas-container" id="ticketCanvas">
+            <div class="canvas- container mx-auto px-4 " id="ticketCanvas">
                 <!-- Elements will be added here dynamically -->
             </div>
             
             <div class="mt-3 text-center">
-                <small class="text-glass-muted">
+                <small class="text-slate-100-muted">
                     <i data-lucide="info" style="width: 14px; height: 14px;"></i>
                     Arraste os elementos para posicioná-los no ingresso
                 </small>
             </div>
 
             <!-- Fixed toolbar below canvas -->
-            <div id="elementToolbarFixed" class="d-flex gap-2 justify-content-center mt-3" style="display:none;">
-                <button class="btn btn-sm btn-light" data-action="align-left" title="Alinhar à esquerda"><i data-lucide="align-left" style="width:18px;height:18px"></i></button>
-                <button class="btn btn-sm btn-light" data-action="align-center" title="Centralizar"><i data-lucide="align-center" style="width:18px;height:18px"></i></button>
-                <button class="btn btn-sm btn-light" data-action="align-right" title="Alinhar à direita"><i data-lucide="align-right" style="width:18px;height:18px"></i></button>
-                <button class="btn btn-sm btn-danger" data-action="delete" title="Excluir"><i data-lucide="trash-2" style="width:18px;height:18px"></i></button>
+            <div id="elementToolbarFixed" class=" flex  gap-2 justify-content-center mt-3" style="display:none;">
+                <button class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -light" data-action="align-left" title="Alinhar à esquerda"><i data-lucide="align-left" style="width:18px;height:18px"></i></button>
+                <button class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -light" data-action="align-center" title="Centralizar"><i data-lucide="align-center" style="width:18px;height:18px"></i></button>
+                <button class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -light" data-action="align-right" title="Alinhar à direita"><i data-lucide="align-right" style="width:18px;height:18px"></i></button>
+                <button class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -danger" data-action="delete" title="Excluir"><i data-lucide="trash-2" style="width:18px;height:18px"></i></button>
             </div>
         </div>
     </div>
@@ -239,12 +239,12 @@
 
 <!-- Fixed save bar for all devices -->
 <div class="fixed-save-bar">
-    <div class="container d-flex justify-content-center">
-        <button type="button" class="btn btn-gradient me-2" id="saveLayoutBtn">
+    <div class=" container mx-auto px-4   flex  justify-content-center">
+        <button type="button" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient me-2" id="saveLayoutBtn">
             <i data-lucide="save" style="width:20px;height:20px"></i>
             <span class="ms-2">Salvar Layout</span>
         </button>
-        <button type="button" class="btn btn-danger" id="clearLayoutBtn">
+        <button type="button" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -danger" id="clearLayoutBtn">
             <i data-lucide="trash-2" style="width:20px;height:20px"></i>
             <span class="ms-2">Limpar Tudo</span>
         </button>
@@ -278,16 +278,16 @@
     const controlPanel = document.querySelector('.control-panel');
     const padHtml = `
         <div class="mb-3">
-            <label class="form-label text-glass">Padding do Canvas (mm)</label>
-            <input type="number" class="form-control" id="canvasPadding" value="${defaultPadding}" min="0" step="0.5">
+            <label class="form-label text-slate-100">Padding do Canvas (mm)</label>
+            <input type="number" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="canvasPadding" value="${defaultPadding}" min="0" step="0.5">
         </div>
         <div class="mb-3 form-check form-switch">
             <input class="form-check-input" type="checkbox" id="canvasBorder" ${defaultBorder ? 'checked' : ''}>
-            <label class="form-check-label text-glass" for="canvasBorder">Mostrar borda do ingresso</label>
+            <label class="form-check-label text-slate-100" for="canvasBorder">Mostrar borda do ingresso</label>
         </div>
         <div class="mb-3" id="selectedControls" style="display:none;">
-            <label class="form-label text-glass">Margin do elemento (mm)</label>
-            <input type="number" class="form-control" id="elementMargin" value="0" min="0" step="0.5">
+            <label class="form-label text-slate-100">Margin do elemento (mm)</label>
+            <input type="number" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="elementMargin" value="0" min="0" step="0.5">
         </div>
     `;
     controlPanel.insertAdjacentHTML('afterbegin', padHtml);
@@ -754,7 +754,7 @@
             const value = el.getAttribute('data-value');
             const id = el.id;
             html += `
-                <div class="list-group-item glass-card mb-2 p-2" data-el-id="${id}">
+                <div class="list-group-item md-card mb-2 p-2" data-el-id="${id}">
                     <small>
                         <strong>${type.toUpperCase()}</strong><br>
                         ${value ? value.substring(0, 30) : 'Logo'}
@@ -870,10 +870,10 @@
         // create toast element with bg according to type
         const bgClass = (type === 'success') ? 'bg-success text-white' : (type === 'danger') ? 'bg-danger text-white' : (type === 'warning') ? 'bg-warning text-dark' : 'bg-light text-dark';
         const toastHtml = `
-            <div class="toast align-items-center ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="d-flex">
+            <div class="toast  items-center  ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class=" flex ">
                     <div class="toast-body">${message}</div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    <button type="button" class="btn-close  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                 </div>
             </div>
         `;

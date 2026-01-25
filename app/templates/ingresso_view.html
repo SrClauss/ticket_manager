@@ -1,12 +1,12 @@
 {% extends 'admin/base.html' %}
 {% block content %}
-<div class="glass-card p-4 text-center">
+<div class="md-card p-4 text-center">
   <h2>Ingresso</h2>
   <p id="meta"></p>
   <img id="ingressoImg" src="" alt="Ingresso" style="max-width:100%;height:auto;border:1px solid #ddd;" />
   <div class="mt-3">
-    <a id="downloadLink" class="btn btn-glass" href="#" download>Baixar JPG</a>
-    <button id="captureBtn" class="btn btn-gradient">Capturar imagem (abrir câmera)</button>
+    <a id="downloadLink" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass" href="#" download>Baixar JPG</a>
+    <button id="captureBtn" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient">Capturar imagem (abrir câmera)</button>
   </div>
   <script>
     // Force fetch from render endpoint every time using cache-buster

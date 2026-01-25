@@ -13,8 +13,8 @@
 {% endblock %}
 
 {% block content %}
-<div class="container d-flex justify-content-center align-items-center" style="min-height:80vh;">
-  <div class="glass-card p-4" style="max-width:920px; width:100%;">
+<div class=" container mx-auto px-4   flex  justify-content-center  items-center " style="min-height:80vh;">
+  <div class="md-card p-4" style="max-width:920px; width:100%;">
     <div class="event-hero mb-3">
       {% if evento.logo_base64 %}
         <img src="data:image/png;base64,{{ evento.logo_base64 }}" alt="{{ evento.nome }}" />
@@ -104,9 +104,9 @@
 
         </div>
 
-        <div class="mt-3 d-flex gap-2">
-          <button type="button" id="cadastroSubmit" class="btn btn-gradient">Cadastrar e emitir ingresso</button>
-          <button type="reset" id="cadastroReset" class="btn btn-outline">Limpar</button>
+        <div class="mt-3  flex  gap-2">
+          <button type="button" id="cadastroSubmit" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient">Cadastrar e emitir ingresso</button>
+          <button type="reset" id="cadastroReset" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -outline">Limpar</button>
         </div>
 
         <div id="cadastroMsg" class="mt-2"></div>

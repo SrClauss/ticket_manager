@@ -37,19 +37,19 @@
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class=" container mx-auto px-4  py-4">
     <!-- Welcome Screen -->
     <div id="welcomeScreen" class="welcome-screen">
-        <div class="glass-card p-5">
-            <h1 class="text-glass">Bem-vindo!</h1>
+        <div class="md-card p-5">
+            <h1 class="text-slate-100">Bem-vindo!</h1>
             {% if evento %}
-            <h3 class="text-glass-muted mb-4">{{ evento.nome }}</h3>
+            <h3 class="text-slate-100-muted mb-4">{{ evento.nome }}</h3>
             {% endif %}
-            <p class="text-glass-muted mb-4">Sistema de Auto-Credenciamento</p>
+            <p class="text-slate-100-muted mb-4">Sistema de Auto-Credenciamento</p>
             
-            <div class="instruction-card glass-card p-4 mt-4">
-                <h5 class="text-glass mb-3">Instruções:</h5>
-                <ol class="text-glass-muted text-start">
+            <div class="instruction-card md-card p-4 mt-4">
+                <h5 class="text-slate-100 mb-3">Instruções:</h5>
+                <ol class="text-slate-100-muted text-start">
                     <li class="mb-2">Clique em "Iniciar Credenciamento"</li>
                     <li class="mb-2">Posicione seu QR Code de inscrição na frente da câmera</li>
                     <li class="mb-2">Aguarde a confirmação</li>
@@ -57,7 +57,7 @@
                 </ol>
             </div>
             
-            <button class="btn btn-gradient btn-lg mt-4" onclick="startSelfCredentialing()">
+            <button class="btn btn-gradient  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -lg mt-4" onclick="startSelfCredentialing()">
                 <i data-lucide="play" style="width: 24px; height: 24px;"></i>
                 Iniciar Credenciamento
             </button>
@@ -66,18 +66,18 @@
     
     <!-- Scanner Screen -->
     <div id="scannerScreen" style="display: none;">
-        <div class="glass-card p-4 mb-4 text-center">
-            <h3 class="text-glass mb-2">Posicione seu QR Code</h3>
-            <p class="text-glass-muted">Mantenha o código centralizado na câmera</p>
+        <div class="md-card p-4 mb-4 text-center">
+            <h3 class="text-slate-100 mb-2">Posicione seu QR Code</h3>
+            <p class="text-slate-100-muted">Mantenha o código centralizado na câmera</p>
         </div>
         
-        <div class="glass-card p-4 text-center">
+        <div class="md-card p-4 text-center">
             <div id="qr-reader-self"></div>
-            <p class="text-glass-muted mt-3" id="scannerStatusSelf">Scanner ativo...</p>
+            <p class="text-slate-100-muted mt-3" id="scannerStatusSelf">Scanner ativo...</p>
         </div>
         
         <div class="text-center mt-4">
-            <button class="btn btn-glass" onclick="cancelSelfCredentialing()">
+            <button class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass" onclick="cancelSelfCredentialing()">
                 <i data-lucide="x" style="width: 20px; height: 20px;"></i>
                 Cancelar
             </button>
@@ -86,17 +86,17 @@
     
     <!-- Success Screen -->
     <div id="successScreen" style="display: none;">
-        <div class="glass-card p-5 text-center">
+        <div class="md-card p-5 text-center">
             <div class="mb-4">
                 <i data-lucide="check-circle" style="width: 100px; height: 100px;" class="text-success"></i>
             </div>
-            <h2 class="text-glass mb-3">Credenciamento Realizado!</h2>
-            <p class="text-glass-muted mb-4" id="participantName">Nome do Participante</p>
-            <div class="alert alert-info glass-card">
+            <h2 class="text-slate-100 mb-3">Credenciamento Realizado!</h2>
+            <p class="text-slate-100-muted mb-4" id="participantName">Nome do Participante</p>
+            <div class="alert alert-info md-card">
                 <i data-lucide="printer" style="width: 24px; height: 24px;"></i>
                 <p class="mb-0 mt-2">Seu crachá está sendo impresso...</p>
             </div>
-            <button class="btn btn-gradient mt-4" onclick="resetSelfCredentialing()">
+            <button class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient mt-4" onclick="resetSelfCredentialing()">
                 Concluir
             </button>
         </div>
@@ -104,17 +104,17 @@
     
     <!-- Error Screen -->
     <div id="errorScreen" style="display: none;">
-        <div class="glass-card p-5 text-center">
+        <div class="md-card p-5 text-center">
             <div class="mb-4">
                 <i data-lucide="alert-triangle" style="width: 100px; height: 100px;" class="text-warning"></i>
             </div>
-            <h2 class="text-glass mb-3">Ops! Algo deu errado</h2>
-            <p class="text-glass-muted mb-4" id="errorMessage">Erro ao processar credenciamento</p>
-            <div class="alert alert-warning glass-card">
+            <h2 class="text-slate-100 mb-3">Ops! Algo deu errado</h2>
+            <p class="text-slate-100-muted mb-4" id="errorMessage">Erro ao processar credenciamento</p>
+            <div class="alert alert-warning md-card">
                 <i data-lucide="help-circle" style="width: 24px; height: 24px;"></i>
                 <p class="mb-0 mt-2">Por favor, dirija-se ao Help Desk para assistência</p>
             </div>
-            <button class="btn btn-gradient mt-4" onclick="resetSelfCredentialing()">
+            <button class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient mt-4" onclick="resetSelfCredentialing()">
                 Tentar Novamente
             </button>
         </div>
@@ -122,7 +122,7 @@
 </div>
 
 <!-- Help Desk Button -->
-<button class="btn btn-danger-gradient btn-lg help-desk-btn">
+<button class="btn btn-danger-gradient btn-lg help-desk- inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 ">
     <i data-lucide="headphones" style="width: 24px; height: 24px;"></i>
     Help Desk
 </button>

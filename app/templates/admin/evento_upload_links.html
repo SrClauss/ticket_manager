@@ -1,32 +1,32 @@
 {% extends 'admin/base.html' %}
 {% block content %}
-<div class="glass-card p-4">
+<div class="md-card p-4">
   <h2>Links de Upload - {{ evento.nome }}</h2>
   <p>Gere links públicos para que empresas possam enviar planilhas para este evento.</p>
 
   <form id="generate-link-form" method="post" action="/admin/eventos/{{ evento.id }}/planilhas/empresas/generate" style="margin-bottom:1rem;">
     <label class="form-label">Descrição do link (opcional)</label>
-    <input type="text" name="descricao" class="form-control" />
+    <input type="text" name="descricao" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " />
     <div class="mt-2">
-      <button id="generate-link-btn" class="btn btn-gradient">Gerar link de upload</button>
+      <button id="generate-link-btn" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -gradient">Gerar link de upload</button>
       <span id="generate-loading" style="display:none;margin-left:8px;">Gerando...</span>
     </div>
   </form>
 
   {% if links %}
-    <div class="row">
+    <div class=" flex flex-wrap -mx-2 ">
       {% for l in links %}
       <div class="col-md-4 mb-3" data-token="{{ l.token }}">
-        <div class="glass-card p-3 d-flex flex-column align-items-start">
-          <div class="w-100 d-flex justify-content-between align-items-start">
+        <div class="md-card p-3  flex  flex-column align-items-start">
+          <div class="w-100  flex   justify-between  align-items-start">
             <div>
               <div class="small text-muted">Token</div>
               <code>{{ l.token[:12] }}...</code>
             </div>
             <div>
-              <button class="btn btn-sm btn-glass copy-link-btn" data-link="{{ url_root }}/upload/{{ l.token }}">Copiar</button>
-              <a class="btn btn-sm btn-outline ms-1" href="{{ url_root }}/upload/{{ l.token }}" target="_blank" rel="noopener">Abrir</a>
-              <button class="btn btn-sm btn-danger ms-1 delete-link-btn" data-token="{{ l.token }}" title="Excluir link">Excluir</button>
+              <button class="btn btn-sm btn-glass copy-link- inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 " data-link="{{ url_root }}/upload/{{ l.token }}">Copiar</button>
+              <a class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -outline ms-1" href="{{ url_root }}/upload/{{ l.token }}" target="_blank" rel="noopener">Abrir</a>
+              <button class="btn btn-sm btn-danger ms-1 delete-link- inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 " data-token="{{ l.token }}" title="Excluir link">Excluir</button>
             </div>
           </div>
           <div class="mt-2 w-100">
@@ -89,16 +89,16 @@
           const row = document.querySelector('.row');
           if (row) {
             const col = document.createElement('div'); col.className = 'col-md-4 mb-3';
-            const card = document.createElement('div'); card.className = 'glass-card p-3 d-flex flex-column align-items-start';
+            const card = document.createElement('div'); card.className = 'md-card p-3 d-flex flex-column align-items-start';
             card.innerHTML = `
-              <div class="w-100 d-flex justify-content-between align-items-start">
+              <div class="w-100  flex   justify-between  align-items-start">
                 <div>
                   <div class="small text-muted">Token</div>
                   <code>${data.token.slice(0,12)}...</code>
                 </div>
                 <div>
-                  <button class="btn btn-sm btn-glass copy-link-btn" data-link="${data.url}">Copiar</button>
-                  <a class="btn btn-sm btn-outline ms-1" href="${data.url}" target="_blank" rel="noopener">Abrir</a>
+                  <button class="btn btn-sm btn-glass copy-link- inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 " data-link="${data.url}">Copiar</button>
+                  <a class="btn btn-sm  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -outline ms-1" href="${data.url}" target="_blank" rel="noopener">Abrir</a>
                 </div>
               </div>
               <div class="mt-2 w-100">

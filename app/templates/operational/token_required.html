@@ -3,22 +3,22 @@
 {% block title %}Token Necessário - {{ module_name }}{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center align-items-center" style="min-height: 100vh;">
+<div class=" container mx-auto px-4 ">
+    <div class=" flex flex-wrap -mx-2  justify-content-center  items-center " style="min-height: 100vh;">
         <div class="col-md-6">
-            <div class="glass-card p-5 text-center">
+            <div class="md-card p-5 text-center">
                 <div class="mb-4">
-                    <i data-lucide="key" style="width: 64px; height: 64px;" class="text-glass"></i>
+                    <i data-lucide="key" style="width: 64px; height: 64px;" class="text-slate-100"></i>
                 </div>
-                <h2 class="text-glass mb-3">Token de Acesso Necessário</h2>
-                <p class="text-glass-muted mb-4">
+                <h2 class="text-slate-100 mb-3">Token de Acesso Necessário</h2>
+                <p class="text-slate-100-muted mb-4">
                     Para acessar o módulo <strong>{{ module_name }}</strong>, você precisa fornecer um token válido.
                 </p>
-                <p class="text-glass-muted">
+                <p class="text-slate-100-muted">
                     {{ module_description }}
                 </p>
                 <hr class="border-light my-4">
-                <p class="text-glass-muted small">
+                <p class="text-slate-100-muted small">
                     <i data-lucide="info" style="width: 16px; height: 16px;"></i>
                     Adicione o token como parâmetro na URL: <code>?token=SEU_TOKEN</code>
                 </p>
