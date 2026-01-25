@@ -3,114 +3,110 @@
 {% block title %}Dashboard - EventMaster Admin{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="glass-card p-4">
-            <h1 class="text-glass mb-0">Dashboard</h1>
-            <p class="text-glass-muted">Visão geral do sistema</p>
-        </div>
-    </div>
-</div>
+<!-- Tailwind-based Material Dark Dashboard -->
+{% block extra_css %}
+<script src="https://cdn.tailwindcss.com"></script>
+{% endblock %}
 
-<div class="row g-3">
+<header class="p-6 md:px-12 pt-8">
+    <h1 class="text-3xl font-light text-slate-100">Dashboard</h1>
+    <p class="text-sm text-slate-400 font-light">Visão geral do sistema</p>
+</header>
+
+<main class="px-4 md:px-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
     <!-- Total de Eventos -->
-    <div class="col-md-6 col-lg-3">
-        <div class="glass-card p-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="text-glass-muted mb-1">Total de Eventos</h6>
-                    <h2 class="text-glass mb-0">{{ stats.total_eventos }}</h2>
-                </div>
-                <div>
-                    <i data-lucide="calendar" class="text-glass" style="width: 40px; height: 40px;"></i>
-                </div>
-            </div>
+    <div class="md-card p-5 flex justify-between items-start border border-slate-700/50 shadow-sm">
+        <div>
+            <p class="text-xs font-medium text-slate-400 mb-1">Total de Eventos</p>
+            <h2 class="text-3xl font-semibold text-slate-100">{{ stats.total_eventos }}</h2>
+        </div>
+        <div class="bg-blue-900/40 p-2 rounded-lg text-blue-400">
+            <span class="material-symbols-outlined">calendar_month</span>
         </div>
     </div>
-    
-    <!-- Eventos Ativos -->
-    <div class="col-md-6 col-lg-3">
-        <div class="glass-card p-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="text-glass-muted mb-1">Eventos Ativos</h6>
-                    <h2 class="text-glass mb-0">{{ stats.eventos_ativos }}</h2>
-                </div>
-                <div>
-                    <i data-lucide="check-circle" class="text-glass" style="width: 40px; height: 40px;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Total de Ingressos -->
-    <div class="col-md-6 col-lg-3">
-        <div class="glass-card p-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="text-glass-muted mb-1">Ingressos Emitidos</h6>
-                    <h2 class="text-glass mb-0">{{ stats.total_ingressos }}</h2>
-                </div>
-                <div>
-                    <i data-lucide="ticket" class="text-glass" style="width: 40px; height: 40px;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Receita Total -->
-    <div class="col-md-6 col-lg-3">
-        <div class="glass-card p-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="text-glass-muted mb-1">Receita Total</h6>
-                    <h2 class="text-glass mb-0">R$ {{ "%.2f"|format(stats.receita_total) }}</h2>
-                </div>
-                <div>
-                    <i data-lucide="dollar-sign" class="text-glass" style="width: 40px; height: 40px;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="glass-card p-4">
-            <h5 class="text-glass mb-3">Próximos Eventos</h5>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr class="text-glass">
-                            <th>Evento</th>
-                            <th>Data</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for evento in proximos_eventos %}
-                        <tr class="text-glass-muted">
-                            <td>{{ evento.nome }}</td>
-                            <td>{{ evento.data_evento.strftime('%d/%m/%Y %H:%M') }}</td>
-                            <td>
-                                {% if evento.ativo %}
-                                <span class="badge bg-success">Ativo</span>
-                                {% else %}
-                                <span class="badge bg-secondary">Inativo</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="/admin/eventos/{{ evento.id }}" class="btn btn-sm btn-glass">
-                                    <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+    <!-- Eventos Ativos -->
+    <div class="md-card p-5 flex justify-between items-start border border-slate-700/50 shadow-sm">
+        <div>
+            <p class="text-xs font-medium text-slate-400 mb-1">Eventos Ativos</p>
+            <h2 class="text-3xl font-semibold text-slate-100">{{ stats.eventos_ativos }}</h2>
+        </div>
+        <div class="bg-green-900/40 p-2 rounded-lg text-green-400">
+            <span class="material-symbols-outlined">check_circle</span>
         </div>
     </div>
-</div>
+
+    <!-- Ingressos Emitidos -->
+    <div class="md-card p-5 flex justify-between items-start border border-slate-700/50 shadow-sm">
+        <div>
+            <p class="text-xs font-medium text-slate-400 mb-1">Ingressos Emitidos</p>
+            <h2 class="text-3xl font-semibold text-slate-100">{{ stats.total_ingressos }}</h2>
+        </div>
+        <div class="bg-purple-900/40 p-2 rounded-lg text-purple-400">
+            <span class="material-symbols-outlined">confirmation_number</span>
+        </div>
+    </div>
+
+    <!-- Receita Total -->
+    <div class="md-card p-5 flex justify-between items-start border border-slate-700/50 shadow-sm">
+        <div>
+            <p class="text-xs font-medium text-slate-400 mb-1">Receita Total</p>
+            <h2 class="text-3xl font-semibold text-slate-100">R$ {{ "%.2f"|format(stats.receita_total) }}</h2>
+        </div>
+        <div class="bg-amber-900/40 p-2 rounded-lg text-amber-400">
+            <span class="material-symbols-outlined">payments</span>
+        </div>
+    </div>
+</main>
+
+<section class="px-4 md:px-12 mt-8">
+    <div class="md-card overflow-hidden border border-slate-700/50 shadow-lg">
+        <div class="p-6 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/50">
+            <h3 class="text-lg font-medium text-slate-100">Próximos Eventos</h3>
+            <a href="/admin/eventos" class="text-blue-400 text-sm font-medium hover:bg-blue-900/30 px-3 py-1 rounded-full transition-colors">Ver todos</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left table-dark">
+                <thead class="bg-slate-900/50 text-slate-400 text-xs uppercase tracking-wider">
+                    <tr>
+                        <th class="px-6 py-4 font-semibold">Evento</th>
+                        <th class="px-6 py-4 font-semibold">Data</th>
+                        <th class="px-6 py-4 font-semibold text-center">Status</th>
+                        <th class="px-6 py-4 font-semibold text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for evento in proximos_eventos %}
+                    <tr class="hover:bg-slate-700/30 transition-colors">
+                        <td class="px-6 py-5">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 bg-slate-700 rounded-lg mr-3 flex items-center justify-center text-slate-500">
+                                    <span class="material-symbols-outlined">image</span>
+                                </div>
+                                <span class="font-medium text-slate-200">{{ evento.nome }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 text-slate-400">{{ evento.data_evento.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td class="px-6 py-5 text-center">
+                            {% if evento.ativo %}
+                            <span class="bg-green-900/50 text-green-300 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase border border-green-800/50">Ativo</span>
+                            {% else %}
+                            <span class="bg-gray-700 text-gray-300 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase border border-gray-600/50">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-5 text-right">
+                            <a href="/admin/eventos/{{ evento.id }}" class="p-2 text-slate-500 hover:text-blue-400 hover:bg-blue-900/30 rounded-full transition-all inline-flex items-center">
+                                <span class="material-symbols-outlined text-xl">visibility</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- Bottom nav and FAB kept in base template -->
+
 {% endblock %}
