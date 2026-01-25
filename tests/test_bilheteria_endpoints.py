@@ -330,7 +330,7 @@ class TestListarParticipantesPaginado:
     
     @pytest.mark.asyncio
     async def test_listar_participantes_per_page_below_min(self, fake_db, mock_get_database, sample_evento, mock_verify_bilheteria):
-        """Testa que per_page abaixo do mínimo é ajustado para padrão."""
+        """Testa que per_page abaixo do mínimo é ajustado para 1."""
         from app.routers.bilheteria import listar_participantes
         
         fake_db.eventos.docs.append(sample_evento)
@@ -351,7 +351,8 @@ class TestListarParticipantesPaginado:
             evento_id=str(sample_evento["_id"])
         )
         
-        assert result.per_page == 20  # Ajustado para padrão
+        assert result.per_page == 1  # Ajustado para mínimo
+        assert len(result.participantes) == 1
 
 
 class TestEmissaoBilheteria:

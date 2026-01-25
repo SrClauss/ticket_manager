@@ -357,11 +357,8 @@ async def listar_participantes(
     """
     db = get_database()
     
-    # Validate and limit per_page
-    if per_page > 100:
-        per_page = 100
-    if per_page < 1:
-        per_page = 20
+    # Validate and clamp per_page to valid range
+    per_page = max(1, min(per_page, 100))
     
     # Validate page number
     if page < 1:
