@@ -6,9 +6,9 @@
 </header>
 
 <main class="px-4 md:px-12 pb-24">
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Settings -->
-    <section class="md:col-span-1 md-card p-4">
+    <section class="lg:col-span-1 md-card p-4">
       <h2 class="text-lg font-semibold text-slate-100 mb-2">Campos e Inscrições</h2>
       <p class="text-sm text-slate-400 mb-4">Defina os campos obrigatórios e controle inscrições públicas.</p>
       <form id="settingsForm" method="post" action="/admin/eventos/{{ evento.id }}/planilhas/campos" class="space-y-3">
@@ -43,18 +43,18 @@
     </section>
 
     <!-- Combined: modelo, upload, histórico -->
-    <section class="md:col-span-2 md-card p-4">
+    <section class="lg:col-span-2 md-card p-4">
       <div class="flex justify-between items-start">
         <div>
           <h2 class="text-lg font-semibold text-slate-100">Modelo, Upload e Histórico</h2>
           <p class="text-sm text-slate-400">Baixe o modelo, gerencie links por empresa e acompanhe importações.</p>
         </div>
-        <div class="hidden md:flex items-center gap-2">
+        <div class="hidden lg:flex items-center gap-2">
           <a href="/admin/eventos/{{ evento.id }}/planilhas/empresas" class="px-3 py-2 bg-slate-700 text-slate-100 rounded-lg">Gerenciar links</a>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
         <div class="p-3 bg-slate-800 rounded-lg border border-slate-700">
           <h3 class="text-sm text-slate-400">Modelo oficial</h3>
           <p class="text-xs text-slate-400 mb-3">Baixe o arquivo .xlsx com as colunas recomendadas.</p>
@@ -64,9 +64,9 @@
         <div class="p-3 bg-slate-800 rounded-lg border border-slate-700 md:col-span-2">
           <h3 class="text-sm text-slate-400">Enviar planilha</h3>
           <p class="text-xs text-slate-400 mb-3">Envie arquivos .xlsx ou .csv. O arquivo será validado antes de persistir.</p>
-          <div class="flex flex-col md:flex-row items-start md:items-center gap-3">
-            <input id="planilhaFile" type="file" accept=".xlsx,.csv" class="text-sm text-slate-200 w-full md:w-auto" />
-            <button id="uploadBtn" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg w-full md:w-auto">Enviar Arquivo</button>
+          <div class="flex flex-col lg:flex-row items-start lg:items-center gap-3">
+            <input id="planilhaFile" type="file" accept=".xlsx,.csv" class="text-sm text-slate-200 w-full lg:w-auto" />
+            <button id="uploadBtn" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg w-full lg:w-auto">Enviar Arquivo</button>
           </div>
           <div class="mt-4">
             <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden">
