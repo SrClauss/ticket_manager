@@ -47,3 +47,8 @@ input[type=file], input[type=text], select, textarea{ background:transparent; bo
 
 /* ensure legacy icon fonts show */
 .material-symbols-outlined{ font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+/* Fix: icon overlays inside inputs — ensure padding and non-interactive icons */
+.relative .material-symbols-outlined.absolute{ left:0.75rem; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; font-size:1.05rem; z-index:2; }
+.relative input[type="text"], .relative input[type="password"], .relative input[type="email"], .relative input, .md-input{ padding-left:3rem !important; }
+.md-input{ height:44px; }
