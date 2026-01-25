@@ -1,0 +1,71 @@
+/* Material Design Dark - centralized stylesheet for templates */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
+:root{
+  --bg:#0f172a; /* slate-900 */
+  --surface:#1e293b; /* slate-800 */
+  --surface-hover:#334155; /* slate-700 */
+  --muted:#94a3b8; /* slate-400 */
+  --text:#f1f5f9; /* slate-100 */
+  --card-border: rgba(148,163,184,0.08);
+  --primary:#3b82f6;
+}
+html,body{height:100%;}
+body{
+  font-family: 'Roboto', sans-serif;
+  background-color:var(--bg);
+  color:var(--text);
+  margin:0;
+}
+.md-card{
+  background-color:var(--surface);
+  border-radius:16px;
+  transition:background-color .3s ease, transform .12s ease;
+  border:1px solid var(--card-border);
+}
+.md-card:hover{ background-color:var(--surface-hover); transform:translateY(-1px); }
+.nav-active{
+  color:#d3e4ff;
+  background-color:#004a77;
+  border-radius:100px;
+}
+/* scrollbar */
+::-webkit-scrollbar{ width:8px; }
+::-webkit-scrollbar-track{ background:var(--bg); }
+::-webkit-scrollbar-thumb{ background:#334155; border-radius:10px; }
+
+/* bottom nav */
+.bottom-nav{ position:fixed; bottom:0; left:0; right:0; background-color:rgba(30,41,59,0.95); backdrop-filter: blur(6px); border-top:1px solid rgba(148,163,184,0.06); height:80px; display:flex; align-items:center; z-index:50; }
+.bottom-nav .nav-link{ display:flex; flex-direction:column; align-items:center; justify-content:center; padding:8px 12px; color:var(--muted); text-decoration:none; font-size:12px; }
+.bottom-nav .nav-link.active, .bottom-nav .nav-link:hover{ color:var(--text); }
+
+/* floating action button */
+.fab{ position:fixed; right:24px; bottom:110px; background:var(--primary); color:var(--surface); padding:14px; border-radius:16px; box-shadow:0 8px 20px rgba(59,130,246,0.25); border:none; cursor:pointer; z-index:60; }
+
+/* tables */
+.table-dark th{ background:rgba(15,23,42,0.6); color:var(--muted); text-transform:uppercase; font-size:12px; }
+.table-dark td{ color:var(--text); }
+
+/* utility */
+.container.content-container{ padding:24px 16px; max-width:1200px; }
+.toast-container{ z-index:2000; }
+
+/* simple responsive grid used by templates */
+.grid-cols-4{ display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; }
+@media(max-width:900px){ .grid-cols-4{ grid-template-columns:1fr; } }
+
+/* status chips */
+.chip{ display:inline-flex; padding:6px 10px; border-radius:999px; font-weight:700; font-size:11px; }
+.chip-ativo{ background:rgba(16,185,129,0.12); color:#bbf7d0; border:1px solid rgba(16,185,129,0.15); }
+.chip-failed{ background:rgba(220,38,38,0.08); color:#fecaca; border:1px solid rgba(220,38,38,0.12); }
+
+/* small helpers for admin pages */
+.btn-md{ padding:8px 12px; border-radius:10px; }
+
+/* ensure lucide icons render well in dark */
+[data-lucide]{ color:var(--muted); }
+
+/* override Bootstrap light backgrounds used in templates */
+.card, .card-body { background: transparent; border: none; }
+
+/* end of md-dark.css */
