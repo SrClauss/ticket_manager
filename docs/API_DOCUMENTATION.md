@@ -60,6 +60,21 @@ Bilheteria (app/routers/bilheteria.py)
   - Auth: Depends on verify_token_bilheteria
   - Description: Retrieve participant by ID.
 
+- GET /participantes/list?page=1&per_page=20&nome=
+  - Response model: ParticipantesListResponse
+  - Auth: Depends on verify_token_bilheteria
+  - Description: Returns a paginated list of participants for the event. Supports filtering by name (case insensitive regex).
+  - Query parameters:
+    - page: Page number (default: 1, minimum: 1)
+    - per_page: Items per page (default: 20, minimum: 1, maximum: 100)
+    - nome: Optional name filter (case insensitive regex)
+  - Response fields:
+    - participantes: List of Participante objects
+    - total_count: Total number of participants (filtered or not)
+    - total_pages: Total number of pages based on per_page
+    - current_page: Current page number
+    - per_page: Items per page
+
 - GET /participantes/buscar?nome=&email=&cpf=
   - Response: List[Participante]
   - Auth: Depends on verify_token_bilheteria

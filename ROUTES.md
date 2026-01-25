@@ -76,6 +76,7 @@
 - POST `/api/bilheteria/participantes` — cria participante (body `ParticipanteCreate`) → 201
 - POST `/api/bilheteria/emitir` — body `{ tipo_ingresso_id, participante_id }` → 201 (retorna `EmissaoIngressoResponse` with `ingresso` + `layout_preenchido`)
 - GET `/api/bilheteria/participante/{participante_id}` — obter participante
+- GET `/api/bilheteria/participantes/list?page=1&per_page=20&nome=` — lista paginada de participantes (retorna `ParticipantesListResponse` com `participantes`, `total_count`, `total_pages`, `current_page`, `per_page`)
 - GET `/api/bilheteria/participantes/buscar?nome=&email=&cpf=` — busca (limit 20)
 - GET `/api/bilheteria/busca-credenciamento?nome=&email=` — busca otimizada para reimpressão
 - POST `/api/bilheteria/reimprimir/{ingresso_id}` — reimprime ingresso (retorna `EmissaoIngressoResponse`)
