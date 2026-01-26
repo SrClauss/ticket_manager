@@ -131,7 +131,12 @@
         <tbody class="divide-y divide-slate-700/50">
           {% for tipo in tipos_ingresso %}
           <tr class="hover:bg-slate-700/30 transition-colors">
-            <td class="px-4 py-2 text-slate-100">{{ tipo.descricao }}</td>
+            <td class="px-4 py-2 text-slate-100">
+              {{ tipo.descricao }}
+              {% if tipo.padrao %}
+                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded bg-green-700 text-green-100 text-xs font-semibold">Padrão</span>
+              {% endif %}
+            </td>
             <td class="px-4 py-2 text-slate-100">R$ {{ "%.2f"|format(tipo.valor) }}</td>
             <td class="px-4 py-2">{% if tipo.permissoes|length > 0 %}<span class="chip chip-ativo">{{ tipo.permissoes|length }} ilha(s)</span>{% else %}<span class="badge">0 ilhas</span>{% endif %}</td>
           </tr>
