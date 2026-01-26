@@ -440,7 +440,8 @@ async def admin_evento_planilhas(request: Request, evento_id: str):
                 "campos_opcionais": campos_opcionais,
                 "campos_atual": campos_atual,
                 "importacoes": importacoes,
-                "saved": request.query_params.get("saved") == "1"
+                "saved": request.query_params.get("saved") == "1",
+                "padrao_error": request.query_params.get("padrao_error") == "1"
             }
         )
     except Exception as e:
@@ -555,7 +556,11 @@ async def admin_evento_planilhas_empresas_delete_form(request: Request, evento_i
 
 @router.post("/eventos/{evento_id}/planilhas/campos")
 async def admin_evento_planilhas_salvar_campos(request: Request, evento_id: str):
-    """Atualiza campos obrigatórios de planilha para o evento."""
+    """Atualiza campos obrigatórios de planilha para o evento.
+
+    Exige que exista um tipo de ingresso marcado como `padrao` para o evento antes de salvar
+    as configurações da planilha (requisito solicitado pelo cliente).
+    """
     redirect = check_admin_session(request)
     if redirect:
         return redirect
@@ -569,6 +574,22 @@ async def admin_evento_planilhas_salvar_campos(request: Request, evento_id: str)
     evento = await db.eventos.find_one({"_id": object_id})
     if not evento:
         raise HTTPException(status_code=404, detail="Evento não encontrado")
+
+    # Verifica se existe um tipo de ingresso padrão definido (embutido ou na coleção tipos_ingresso)
+    has_padrao = False
+    for t in evento.get("tipos_ingresso", []) or []:
+        if t.get("padrao"):
+            has_padrao = True
+            break
+    if not has_padrao:
+        # procura na coleção legada
+        padrao_doc = await db.tipos_ingresso.find_one({"evento_id": str(object_id), "padrao": True})
+        if padrao_doc:
+            has_padrao = True
+
+    if not has_padrao:
+        # redireciona com erro informando que é necessário definir um tipo padrão
+        return RedirectResponse(url=f"/admin/eventos/{evento_id}/planilhas?padrao_error=1", status_code=status.HTTP_303_SEE_OTHER)
 
     form = await request.form()
     selecionados = form.getlist("campos")

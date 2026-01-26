@@ -98,12 +98,33 @@ async def get_evento_info(
     )
 
 
+@router.get("/evento/campos-obrigatorios")
+async def get_evento_campos_obrigatorios(evento_id: str = Depends(verify_token_bilheteria)):
+    """Retorna os campos obrigatórios configurados para o evento (útil para clientes mobile montar UI de cadastro)."""
+    db = get_database()
+    # tenta por ObjectId primeiro, mas aceita string também
+    try:
+        evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+    except Exception:
+        evento = await db.eventos.find_one({"_id": evento_id})
+
+    if not evento:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evento não encontrado")
+
+    campos = evento.get("campos_obrigatorios_planilha") or []
+    return {"campos_obrigatorios": campos}
+
+
 @router.post("/participantes", response_model=Participante, status_code=status.HTTP_201_CREATED)
 async def criar_participante(
     participante: ParticipanteCreate,
     evento_id: str = Depends(verify_token_bilheteria)
 ):
-    """Cadastro rápido de participantes (botão 'Adicionar Participante')"""
+    """Cadastro rápido de participantes (botão 'Adicionar Participante').
+
+    Se um evento for fornecido via token, cria também um ingresso usando o tipo
+    de ingresso marcado como `padrao` para o evento (requisito solicitado pelo cliente).
+    """
     db = get_database()
     
     # Normalize and validate CPF if provided
@@ -127,7 +148,63 @@ async def criar_participante(
     
     created_participante = await db.participantes.find_one({"_id": result.inserted_id})
     created_participante["_id"] = str(created_participante["_id"])
-    
+
+    # Se veio um evento via token, tenta emitir ingresso padrão para o participante
+    if evento_id:
+        try:
+            evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+        except Exception:
+            evento = await db.eventos.find_one({"_id": evento_id})
+
+        if evento:
+            # procura tipo padrao embutido no evento
+            tipo = None
+            for t in evento.get("tipos_ingresso", []) or []:
+                if t.get("padrao"):
+                    tipo = t
+                    break
+            # fallback: procura na coleção de tipos
+            if not tipo:
+                tipo = await db.tipos_ingresso.find_one({"evento_id": str(evento.get("_id") or evento_id), "padrao": True})
+
+            if tipo:
+                try:
+                    # garante CPF único por evento quando possível
+                    participante_cpf = created_participante.get("cpf")
+                    try:
+                        participante_cpf = await _ensure_participante_cpf_unico(db, str(evento.get("_id") or evento_id), created_participante.get("_id"), created_participante)
+                    except Exception:
+                        # ignore uniqueness enforcement failures here (still create ingresso)
+                        participante_cpf = participante_cpf
+
+                    qrcode_hash = generate_qrcode_hash()
+                    tipo_id = str(tipo.get("_id") or tipo.get("id") or tipo.get("numero"))
+
+                    ingresso_dict = {
+                        "evento_id": str(evento.get("_id") or evento_id),
+                        "tipo_ingresso_id": tipo_id,
+                        "participante_id": created_participante.get("_id"),
+                        "participante_cpf": participante_cpf,
+                        "status": "Ativo",
+                        "qrcode_hash": qrcode_hash,
+                        "data_emissao": datetime.now(timezone.utc)
+                    }
+
+                    try:
+                        res = await db.ingressos_emitidos.insert_one(ingresso_dict)
+                        ingresso_dict["_id"] = res.inserted_id
+                    except Exception:
+                        pass
+
+                    # também armazena embutido no participante
+                    try:
+                        await db.participantes.update_one({"_id": ObjectId(created_participante.get("_id"))}, {"$push": {"ingressos": ingresso_dict}})
+                    except Exception:
+                        await db.participantes.update_one({"_id": created_participante.get("_id")}, {"$push": {"ingressos": ingresso_dict}})
+                except Exception:
+                    # não bloquear criação de participante por falha na emissão automática
+                    pass
+
     return Participante(**created_participante)
 
 
