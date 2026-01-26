@@ -29,6 +29,15 @@
         </div>
 
         <div class="pt-3 border-t border-slate-700/50">
+          <div class="mb-2">
+            <label class="block text-sm font-medium text-slate-300 mb-1">Tipo de ingresso padrão</label>
+            <select name="tipo_padrao" class="w-full bg-slate-900 text-slate-100 p-2 rounded">
+              <option value="">-- Selecionar padrão --</option>
+              {% for tipo in tipos_ingresso %}
+                <option value="{{ tipo.id }}" {% if tipo.padrao %}selected{% endif %}>{{ tipo.descricao }}</option>
+              {% endfor %}
+            </select>
+          </div>
           <label class="inline-flex items-center gap-2 text-slate-300"><input type="checkbox" name="aceita_inscricoes" {% if evento.aceita_inscricoes %}checked{% endif %} class="form-checkbox"/> Aceitar inscrições públicas</label>
         </div>
 

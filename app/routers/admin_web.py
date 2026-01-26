@@ -28,7 +28,7 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 PLANILHA_BASE_FIELDS = ["Nome", "Email", "CPF"]
-PLANILHA_OPTIONAL_FIELDS = ["Telefone", "Empresa", "Nacionalidade", "Tipo Ingresso"]
+PLANILHA_OPTIONAL_FIELDS = ["Telefone", "Empresa", "Nacionalidade"]
 
 # Simple session storage (in production, use proper session management)
 admin_sessions = set()
@@ -407,9 +407,16 @@ async def admin_evento_planilhas(request: Request, evento_id: str):
             if campo_norm and campo_norm not in campos_atual:
                 campos_atual.append(campo_norm)
 
-        campos_opcionais = PLANILHA_OPTIONAL_FIELDS.copy()
+        # Ensure "Tipo Ingresso" is not treated as a public field (use the select above instead)
+        if "Tipo Ingresso" in campos_atual:
+            campos_atual = [c for c in campos_atual if c != "Tipo Ingresso"]
+
+        campos_opcionais = [c for c in PLANILHA_OPTIONAL_FIELDS.copy() if c != "Tipo Ingresso"]
         for campo in campos_atual:
             if campo not in PLANILHA_BASE_FIELDS and campo not in campos_opcionais:
+                # skip Tipo Ingresso if it somehow appears
+                if campo == "Tipo Ingresso":
+                    continue
                 campos_opcionais.append(campo)
 
         importacoes = []
@@ -430,6 +437,13 @@ async def admin_evento_planilhas(request: Request, evento_id: str):
                 }
             })
 
+        tipos_ingresso = []
+        cursor = db.tipos_ingresso.find({"evento_id": evento["id"]})
+        async for tipo in cursor:
+            tipo["_id"] = str(tipo["_id"])
+            tipo["id"] = tipo["_id"]
+            tipos_ingresso.append(tipo)
+
         return templates.TemplateResponse(
             "admin/evento_planilhas.html",
             {
@@ -440,6 +454,7 @@ async def admin_evento_planilhas(request: Request, evento_id: str):
                 "campos_opcionais": campos_opcionais,
                 "campos_atual": campos_atual,
                 "importacoes": importacoes,
+                "tipos_ingresso": tipos_ingresso,
                 "saved": request.query_params.get("saved") == "1",
                 "padrao_error": request.query_params.get("padrao_error") == "1"
             }
@@ -594,6 +609,27 @@ async def admin_evento_planilhas_salvar_campos(request: Request, evento_id: str)
     form = await request.form()
     selecionados = form.getlist("campos")
 
+    # If admin selected a default ticket type, update tipos_ingresso collection accordingly
+    tipo_padrao = form.get('tipo_padrao')
+    if tipo_padrao:
+        try:
+            # clear existing padrao flags for this event
+            await db.tipos_ingresso.update_many({"evento_id": str(object_id)}, {"$set": {"padrao": False}})
+            # try matching by ObjectId
+            from bson import ObjectId as BsonObjectId
+            try:
+                await db.tipos_ingresso.update_one({"_id": BsonObjectId(tipo_padrao), "evento_id": str(object_id)}, {"$set": {"padrao": True}})
+            except Exception:
+                # try matching by string id or by numero
+                await db.tipos_ingresso.update_one({"_id": tipo_padrao, "evento_id": str(object_id)}, {"$set": {"padrao": True}})
+                try:
+                    num = int(tipo_padrao)
+                    await db.tipos_ingresso.update_one({"numero": num, "evento_id": str(object_id)}, {"$set": {"padrao": True}})
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
     novos_campos = []
     for campo in PLANILHA_BASE_FIELDS:
         if campo not in novos_campos:
@@ -601,6 +637,9 @@ async def admin_evento_planilhas_salvar_campos(request: Request, evento_id: str)
 
     for campo in selecionados:
         campo_norm = (campo or "").strip()
+        # Do not allow Tipo Ingresso to be saved as a public field — it's selected separately
+        if campo_norm == "Tipo Ingresso":
+            continue
         if campo_norm and campo_norm not in novos_campos:
             novos_campos.append(campo_norm)
 
