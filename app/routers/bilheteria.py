@@ -98,6 +98,42 @@ async def get_evento_info(
     )
 
 
+@router.get("/tipos", response_model=List[Dict[str, Any]])
+async def get_tipos(evento_id: str = Depends(verify_token_bilheteria)):
+    """Retorna os tipos de ingresso disponíveis para o evento (para mobile)."""
+    db = get_database()
+    # tenta por ObjectId primeiro, mas aceita string também
+    try:
+        evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+    except Exception:
+        evento = await db.eventos.find_one({"_id": evento_id})
+
+    if not evento:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evento não encontrado")
+
+    tipos = []
+    tipos_from_evento = evento.get("tipos_ingresso", [])
+    if tipos_from_evento:
+        for tipo in tipos_from_evento:
+            tipos.append({
+                "tipo_ingresso_id": str(tipo.get("_id") or tipo.get("id") or tipo.get("numero")),
+                "descricao": tipo.get("descricao"),
+                "valor": tipo.get("valor", 0),
+                "permissoes": tipo.get("permissoes", [])
+            })
+    else:
+        cursor = db.tipos_ingresso.find({"evento_id": evento_id})
+        async for tipo in cursor:
+            tipos.append({
+                "tipo_ingresso_id": str(tipo["_id"]),
+                "descricao": tipo.get("descricao"),
+                "valor": tipo.get("valor", 0),
+                "permissoes": tipo.get("permissoes", [])
+            })
+
+    return tipos
+
+
 @router.get("/evento/campos-obrigatorios")
 async def get_evento_campos_obrigatorios(evento_id: str = Depends(verify_token_bilheteria)):
     """Retorna os campos obrigatórios configurados para o evento (útil para clientes mobile montar UI de cadastro)."""
