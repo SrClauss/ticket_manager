@@ -776,6 +776,8 @@ async def admin_evento_layout_preview(
         bio.seek(0)
         
         return StreamingResponse(bio, media_type='image/jpeg', headers={"Cache-Control": "no-cache"})
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
