@@ -1020,8 +1020,8 @@ LAYOUT_TEMPLATES = {
 }
 
 
-@router.get("/templates/layout")
-async def get_layout_templates(dependencies=[Depends(verify_admin_access)]):
+@router.get("/templates/layout", dependencies=[Depends(verify_admin_access)])
+async def get_layout_templates():
     """Get available layout templates"""
     return {
         "templates": [
@@ -1031,8 +1031,8 @@ async def get_layout_templates(dependencies=[Depends(verify_admin_access)]):
     }
 
 
-@router.get("/templates/layout/{template_id}")
-async def get_layout_template(template_id: str, dependencies=[Depends(verify_admin_access)]):
+@router.get("/templates/layout/{template_id}", dependencies=[Depends(verify_admin_access)])
+async def get_layout_template(template_id: str):
     """Get specific layout template"""
     if template_id not in LAYOUT_TEMPLATES:
         raise HTTPException(status_code=404, detail="Template não encontrado")

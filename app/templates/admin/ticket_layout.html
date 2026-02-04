@@ -1007,8 +1007,11 @@ function layoutEditor() {
         draggedElementId: null,
         dragTransform: { x: 0, y: 0 },
         
-        // Pixel to MM conversion (assume 96 DPI for screen display)
-        screenDpi: 96,
+        // Preview timeout (for debouncing)
+        _previewTimeout: null,
+        
+        // Track elements with Interact.js configured (WeakSet for better memory management)
+        _interactElements: new WeakSet(),
         
         // Initialize
         init() {
@@ -1284,7 +1287,7 @@ function layoutEditor() {
         setupInteract() {
             this.elements.forEach(element => {
                 const el = document.getElementById(element.id);
-                if (!el || el._interactSetup) return;
+                if (!el || this._interactElements.has(el)) return;
                 
                 interact(`#${element.id}`)
                     .draggable({
@@ -1317,7 +1320,8 @@ function layoutEditor() {
                         }
                     });
                 
-                el._interactSetup = true;
+                // Mark element as configured
+                this._interactElements.add(el);
             });
         },
         
