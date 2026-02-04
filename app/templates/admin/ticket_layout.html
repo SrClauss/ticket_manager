@@ -437,7 +437,12 @@
     // Load existing elements (if any)
     if (existingLayout && Array.isArray(existingLayout.elements)) {
         existingLayout.elements.forEach(el => {
-            addElementToCanvas(el.type, el.value, el.x || 40, el.y || 60, el.size || 12, el.margin_mm || 0);
+            // Use size_mm for qrcode/logo, size for text
+            let sizeParam = el.size || 12;
+            if ((el.type === 'qrcode' || el.type === 'logo') && el.size_mm) {
+                sizeParam = el.size_mm;
+            }
+            addElementToCanvas(el.type, el.value, el.x || 40, el.y || 60, sizeParam, el.margin_mm || 0);
         });
     }
 
@@ -561,7 +566,8 @@
         // Set initial size-mm and aspect for QR/Logo
         let initialSizeMm = 0;
         if (type === 'qrcode' || type === 'logo') {
-            initialSizeMm = parseFloat(size) || 20;
+            // size parameter should already be in mm for qrcode/logo
+            initialSizeMm = parseFloat(size) || 30;
             element.setAttribute('data-size-mm', initialSizeMm);
             // set inner element pixel size and store aspect ratio
             try {
@@ -570,8 +576,8 @@
                     const px = (initialSizeMm / canvasMmWidth) * canvasRect.width;
                     inner.style.width = px + 'px';
                     inner.style.height = px + 'px';
-                    // store aspect ratio (width/height)
-                    const aspect = (inner.offsetWidth || px) / (inner.offsetHeight || px) || 1;
+                    // store aspect ratio (width/height) - for QR it's 1:1
+                    const aspect = 1.0;
                     element.setAttribute('data-aspect', aspect);
                 }
             } catch (e) {}
@@ -819,8 +825,9 @@
 
             if (dtype === 'text') {
                 elementObj.size = parseInt(el.getAttribute('data-size')) || 12;
-            } else {
-                elementObj.size_mm = sizeMmVal || undefined;
+            } else if (dtype === 'qrcode' || dtype === 'logo') {
+                // Always save size_mm for qrcode and logo
+                elementObj.size_mm = sizeMmVal || 30;
             }
 
             layout.elements.push(elementObj);

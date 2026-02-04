@@ -643,9 +643,15 @@ async def admin_evento_planilhas_salvar_campos(request: Request, evento_id: str)
         if campo_norm and campo_norm not in novos_campos:
             novos_campos.append(campo_norm)
 
+    # Handle aceita_inscricoes checkbox
+    aceita = 'aceita_inscricoes' in form
+    
     await db.eventos.update_one(
         {"_id": object_id},
-        {"$set": {"campos_obrigatorios_planilha": novos_campos}}
+        {"$set": {
+            "campos_obrigatorios_planilha": novos_campos,
+            "aceita_inscricoes": aceita
+        }}
     )
 
     return RedirectResponse(
