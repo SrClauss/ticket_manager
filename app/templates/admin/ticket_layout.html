@@ -884,7 +884,7 @@
         } catch (err) { console.error(err); showToast('Erro ao salvar layout', 'danger'); }
     });
 
-    // Preview button
+    // Preview button - generates preview with fake data
     document.getElementById('previewBtn').addEventListener('click', async function() {
         const canvas = document.getElementById('ticketCanvas');
         const canvasRect = canvas.getBoundingClientRect();
@@ -953,11 +953,11 @@
                 document.getElementById('previewImg').src = url;
                 document.getElementById('previewModal').style.display = 'block';
             } else {
-                showToast('Erro ao gerar preview', 'danger');
+                alert('Erro ao gerar preview');
             }
         } catch (err) {
             console.error(err);
-            showToast('Erro ao gerar preview', 'danger');
+            alert('Erro ao gerar preview');
         }
     });
 
