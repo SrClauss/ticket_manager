@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, HTTPException, status, Depends, Form, UploadFile, File
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
 from datetime import datetime, timedelta, timezone
@@ -726,6 +726,58 @@ async def admin_evento_layout_page(request: Request, evento_id: str):
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/eventos/layout/{evento_id}/preview")
+async def admin_evento_layout_preview(
+    evento_id: str,
+    request: Request,
+    dependencies=[Depends(verify_admin_access)]
+):
+    """Generate preview of ticket layout with fake data"""
+    from app.routers.evento_api import _render_layout_to_image
+    from io import BytesIO
+    
+    try:
+        data = await request.json()
+        layout = data.get("layout_ingresso")
+        
+        if not layout:
+            raise HTTPException(status_code=400, detail="Layout inválido")
+        
+        # Embed fake data into layout
+        from app.utils.layouts import embed_layout
+        fake_participante = {
+            "nome": "Clausemberg Rodrigues de Oliveira Neto",
+            "cpf": "123.456.789-00",
+            "email": "teste@example.com"
+        }
+        fake_tipo = {
+            "descricao": "Pista Premium"
+        }
+        db = get_database()
+        evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+        if not evento:
+            raise HTTPException(status_code=404, detail="Evento não encontrado")
+        
+        fake_ingresso = {
+            "qrcode_hash": "PREVIEW123456789",
+            "data_emissao": datetime.now()
+        }
+        
+        embedded_layout = embed_layout(layout, fake_participante, fake_tipo, evento, fake_ingresso)
+        
+        # Render to image
+        img = _render_layout_to_image(embedded_layout, dpi=300)
+        
+        # Return as JPEG
+        bio = BytesIO()
+        img.save(bio, format='JPEG', quality=90)
+        bio.seek(0)
+        
+        return StreamingResponse(bio, media_type='image/jpeg', headers={"Cache-Control": "no-cache"})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/eventos/layout/{evento_id}")

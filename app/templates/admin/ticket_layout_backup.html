@@ -245,28 +245,15 @@
 
 <!-- Fixed save bar for all devices -->
 <div class="fixed-save-bar">
-    <div class="container mx-auto px-4 flex justify-center gap-2">
-        <button type="button" id="previewBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg">
-            <span class="material-symbols-outlined">visibility</span>
-            <span>Preview</span>
-        </button>
-        <button type="button" id="saveLayoutBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg">
+    <div class="container mx-auto px-4 flex justify-center">
+        <button type="button" id="saveLayoutBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg me-2">
             <span class="material-symbols-outlined">save</span>
-            <span>Salvar Layout</span>
+            <span class="ml-2">Salvar Layout</span>
         </button>
         <button type="button" id="clearLayoutBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg">
             <span class="material-symbols-outlined">delete</span>
-            <span>Limpar Tudo</span>
+            <span class="ml-2">Limpar Tudo</span>
         </button>
-    </div>
-</div>
-
-<!-- Preview Modal -->
-<div id="previewModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.9); z-index:9999; padding:20px;" onclick="document.getElementById('previewModal').style.display='none'">
-    <div style="max-width:800px; margin:40px auto; text-align:center;">
-        <h3 class="text-slate-100 mb-4">Preview do Ingresso (dados fictícios)</h3>
-        <img id="previewImg" src="" style="max-width:100%; height:auto; box-shadow:0 8px 32px rgba(0,0,0,0.5);" alt="Preview"/>
-        <p class="text-slate-400 mt-4 text-sm">Clique para fechar</p>
     </div>
 </div>
 
@@ -882,83 +869,6 @@
                 showToast('Erro ao salvar layout', 'danger');
             }
         } catch (err) { console.error(err); showToast('Erro ao salvar layout', 'danger'); }
-    });
-
-    // Preview button
-    document.getElementById('previewBtn').addEventListener('click', async function() {
-        const canvas = document.getElementById('ticketCanvas');
-        const canvasRect = canvas.getBoundingClientRect();
-        const elems = canvas.querySelectorAll('.draggable-element');
-
-        const layout = {
-            canvas: {
-                width: canvasMmWidth,
-                height: canvasMmHeight,
-                unit: 'mm',
-                padding_mm: parseFloat(document.getElementById('canvasPadding').value || '5'),
-                border: document.getElementById('canvasBorder').checked,
-                orientation: (document.getElementById('canvasOrientation') && document.getElementById('canvasOrientation').value) ? document.getElementById('canvasOrientation').value : 'portrait'
-            },
-            elements: []
-        };
-
-        elems.forEach(el => {
-            const leftPx = parseFloat(el.style.left) || 0;
-            const topPx = parseFloat(el.style.top) || 0;
-            const xMm = Math.max(0, (leftPx / canvasRect.width) * layout.canvas.width);
-            const yMm = Math.max(0, (topPx / canvasRect.height) * layout.canvas.height);
-            
-            let sizeMmVal = 0;
-            const dtype = el.getAttribute('data-type');
-            if (el.getAttribute('data-size-mm')) {
-                sizeMmVal = parseFloat(el.getAttribute('data-size-mm')) || 0;
-            } else if (dtype === 'qrcode' || dtype === 'logo') {
-                const inner = el.querySelector(dtype === 'qrcode' ? '.element-qrcode' : '.element-logo');
-                if (inner) {
-                    const innerWidth = parseFloat(inner.style.width) || 60;
-                    sizeMmVal = Math.round(((innerWidth / canvasRect.width) * layout.canvas.width) * 10) / 10;
-                } else {
-                    sizeMmVal = 30;
-                }
-            }
-
-            const elementObj = {
-                type: dtype,
-                value: el.getAttribute('data-value'),
-                x: Math.round(xMm * 10) / 10,
-                y: Math.round(yMm * 10) / 10,
-                margin_mm: parseFloat(el.getAttribute('data-margin-mm')) || 0
-            };
-
-            if (dtype === 'text') {
-                elementObj.size = parseInt(el.getAttribute('data-size')) || 12;
-            } else if (dtype === 'qrcode' || dtype === 'logo') {
-                elementObj.size_mm = sizeMmVal || 30;
-            }
-
-            layout.elements.push(elementObj);
-        });
-
-        try {
-            const response = await fetch('/admin/eventos/layout/{{ evento.id }}/preview', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ layout_ingresso: layout })
-            });
-            
-            if (response.ok) {
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                document.getElementById('previewImg').src = url;
-                document.getElementById('previewModal').style.display = 'block';
-            } else {
-                showToast('Erro ao gerar preview', 'danger');
-            }
-        } catch (err) {
-            console.error(err);
-            showToast('Erro ao gerar preview', 'danger');
-        }
     });
 
     // Clear all elements
