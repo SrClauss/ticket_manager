@@ -6,14 +6,16 @@
 <!-- Tailwind-based Material Dark Dashboard -->
 
 
-<header class="p-6 md:px-12 pt-8 relative">
-    <div class="absolute top-4 right-4 md:right-12">
+<header class="p-6 md:px-12 pt-8 flex justify-between items-start">
+    <div>
+        <h1 class="text-3xl font-light text-slate-100">Dashboard</h1>
+        <p class="text-sm text-slate-400 font-light">Visão geral do sistema</p>
+    </div>
+    <div>
         <span class="text-xs font-mono text-slate-500 bg-slate-800/50 px-2 py-1 rounded border border-slate-700/50">
-            v: {{ git_version | default('dev') }}
+            v: {{ git_version | default('8a2ee12') }}
         </span>
     </div>
-    <h1 class="text-3xl font-light text-slate-100">Dashboard</h1>
-    <p class="text-sm text-slate-400 font-light">Visão geral do sistema</p>
 </header>
 
 <main class="px-4 md:px-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
