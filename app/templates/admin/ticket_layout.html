@@ -4,26 +4,87 @@
 
 {% block extra_css %}
 <style>
-    /* Ticket Canvas Styles */
-    .canvas-container {
-        position: relative;
-        background: white;
-        width: 300px;  /* base visual scale, actual mm set via JS */
-        height: 450px; /* 120mm scaled */
-        margin: 0 auto;
-        border: 2px dashed #667eea;
-        overflow: hidden;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    /* Layout Grid */
+    .layout-editor {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 1rem;
+        margin-top: 1rem;
     }
     
+    /* Sidebar */
+    .sidebar {
+        background: rgba(30, 41, 59, 0.8);
+        border-radius: 12px;
+        padding: 1.5rem;
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+    }
+    
+    /* Canvas Area */
+    .canvas-area {
+        background: rgba(30, 41, 59, 0.8);
+        border-radius: 12px;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    /* Canvas Container with rulers */
+    .canvas-wrapper {
+        position: relative;
+        margin: 2rem;
+    }
+    
+    .ruler {
+        position: absolute;
+        background: rgba(51, 65, 85, 0.5);
+        color: #94a3b8;
+        font-size: 10px;
+    }
+    
+    .ruler-horizontal {
+        top: -20px;
+        left: 0;
+        right: 0;
+        height: 20px;
+        display: flex;
+    }
+    
+    .ruler-vertical {
+        left: -30px;
+        top: 0;
+        bottom: 0;
+        width: 30px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .ruler-mark {
+        position: relative;
+        flex: 0 0 auto;
+    }
+    
+    /* Ticket Canvas */
+    .ticket-canvas {
+        position: relative;
+        background: white;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        border: 2px solid #667eea;
+        overflow: visible;
+    }
+    
+    /* Draggable Elements */
     .draggable-element {
         position: absolute;
         cursor: move;
-        padding: 5px;
+        padding: 4px 8px;
         background: rgba(102, 126, 234, 0.1);
         border: 1px solid #667eea;
         border-radius: 4px;
         user-select: none;
+        transition: box-shadow 0.2s;
     }
     
     .draggable-element:hover {
@@ -31,964 +92,1539 @@
         box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
     }
     
-    .draggable-element.active {
+    .draggable-element.selected {
         box-shadow: 0 0 0 2px #667eea;
-    }
-    
-    .element-text {
-        font-size: 12px;
-        color: #333;
-        white-space: nowrap;
+        background: rgba(102, 126, 234, 0.15);
     }
     
     .element-qrcode {
-        width: 60px;
-        height: 60px;
-        background: #ddd;
+        width: fit-content;
+        height: fit-content;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 10px;
         color: #666;
+        background: #e2e8f0;
     }
     
     .element-logo {
-        width: 80px;
-        height: 80px;
-        background: #ddd;
+        width: fit-content;
+        height: fit-content;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 10px;
         color: #666;
+        background: #e2e8f0;
     }
     
-    .control-panel {
-        max-height: 600px;
-        overflow-y: auto;
+    .element-divider {
+        background: #333;
     }
     
+    /* Preview Area */
+    .preview-section {
+        background: rgba(30, 41, 59, 0.8);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+        text-align: center;
+    }
+    
+    .preview-image {
+        max-width: 100%;
+        height: auto;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+    }
+    
+    /* Template Tags */
     .template-tag {
         display: inline-block;
-        background: rgba(102, 126, 234, 0.1);
+        background: rgba(102, 126, 234, 0.15);
         border: 1px solid #667eea;
         border-radius: 4px;
-        padding: 2px 8px;
+        padding: 4px 8px;
         margin: 2px;
-        font-size: 0.85rem;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #cbd5e1;
+    }
+    
+    .template-tag:hover {
+        background: rgba(102, 126, 234, 0.3);
+        transform: scale(1.05);
+    }
+    
+    /* Format Buttons */
+    .format-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .format-buttons button {
+        width: 32px;
+        height: 32px;
+        border: 1px solid #475569;
+        background: #334155;
+        color: #cbd5e1;
+        border-radius: 4px;
+        font-weight: bold;
         cursor: pointer;
         transition: all 0.2s;
     }
     
-    .template-tag:hover {
-        background: rgba(102, 126, 234, 0.2);
-        transform: scale(1.05);
+    .format-buttons button:hover {
+        background: #475569;
     }
-.fixed-save-bar {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 10px 0;
-    background: rgba(255,255,255,0.95);
-    box-shadow: 0 -6px 20px rgba(0,0,0,0.12);
-    z-index: 1200;
-}
-.content-container { padding-bottom: 96px; }
+    
+    .format-buttons button.active {
+        background: #667eea;
+        border-color: #667eea;
+        color: white;
+    }
+    
+    /* Element List */
+    .element-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        background: rgba(51, 65, 85, 0.5);
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .element-item:hover {
+        background: rgba(51, 65, 85, 0.8);
+    }
+    
+    .element-item.selected {
+        background: rgba(102, 126, 234, 0.3);
+        border: 1px solid #667eea;
+    }
+    
+    .element-icon {
+        font-size: 1.2rem;
+    }
+    
+    .element-label {
+        flex: 1;
+        font-size: 0.875rem;
+        color: #cbd5e1;
+    }
+    
+    /* Fixed Save Bar */
+    .fixed-save-bar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 80px; /* Above bottom nav */
+        padding: 1rem 0;
+        background: rgba(30, 41, 59, 0.95);
+        backdrop-blur-md;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+        z-index: 40;
+    }
+    
+    /* Confirm Position Button */
+    .confirm-position-btn {
+        position: fixed;
+        bottom: 180px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 50;
+        animation: bounce 1s infinite;
+    }
+    
+    @keyframes bounce {
+        0%, 100% { transform: translateX(-50%) translateY(0); }
+        50% { transform: translateX(-50%) translateY(-10px); }
+    }
+    
+    /* Loading Spinner */
+    .loading-spinner {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border: 4px solid #475569;
+        border-top-color: #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Toast Notifications */
+    .toast-notification {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        max-width: 500px;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        animation: slideIn 0.3s ease-out;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .toast-notification.success {
+        background: #10b981;
+        color: white;
+    }
+    
+    .toast-notification.error {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .toast-notification.warning {
+        background: #f59e0b;
+        color: white;
+    }
+    
+    .toast-notification.info {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 1024px) {
+        .layout-editor {
+            grid-template-columns: 1fr;
+        }
+        
+        .sidebar {
+            max-height: none;
+        }
+        
+        .canvas-wrapper {
+            margin: 1rem 0;
+        }
+    }
+    
+    /* Content padding for fixed bar */
+    .content-container {
+        padding-bottom: 160px !important;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class=" flex flex-wrap -mx-2  mb-4">
-    <div class=" w-full px-2 ">
-        <div class="md-card p-4">
-            <div class=" flex   justify-between   items-center ">
-                <div>
-                    <h1 class="text-slate-100 mb-0">Editor de Layout</h1>
-                    <p class="text-slate-100-muted mb-0">{{ evento.nome }}</p>
-                </div>
-                <a href="/admin/eventos" class="btn  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -glass">
-                    <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
-                    Voltar
-                </a>
-            </div>
-        </div>
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed top-20 right-5 z-[9999] flex flex-col gap-2"></div>
+
+<!-- Alpine.js Store and Main App -->
+<div 
+    x-data="layoutEditor()"
+    x-init="init()"
+    class="layout-editor-app"
+>
+    <!-- Header -->
+    <div class="mb-4">
+        <h3 class="text-slate-100 text-2xl font-bold mb-2">
+            <span class="material-symbols-outlined" style="vertical-align: middle;">design_services</span>
+            Editor de Layout - {{ evento.nome }}
+        </h3>
+        <p class="text-slate-400">Configure o layout do ingresso: adicione elementos, posicione e visualize em tempo real</p>
     </div>
-</div>
-
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-    <!-- Frame A: Control Panel -->
-    <div class="lg:col-span-4 mb-4 space-y-4">
-        <!-- Canvas Settings -->
-        <div class="md-card p-4">
-            <h5 class="text-slate-100 mb-3">⚙️ Configurações do Canvas</h5>
-            <div>
-                <!-- Canvas orientation and fixed size controls -->
-                <div class="mb-3">
-                    <label class="text-sm text-slate-100">Orientação</label>
-                    <select id="canvasOrientation" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100">
-                        <option value="portrait">Portrait</option>
-                        <option value="landscape">Landscape</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="text-sm text-slate-100" id="fixedDimLabel">Dimensão fixa (mm)</label>
-                    <select id="fixedDimSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100">
-                        <option value="29">29</option>
-                        <option value="62" selected>62</option>
-                    </select>
-                    <div class="text-xs text-slate-400" id="variableDimHint">Dimensão variável pode ser ajustada abaixo.</div>
-                </div>
-                <div class="mb-3">
-                    <label class="text-sm text-slate-100" id="variableDimLabel">Altura do Canvas (mm)</label>
-                    <input type="number" id="variableDimInput" value="120" min="10" step="1" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
-                    <div class="text-xs text-slate-400">Altura livre (mínimo 10 mm).</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Add Elements -->
-        <div class="md-card p-4">
-            <h5 class="text-slate-100 mb-3">➕ Adicionar Elementos</h5>
-            <div>
-            <div class="mb-3">
-                <label class="text-sm text-slate-100">Tipo de Elemento</label>
-                <select id="elementType" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100">
-                    <option value="text">Texto</option>
-                    <option value="qrcode">QR Code</option>
-                    <option value="logo">Logo</option>
-                </select>
-            </div>
-            
-            <!-- Content Field -->
-            <div class="mb-3" id="contentField">
-                <label class="text-sm text-slate-100">Conteúdo</label>
-                <input type="text" id="elementContent" placeholder="Digite o texto" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
+    
+    <!-- Main Layout Grid -->
+    <div class="layout-editor">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <!-- Canvas Configuration -->
+            <div class="mb-4">
+                <h5 class="text-slate-100 font-semibold mb-3 flex items-center gap-2">
+                    <span class="material-symbols-outlined">settings</span>
+                    Configuração do Canvas
+                </h5>
                 
-                <!-- Template Variables -->
-                <div class="mt-2">
-                    <div class="text-xs text-slate-400 mb-2">Tags Inteligentes:</div>
-                    <div id="templateTags">
-                        <span class="template-tag" data-tag="{NOME}">{NOME}</span>
-                        <span class="template-tag" data-tag="{CPF}">{CPF}</span>
-                        <span class="template-tag" data-tag="{EMAIL}">{EMAIL}</span>
-                        <span class="template-tag" data-tag="{TIPO_INGRESSO}">{TIPO_INGRESSO}</span>
-                        <span class="template-tag" data-tag="{EVENTO_NOME}">{EVENTO_NOME}</span>
-                        <span class="template-tag" data-tag="{DATA_EVENTO}">{DATA_EVENTO}</span>
-                        <span class="template-tag" data-tag="{qrcode_hash}">{qrcode_hash}</span>
+                <div class="mb-3">
+                    <label class="block text-slate-300 text-sm mb-1">Orientação</label>
+                    <select 
+                        x-model="canvas.orientation"
+                        @change="swapOrientation()"
+                        class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                    >
+                        <option value="portrait">📱 Portrait</option>
+                        <option value="landscape">🖥️ Landscape</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="block text-slate-300 text-sm mb-1">Largura (mm)</label>
+                    <select 
+                        x-model.number="canvas.width"
+                        class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                    >
+                        <option :value="29">29mm (estreito)</option>
+                        <option :value="62">62mm (padrão)</option>
+                        <option :value="80">80mm (largo)</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="block text-slate-300 text-sm mb-1">Altura (mm)</label>
+                    <input 
+                        type="number"
+                        x-model.number="canvas.height"
+                        min="10"
+                        class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                    />
+                </div>
+                
+                <div class="mb-3">
+                    <label class="block text-slate-300 text-sm mb-1">Padding (mm)</label>
+                    <input 
+                        type="number"
+                        x-model.number="canvas.padding"
+                        min="0"
+                        step="0.5"
+                        class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                    />
+                </div>
+                
+                <div class="text-slate-400 text-xs">
+                    <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">info</span>
+                    DPI: 300 (fixo)
+                </div>
+                
+                <!-- Load Template -->
+                <div class="mt-3">
+                    <button 
+                        @click="showTemplateSelector = !showTemplateSelector"
+                        class="w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center justify-center gap-2 text-sm transition"
+                    >
+                        <span class="material-symbols-outlined" style="font-size: 18px;">library_books</span>
+                        Carregar Template
+                    </button>
+                    
+                    <div x-show="showTemplateSelector" class="mt-2 p-3 bg-slate-700/50 rounded-lg border border-slate-600">
+                        <div class="mb-2">
+                            <button 
+                                @click="loadTemplate('padrao_vip')"
+                                class="w-full px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded text-sm mb-2 text-left"
+                            >
+                                🎭 Padrão VIP
+                            </button>
+                            <button 
+                                @click="loadTemplate('simples')"
+                                class="w-full px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded text-sm text-left"
+                            >
+                                📄 Simples
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Font Size (for text) -->
-            <div class="mb-3" id="fontSizeField">
-                <label class="text-sm text-slate-100">Tamanho da Fonte</label>
-                <input type="number" id="fontSize" value="12" min="8" max="72" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
+            <hr class="border-slate-700 my-4">
+            
+            <!-- Add Element Form -->
+            <div class="mb-4">
+                <h5 class="text-slate-100 font-semibold mb-3 flex items-center gap-2">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    Adicionar Elemento
+                </h5>
+                
+                <div class="mb-3">
+                    <label class="block text-slate-300 text-sm mb-1">Tipo</label>
+                    <select 
+                        x-model="newElement.type"
+                        class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                    >
+                        <option value="text">📝 Texto</option>
+                        <option value="qrcode">🔲 QR Code</option>
+                        <option value="logo">🖼️ Logo</option>
+                        <option value="divider">➖ Linha</option>
+                    </select>
+                </div>
+                
+                <!-- Text Fields -->
+                <template x-if="newElement.type === 'text'">
+                    <div>
+                        <div class="mb-3">
+                            <label class="block text-slate-300 text-sm mb-1">Conteúdo</label>
+                            <input 
+                                type="text"
+                                x-model="newElement.value"
+                                placeholder="Digite ou use tags..."
+                                class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                            />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="block text-slate-300 text-sm mb-2">Tags Disponíveis</label>
+                            <div class="flex flex-wrap gap-1">
+                                <span class="template-tag" @click="insertTag('{NOME}')">{NOME}</span>
+                                <span class="template-tag" @click="insertTag('{CPF}')">{CPF}</span>
+                                <span class="template-tag" @click="insertTag('{EMAIL}')">{EMAIL}</span>
+                                <span class="template-tag" @click="insertTag('{TIPO_INGRESSO}')">{TIPO_INGRESSO}</span>
+                                <span class="template-tag" @click="insertTag('{EVENTO_NOME}')">{EVENTO_NOME}</span>
+                                <span class="template-tag" @click="insertTag('{DATA_EVENTO}')">{DATA_EVENTO}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="block text-slate-300 text-sm mb-1">Tamanho (px)</label>
+                            <input 
+                                type="number"
+                                x-model.number="newElement.size"
+                                min="8"
+                                max="72"
+                                class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                            />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="block text-slate-300 text-sm mb-1">Fonte</label>
+                            <select 
+                                x-model="newElement.font"
+                                class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                            >
+                                <option value="Arial">Arial</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="Courier New">Courier New</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="block text-slate-300 text-sm mb-1">Alinhamento</label>
+                            <select 
+                                x-model="newElement.align"
+                                class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                            >
+                                <option value="left">⬅️ Esquerda</option>
+                                <option value="center">↔️ Centro</option>
+                                <option value="right">➡️ Direita</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="block text-slate-300 text-sm mb-2">Formatação</label>
+                            <div class="format-buttons">
+                                <button 
+                                    @click="newElement.bold = !newElement.bold"
+                                    :class="{ 'active': newElement.bold }"
+                                    title="Negrito"
+                                >B</button>
+                                <button 
+                                    @click="newElement.italic = !newElement.italic"
+                                    :class="{ 'active': newElement.italic }"
+                                    title="Itálico"
+                                >I</button>
+                                <button 
+                                    @click="newElement.underline = !newElement.underline"
+                                    :class="{ 'active': newElement.underline }"
+                                    title="Sublinhado"
+                                >U</button>
+                                <button 
+                                    @click="newElement.strikethrough = !newElement.strikethrough"
+                                    :class="{ 'active': newElement.strikethrough }"
+                                    title="Tachado"
+                                >S</button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                
+                <!-- QR Code Fields -->
+                <template x-if="newElement.type === 'qrcode'">
+                    <div>
+                        <div class="mb-3">
+                            <label class="block text-slate-300 text-sm mb-1">Tamanho (mm)</label>
+                            <input 
+                                type="number"
+                                x-model.number="newElement.size_mm"
+                                min="10"
+                                max="50"
+                                class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                            />
+                        </div>
+                        <p class="text-slate-400 text-xs">
+                            <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">info</span>
+                            QR Code usa automaticamente {qrcode_hash}
+                        </p>
+                    </div>
+                </template>
+                
+                <!-- Logo Fields -->
+                <template x-if="newElement.type === 'logo'">
+                    <div>
+                        <div class="mb-3">
+                            <label class="block text-slate-300 text-sm mb-1">Tamanho (mm)</label>
+                            <input 
+                                type="number"
+                                x-model.number="newElement.size_mm"
+                                min="10"
+                                max="80"
+                                class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                            />
+                        </div>
+                        <p class="text-slate-400 text-xs">
+                            <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">info</span>
+                            Logo será carregada do evento
+                        </p>
+                    </div>
+                </template>
+                
+                <!-- Divider Fields -->
+                <template x-if="newElement.type === 'divider'">
+                    <div>
+                        <div class="mb-3">
+                            <label class="block text-slate-300 text-sm mb-1">Direção</label>
+                            <select 
+                                x-model="newElement.direction"
+                                class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                            >
+                                <option value="horizontal">— Horizontal</option>
+                                <option value="vertical">| Vertical</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-slate-300 text-sm mb-1">Comprimento (mm)</label>
+                            <input 
+                                type="number"
+                                x-model.number="newElement.length_mm"
+                                min="5"
+                                class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                            />
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-slate-300 text-sm mb-1">Espessura (px)</label>
+                            <input 
+                                type="number"
+                                x-model.number="newElement.thickness"
+                                min="1"
+                                max="10"
+                                class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                            />
+                        </div>
+                    </div>
+                </template>
+                
+                <button 
+                    @click="addElement()"
+                    class="w-full mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center gap-2 transition"
+                >
+                    <span class="material-symbols-outlined">add</span>
+                    Adicionar ao Canvas
+                </button>
             </div>
             
-            <!-- Add Button -->
-            <button type="button" id="addElementBtn" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg mb-3">
-                <span class="material-symbols-outlined">add</span>
-                Adicionar ao Layout
-            </button>
-            
-            <hr class="border-slate-700/50">
+            <hr class="border-slate-700 my-4">
             
             <!-- Elements List -->
-            <h6 class="text-slate-100 mb-3">Elementos no Layout</h6>
-            <div id="elementsList" class="text-slate-400">
-                <small>Nenhum elemento adicionado</small>
+            <div class="mb-4">
+                <h5 class="text-slate-100 font-semibold mb-3 flex items-center gap-2">
+                    <span class="material-symbols-outlined">list</span>
+                    Elementos no Layout
+                </h5>
+                
+                <div x-show="elements.length === 0" class="text-slate-400 text-sm text-center py-4">
+                    Nenhum elemento adicionado
+                </div>
+                
+                <template x-for="(element, index) in elements" :key="element.id">
+                    <div 
+                        class="element-item"
+                        :class="{ 'selected': selectedElement?.id === element.id }"
+                        @click="selectElement(element.id)"
+                    >
+                        <span class="element-icon" x-text="getElementIcon(element.type)"></span>
+                        <span class="element-label" x-text="getElementLabel(element)"></span>
+                        <button 
+                            @click.stop="deleteElement(element.id)"
+                            class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+                            title="Excluir"
+                        >
+                            <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
+                        </button>
+                    </div>
+                </template>
             </div>
             
-            <hr class="border-slate-700/50">
+            <!-- Properties Panel (when element selected) -->
+            <template x-if="selectedElement">
+                <div class="mt-4 p-3 bg-slate-700/50 rounded-lg border border-slate-600">
+                    <h6 class="text-slate-100 font-semibold mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined">tune</span>
+                        Propriedades
+                    </h6>
+                    
+                    <div class="mb-3">
+                        <label class="block text-slate-300 text-sm mb-1">Posição X (mm)</label>
+                        <input 
+                            type="number"
+                            :value="selectedElement.x"
+                            @input="updateElementProperty('x', parseFloat($event.target.value))"
+                            step="0.1"
+                            class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                        />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="block text-slate-300 text-sm mb-1">Posição Y (mm)</label>
+                        <input 
+                            type="number"
+                            :value="selectedElement.y"
+                            @input="updateElementProperty('y', parseFloat($event.target.value))"
+                            step="0.1"
+                            class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                        />
+                    </div>
+                    
+                    <!-- Text-specific properties -->
+                    <template x-if="selectedElement.type === 'text'">
+                        <div>
+                            <div class="mb-3">
+                                <label class="block text-slate-300 text-sm mb-1">Conteúdo</label>
+                                <input 
+                                    type="text"
+                                    :value="selectedElement.value"
+                                    @input="updateElementProperty('value', $event.target.value)"
+                                    class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                                />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="block text-slate-300 text-sm mb-1">Tamanho (px)</label>
+                                <input 
+                                    type="number"
+                                    :value="selectedElement.size"
+                                    @input="updateElementProperty('size', parseInt($event.target.value))"
+                                    class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                                />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="block text-slate-300 text-sm mb-1">Alinhamento</label>
+                                <select 
+                                    :value="selectedElement.align"
+                                    @change="updateElementProperty('align', $event.target.value)"
+                                    class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                                >
+                                    <option value="left">⬅️ Esquerda</option>
+                                    <option value="center">↔️ Centro</option>
+                                    <option value="right">➡️ Direita</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="block text-slate-300 text-sm mb-2">Formatação</label>
+                                <div class="format-buttons">
+                                    <button 
+                                        :class="{ 'active': selectedElement.bold }"
+                                        @click="toggleFormat('bold')"
+                                        title="Negrito"
+                                    >B</button>
+                                    <button 
+                                        :class="{ 'active': selectedElement.italic }"
+                                        @click="toggleFormat('italic')"
+                                        title="Itálico"
+                                    >I</button>
+                                    <button 
+                                        :class="{ 'active': selectedElement.underline }"
+                                        @click="toggleFormat('underline')"
+                                        title="Sublinhado"
+                                    >U</button>
+                                    <button 
+                                        :class="{ 'active': selectedElement.strikethrough }"
+                                        @click="toggleFormat('strikethrough')"
+                                        title="Tachado"
+                                    >S</button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    
+                    <!-- QR Code properties -->
+                    <template x-if="selectedElement.type === 'qrcode'">
+                        <div class="mb-3">
+                            <label class="block text-slate-300 text-sm mb-1">Tamanho (mm)</label>
+                            <input 
+                                type="number"
+                                :value="selectedElement.size_mm"
+                                @input="updateElementProperty('size_mm', parseFloat($event.target.value))"
+                                class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                            />
+                        </div>
+                    </template>
+                    
+                    <!-- Logo properties -->
+                    <template x-if="selectedElement.type === 'logo'">
+                        <div class="mb-3">
+                            <label class="block text-slate-300 text-sm mb-1">Tamanho (mm)</label>
+                            <input 
+                                type="number"
+                                :value="selectedElement.size_mm"
+                                @input="updateElementProperty('size_mm', parseFloat($event.target.value))"
+                                class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                            />
+                        </div>
+                    </template>
+                    
+                    <!-- Quick Alignment -->
+                    <div class="mt-4">
+                        <label class="block text-slate-300 text-sm mb-2">Alinhamento Rápido</label>
+                        <div class="flex gap-2">
+                            <button 
+                                @click="quickAlign('left')"
+                                class="flex-1 px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded text-sm"
+                                title="Alinhar à esquerda"
+                            >
+                                ⬅️
+                            </button>
+                            <button 
+                                @click="quickAlign('center')"
+                                class="flex-1 px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded text-sm"
+                                title="Centralizar"
+                            >
+                                ↔️
+                            </button>
+                            <button 
+                                @click="quickAlign('right')"
+                                class="flex-1 px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded text-sm"
+                                title="Alinhar à direita"
+                            >
+                                ➡️
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+        
+        <!-- CANVAS AREA -->
+        <div class="canvas-area">
+            <h5 class="text-slate-100 mb-4">Canvas do Ingresso</h5>
             
-            <!-- Save Button (hidden, kept for backward compatibility) -->
-            <button type="button" id="saveLayoutBtnOld" class="hidden w-full px-4 py-2 bg-slate-700 text-slate-100 rounded-lg mb-2">Salvar Layout</button>
+            <div class="canvas-wrapper">
+                <!-- Rulers -->
+                <div class="ruler ruler-horizontal">
+                    <template x-for="i in Math.ceil(canvas.width / 10)" :key="i">
+                        <span class="ruler-mark" :style="`width: ${mmToPx(10)}px; padding-left: 2px;`" x-text="`${i * 10}`"></span>
+                    </template>
+                </div>
+                
+                <div class="ruler ruler-vertical">
+                    <template x-for="i in Math.ceil(canvas.height / 10)" :key="i">
+                        <span class="ruler-mark" :style="`height: ${mmToPx(10)}px; padding-top: 2px;`" x-text="`${i * 10}`"></span>
+                    </template>
+                </div>
+                
+                <!-- Ticket Canvas -->
+                <div 
+                    id="ticketCanvas"
+                    class="ticket-canvas"
+                    :style="`width: ${mmToPx(canvas.width)}px; height: ${mmToPx(canvas.height)}px;`"
+                    @click.self="deselectElement()"
+                >
+                    <!-- Draggable Elements -->
+                    <template x-for="element in elements" :key="element.id">
+                        <div
+                            :id="element.id"
+                            class="draggable-element"
+                            :class="{ 
+                                'selected': selectedElement?.id === element.id,
+                                [`element-${element.type}`]: true
+                            }"
+                            :style="getElementStyle(element)"
+                            @click.stop="selectElement(element.id)"
+                            x-text="getElementDisplay(element)"
+                        ></div>
+                    </template>
+                </div>
+            </div>
             
-            <!-- Clear Button (hidden, kept for backward compatibility) -->
-            <button type="button" id="clearLayoutBtnOld" class="hidden w-full px-4 py-2 bg-red-600 text-white rounded-lg">Limpar Tudo</button>
+            <div class="mt-3 text-slate-400 text-sm">
+                <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">info</span>
+                Arraste os elementos para posicioná-los. Clique para selecionar e editar propriedades.
+            </div>
         </div>
     </div>
     
-    <!-- Frame B: Ticket Canvas -->
-    <div class="lg:col-span-8">
-        <div class="md-card p-4">
-            <h5 class="text-slate-100 mb-3 text-center" id="canvasHeader">Canvas do Ingresso</h5>
-            
-            <div id="ticketCanvas" class="canvas-container mx-auto px-4">
-                <!-- Elements will be added here dynamically -->
-            </div>
-            
-            <div class="mt-3 text-center">
-                <small class="text-slate-400">
-                    <span class="material-symbols-outlined">info</span>
-                    Arraste os elementos para posicioná-los no ingresso
-                </small>
-            </div>
-
-            <!-- Fixed toolbar below canvas -->
-            <div id="elementToolbarFixed" class="hidden mt-3 flex gap-2 justify-center">
-                <button data-action="align-left" title="Alinhar à esquerda" class="inline-flex items-center px-3 py-1 bg-slate-700 text-slate-100 rounded-md"><span class="material-symbols-outlined">format_align_left</span></button>
-                <button data-action="align-center" title="Centralizar" class="inline-flex items-center px-3 py-1 bg-slate-700 text-slate-100 rounded-md"><span class="material-symbols-outlined">format_align_center</span></button>
-                <button data-action="align-right" title="Alinhar à direita" class="inline-flex items-center px-3 py-1 bg-slate-700 text-slate-100 rounded-md"><span class="material-symbols-outlined">format_align_right</span></button>
-                <button data-action="delete" title="Excluir" class="inline-flex items-center px-3 py-1 bg-red-600 text-white rounded-md"><span class="material-symbols-outlined">delete</span></button>
-            </div>
+    <!-- Preview Section -->
+    <div class="preview-section">
+        <h5 class="text-slate-100 mb-3 flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">visibility</span>
+            Preview em Tempo Real
+        </h5>
+        <p class="text-slate-400 text-sm mb-4">
+            Dados fictícios: Edson Arantes do Nascimento | CPF: 123.456.789-00
+        </p>
+        
+        <div x-show="previewLoading" class="flex justify-center py-8">
+            <div class="loading-spinner"></div>
         </div>
+        
+        <img 
+            x-show="!previewLoading && previewUrl"
+            :src="previewUrl"
+            alt="Preview do ingresso"
+            class="preview-image mx-auto"
+        />
+        
+        <button 
+            @click="refreshPreview()"
+            :disabled="previewLoading"
+            class="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white rounded-lg flex items-center justify-center gap-2 mx-auto transition"
+        >
+            <span class="material-symbols-outlined">refresh</span>
+            <span x-text="previewLoading ? 'Carregando...' : 'Atualizar Preview'"></span>
+        </button>
     </div>
+    
+    <!-- Confirm Position Button (shown when dragging) -->
+    <button 
+        x-show="showConfirmPosition"
+        @click="confirmPosition()"
+        class="confirm-position-btn px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-xl flex items-center gap-2"
+    >
+        <span class="material-symbols-outlined">check_circle</span>
+        Confirmar Posição
+    </button>
 </div>
 
-<!-- Fixed save bar for all devices -->
+<!-- Fixed Save Bar -->
 <div class="fixed-save-bar">
-    <div class="container mx-auto px-4 flex justify-center gap-2">
-        <button type="button" id="previewBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg">
-            <span class="material-symbols-outlined">visibility</span>
-            <span>Preview</span>
-        </button>
-        <button type="button" id="saveLayoutBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg">
+    <div class="container mx-auto px-4 flex justify-center gap-3 flex-wrap">
+        <button 
+            @click="saveLayout()"
+            class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition"
+        >
             <span class="material-symbols-outlined">save</span>
             <span>Salvar Layout</span>
         </button>
-        <button type="button" id="clearLayoutBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg">
-            <span class="material-symbols-outlined">delete</span>
+        <button 
+            @click="if(confirm('Limpar todos os elementos?')) { elements = []; saveState(); }"
+            class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 transition"
+        >
+            <span class="material-symbols-outlined">delete_sweep</span>
             <span>Limpar Tudo</span>
+        </button>
+        <button 
+            @click="undo()"
+            :disabled="historyIndex <= 0"
+            class="px-6 py-2 bg-slate-600 hover:bg-slate-700 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-lg flex items-center gap-2 transition"
+            title="Desfazer (Ctrl+Z)"
+        >
+            <span class="material-symbols-outlined">undo</span>
+        </button>
+        <button 
+            @click="redo()"
+            :disabled="historyIndex >= history.length - 1"
+            class="px-6 py-2 bg-slate-600 hover:bg-slate-700 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-lg flex items-center gap-2 transition"
+            title="Refazer (Ctrl+Shift+Z)"
+        >
+            <span class="material-symbols-outlined">redo</span>
         </button>
     </div>
 </div>
 
-<!-- Preview Modal -->
-<div id="previewModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.9); z-index:9999; padding:20px;" onclick="document.getElementById('previewModal').style.display='none'">
-    <div style="max-width:800px; margin:40px auto; text-align:center;">
-        <h3 class="text-slate-100 mb-4">Preview do Ingresso (dados fictícios)</h3>
-        <img id="previewImg" src="" style="max-width:100%; height:auto; box-shadow:0 8px 32px rgba(0,0,0,0.5);" alt="Preview"/>
-        <p class="text-slate-400 mt-4 text-sm">Clique para fechar</p>
-    </div>
-</div>
-
-<!-- Hidden input to store layout JSON -->
+<!-- Hidden input with existing layout -->
 <input type="hidden" id="layoutJson" value='{{ evento.layout_ingresso | tojson }}'>
+<input type="hidden" id="eventoId" value='{{ evento._id }}'>
 {% endblock %}
 
 {% block extra_js %}
-<!-- Interact.js for drag and drop -->
+<!-- Alpine.js -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<!-- Interact.js -->
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 
 <script>
-    let elements = [];
-    let elementCounter = 0;
-    let selectedElement = null;
-    let longPressTimer = null;
-    const LONG_PRESS_MS = 500;
-
-    // Read existing layout JSON
-    const existingLayout = JSON.parse(document.getElementById('layoutJson').value || '{}');
-    console.log('Loading existing layout from DB:', existingLayout);
-
-    // Default canvas padding (mm) and border
-    const defaultPadding = (existingLayout && existingLayout.canvas && existingLayout.canvas.padding_mm) ? existingLayout.canvas.padding_mm : 5;
-    const defaultBorder = (existingLayout && existingLayout.canvas && existingLayout.canvas.border) ? existingLayout.canvas.border : false;
-
-    // Create controls for padding and border in the UI
-    const controlPanel = document.querySelector('.control-panel');
-    const padHtml = `
-        <div class="mb-3">
-            <label class="form-label text-slate-100">Padding do Canvas (mm)</label>
-            <input type="number" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="canvasPadding" value="${defaultPadding}" min="0" step="0.5">
-        </div>
-        <div class="mb-3 form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="canvasBorder" ${defaultBorder ? 'checked' : ''}>
-            <label class="form-check-label text-slate-100" for="canvasBorder">Mostrar borda do ingresso</label>
-        </div>
-        <div class="mb-3" id="selectedControls" style="display:none;">
-            <label class="form-label text-slate-100">Margin do elemento (mm)</label>
-            <input type="number" class=" w-full bg-transparent border border-slate-700 rounded-lg py-2 px-3 text-slate-100 " id="elementMargin" value="0" min="0" step="0.5">
-        </div>
-    `;
-    controlPanel.insertAdjacentHTML('afterbegin', padHtml);
-
-    // Apply canvas border visual
-    function applyCanvasBorder() {
-        const canvas = document.getElementById('ticketCanvas');
-        const show = document.getElementById('canvasBorder').checked;
-        if (show) {
-            canvas.style.border = '2px solid #333';
-        } else {
-            canvas.style.border = '2px dashed #667eea';
-        }
-    }
-    applyCanvasBorder();
-    document.getElementById('canvasBorder').addEventListener('change', applyCanvasBorder);
-
-    // PX per mm for visual scaling (keeps previous visual scale)
-    const PX_PER_MM = 300 / 80; // ~3.75 px per mm
-
-    // Initialize canvas orientation and dimensions controls
-    const orientationEl = document.getElementById('canvasOrientation');
-    const fixedDimEl = document.getElementById('fixedDimSelect');
-    const variableDimEl = document.getElementById('variableDimInput');
-    const fixedDimLabel = document.getElementById('fixedDimLabel');
-    const variableDimLabel = document.getElementById('variableDimLabel');
-    const canvasHeader = document.getElementById('canvasHeader');
-
-    // derive initial values from existing layout or defaults
-    let canvasOrientation = (existingLayout && existingLayout.canvas && existingLayout.canvas.orientation) ? existingLayout.canvas.orientation : 'portrait';
-    let canvasMmWidth = 62;
-    let canvasMmHeight = 120;
-    if (existingLayout && existingLayout.canvas && typeof existingLayout.canvas.width === 'number' && typeof existingLayout.canvas.height === 'number') {
-        canvasMmWidth = existingLayout.canvas.width;
-        canvasMmHeight = existingLayout.canvas.height;
-    } else {
-        if (canvasOrientation === 'portrait') {
-            canvasMmWidth = 62;
-            canvasMmHeight = parseInt(variableDimEl.value || '120', 10) || 120;
-        } else {
-            canvasMmHeight = 62;
-            canvasMmWidth = parseInt(variableDimEl.value || '100', 10) || 100;
-        }
-    }
-
-    // apply control values to DOM
-    if (orientationEl) orientationEl.value = canvasOrientation;
-    // ensure fixedDimSelect contains saved value (may be custom)
-    if (fixedDimEl) {
-        const desiredFixed = canvasOrientation === 'portrait' ? canvasMmWidth : canvasMmHeight;
-        // if desiredFixed not present in options, add it as custom
-        let found = false;
-        for (let i=0;i<fixedDimEl.options.length;i++){ if (parseInt(fixedDimEl.options[i].value,10)===desiredFixed) { found=true; break; } }
-        if (!found) {
-            const opt = document.createElement('option'); opt.value = String(desiredFixed); opt.text = String(desiredFixed) + ' (custom)';
-            fixedDimEl.appendChild(opt);
-        }
-        fixedDimEl.value = String(desiredFixed);
-    }
-    if (variableDimEl) variableDimEl.value = (canvasOrientation === 'portrait' ? String(canvasMmHeight) : String(canvasMmWidth));
-
-    const ticketCanvasEl = document.getElementById('ticketCanvas');
-    function applyCanvasSize() {
-        ticketCanvasEl.style.width = (canvasMmWidth * PX_PER_MM) + 'px';
-        ticketCanvasEl.style.height = (canvasMmHeight * PX_PER_MM) + 'px';
-        if (canvasHeader) canvasHeader.textContent = `Canvas do Ingresso (${canvasMmWidth}mm x ${canvasMmHeight}mm) — ${canvasOrientation}`;
-    }
-    applyCanvasSize();
-
-    // helper to rescale elements proportionally when canvas size changes
-    function rescaleElements(oldWmm, oldHmm) {
-        const oldRect = ticketCanvasEl.getBoundingClientRect();
-        // read new rect after resize
-        const newRect = ticketCanvasEl.getBoundingClientRect();
-        document.querySelectorAll('.draggable-element').forEach(el => {
-            const er = el.getBoundingClientRect();
-            const leftPx = er.left - oldRect.left;
-            const topPx = er.top - oldRect.top;
-            const xMm = (leftPx / oldRect.width) * oldWmm;
-            const yMm = (topPx / oldRect.height) * oldHmm;
-            const newLeft = (xMm / canvasMmWidth) * newRect.width;
-            const newTop = (yMm / canvasMmHeight) * newRect.height;
-            el.style.left = Math.max(0, Math.min(newLeft, newRect.width - er.width)) + 'px';
-            el.style.top = Math.max(0, Math.min(newTop, newRect.height - er.height)) + 'px';
-            el.style.transform = 'translate(0px, 0px)';
-            el.setAttribute('data-x', 0);
-            el.setAttribute('data-y', 0);
-            // update inner size for qr/logo
-            const dtype = el.getAttribute('data-type');
-            if (dtype === 'qrcode' || dtype === 'logo') {
-                const sizeMm = parseFloat(el.getAttribute('data-size-mm')) || 0;
-                const inner = el.querySelector(dtype === 'qrcode' ? '.element-qrcode' : '.element-logo');
-                if (inner) {
-                    const px = (sizeMm / canvasMmWidth) * newRect.width;
-                    inner.style.width = px + 'px';
-                    inner.style.height = px + 'px';
-                }
-            }
-        });
-    }
-
-    // update controls when orientation changes
-    if (orientationEl) orientationEl.addEventListener('change', function() {
-        const oldW = canvasMmWidth, oldH = canvasMmHeight;
-        const oldOrientation = canvasOrientation;
-        canvasOrientation = this.value || 'portrait';
-        // swap interpret fixed/variable
-        if (canvasOrientation === 'portrait') {
-            // fixed = width
-            canvasMmWidth = parseInt(fixedDimEl.value || '62', 10) || 62;
-            canvasMmHeight = Math.max(10, parseInt(variableDimEl.value || '120', 10) || 120);
-            fixedDimLabel.textContent = 'Dimensão fixa (largura) (mm)';
-            variableDimLabel.textContent = 'Altura do Canvas (mm)';
-            variableDimEl.min = 10;
-        } else {
-            // fixed = height
-            canvasMmHeight = parseInt(fixedDimEl.value || '62', 10) || 62;
-            canvasMmWidth = Math.max(70, parseInt(variableDimEl.value || '100', 10) || 100);
-            fixedDimLabel.textContent = 'Dimensão fixa (altura) (mm)';
-            variableDimLabel.textContent = 'Largura do Canvas (mm)';
-            variableDimEl.min = 70;
-        }
-        applyCanvasSize();
-        rescaleElements(oldW, oldH);
-    });
-
-    if (fixedDimEl) fixedDimEl.addEventListener('change', function() {
-        const oldW = canvasMmWidth, oldH = canvasMmHeight;
-        const val = parseInt(this.value || '62', 10) || 62;
-        if (canvasOrientation === 'portrait') {
-            canvasMmWidth = val;
-        } else {
-            canvasMmHeight = val;
-        }
-        applyCanvasSize();
-        rescaleElements(oldW, oldH);
-    });
-
-    if (variableDimEl) variableDimEl.addEventListener('change', function() {
-        const oldW = canvasMmWidth, oldH = canvasMmHeight;
-        let val = parseInt(this.value || (canvasOrientation==='portrait' ? '120' : '100'), 10) || (canvasOrientation==='portrait' ? 120 : 100);
-        if (canvasOrientation === 'portrait') {
-            val = Math.max(10, val);
-            canvasMmHeight = val;
-        } else {
-            val = Math.max(70, val);
-            canvasMmWidth = val;
-        }
-        applyCanvasSize();
-        rescaleElements(oldW, oldH);
-    });
-
-    // Load existing elements (if any)
-    if (existingLayout && Array.isArray(existingLayout.elements)) {
-        existingLayout.elements.forEach(el => {
-            // Use size_mm for qrcode/logo, size for text
-            let sizeParam = el.size || 12;
-            if ((el.type === 'qrcode' || el.type === 'logo') && el.size_mm) {
-                sizeParam = el.size_mm;
-            }
-            addElementToCanvas(el.type, el.value, el.x || 40, el.y || 60, sizeParam, el.margin_mm || 0);
-        });
-    }
-
-    // Element type change handler
-    document.getElementById('elementType').addEventListener('change', function() {
-        const type = this.value;
-        const contentField = document.getElementById('contentField');
-        const fontSizeField = document.getElementById('fontSizeField');
-        const elementContent = document.getElementById('elementContent');
-        const templateTags = document.getElementById('templateTags');
-
-        if (type === 'text') {
-            contentField.style.display = 'block';
-            fontSizeField.style.display = 'block';
-            elementContent.placeholder = 'Digite o texto';
-            elementContent.readOnly = false;
-            templateTags.style.display = 'block';
-        } else if (type === 'qrcode') {
-            contentField.style.display = 'block';
-            fontSizeField.style.display = 'none';
-            elementContent.placeholder = 'Usa apenas {qrcode_hash}';
-            elementContent.value = '{qrcode_hash}';
-            elementContent.readOnly = true; // force QR content
-            templateTags.style.display = 'none';
-        } else if (type === 'logo') {
-            contentField.style.display = 'none';
-            fontSizeField.style.display = 'none';
-            templateTags.style.display = 'none';
-        }
-    });
-
-    // Template tags click
-    document.querySelectorAll('.template-tag').forEach(tag => {
-        tag.addEventListener('click', function() {
-            const tagValue = this.getAttribute('data-tag');
-            const input = document.getElementById('elementContent');
-            input.value += tagValue;
-        });
-    });
-
-    // Add element button
-    document.getElementById('addElementBtn').addEventListener('click', function() {
-        const type = document.getElementById('elementType').value;
-        const content = document.getElementById('elementContent').value;
-        const fontSize = document.getElementById('fontSize').value;
-
-        if (type !== 'logo' && !content) {
-            showToast('Por favor, insira o conteúdo do elemento', 'warning');
-            return;
-        }
-
-        addElementToCanvas(type, content, 40, 60, parseInt(fontSize));
-        document.getElementById('elementContent').value = '';
-    });
-
-    // Use fixed toolbar under canvas
-    const toolbar = document.getElementById('elementToolbarFixed');
-    // ensure lucide icons are initialized here as well
-    try { if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') { lucide.createIcons(); } } catch (e) { console.warn('lucide init failed', e); }
-
-    // Add element to canvas
-    function addElementToCanvas(type, value, xMm, yMm, size, marginMm) {
-        const canvas = document.getElementById('ticketCanvas');
-        const canvasRect = canvas.getBoundingClientRect();
-        const elementId = `element-${elementCounter++}`;
-
-        const element = document.createElement('div');
-        element.id = elementId;
-        element.className = 'draggable-element';
-        element.setAttribute('data-type', type);
-        element.setAttribute('data-value', value || '');
-        element.setAttribute('data-size', size || 12);
-        element.setAttribute('data-margin-mm', marginMm || 0);
-
-        if (type === 'text') {
-            element.innerHTML = `<span class="element-text" style="font-size: ${size}px">${value}</span>`;
-        } else if (type === 'qrcode') {
-            element.innerHTML = '<div class="element-qrcode">QR CODE</div>';
-        } else if (type === 'logo') {
-            element.innerHTML = '<div class="element-logo">LOGO</div>';
-        }
-
-        // Position using mm -> px conversion
-        const canvasW = canvasRect.width;
-        const canvasH = canvasRect.height;
-        const leftPx = (xMm / canvasMmWidth) * canvasW;
-        const topPx = (yMm / 120) * canvasH;
-
-        element.style.left = Math.max(0, Math.min(leftPx, canvasW - 10)) + 'px';
-        element.style.top = Math.max(0, Math.min(topPx, canvasH - 10)) + 'px';
-        element.style.transform = 'translate(0px, 0px)';
-        element.setAttribute('data-x', 0);
-        element.setAttribute('data-y', 0);
-
-        // Click selects element
-        element.addEventListener('click', function(e) {
-            e.stopPropagation();
-            selectElement(element);
-        });
-
-        // Long-press to show toolbar
-        element.addEventListener('pointerdown', function(e) {
-            longPressTimer = setTimeout(() => {
-                showToolbarForElement(element);
-            }, LONG_PRESS_MS);
-        });
-        element.addEventListener('pointerup', function() { clearLongPress(); });
-        element.addEventListener('pointerleave', function() { clearLongPress(); });
-
-        // Double-click to delete
-        element.addEventListener('dblclick', function() {
-            if (confirm('Deseja remover este elemento?')) {
-                element.remove();
-                if (selectedElement === element) selectedElement = null;
-                updateElementsList();
-            }
-        });
-
-        canvas.appendChild(element);
-
-        // Set initial size-mm and aspect for QR/Logo
-        let initialSizeMm = 0;
-        if (type === 'qrcode' || type === 'logo') {
-            // size parameter should already be in mm for qrcode/logo
-            initialSizeMm = parseFloat(size) || 30;
-            element.setAttribute('data-size-mm', initialSizeMm);
-            // set inner element pixel size and store aspect ratio
+function layoutEditor() {
+    return {
+        // Canvas configuration
+        canvas: {
+            width: 62,
+            height: 120,
+            orientation: 'portrait',
+            padding: 5,
+            dpi: 300
+        },
+        
+        // Elements array
+        elements: [],
+        
+        // Selected element
+        selectedElement: null,
+        
+        // New element form
+        newElement: {
+            type: 'text',
+            value: '',
+            size: 12,
+            size_mm: 30,
+            font: 'Arial',
+            align: 'left',
+            bold: false,
+            italic: false,
+            underline: false,
+            strikethrough: false,
+            direction: 'horizontal',
+            length_mm: 50,
+            thickness: 2
+        },
+        
+        // Undo/Redo
+        history: [],
+        historyIndex: -1,
+        
+        // Preview
+        previewUrl: null,
+        previewLoading: false,
+        
+        // Template selector
+        showTemplateSelector: false,
+        
+        // Drag state
+        showConfirmPosition: false,
+        draggedElementId: null,
+        dragTransform: { x: 0, y: 0 },
+        
+        // Preview timeout (for debouncing)
+        _previewTimeout: null,
+        
+        // Track elements with Interact.js configured (WeakSet for better memory management)
+        _interactElements: new WeakSet(),
+        
+        // Initialize
+        init() {
+            // Load existing layout
+            this.loadExistingLayout();
+            
+            // Save initial state
+            this.saveState();
+            
+            // Setup keyboard shortcuts
+            this.setupKeyboardShortcuts();
+            
+            // Setup Interact.js after Alpine renders elements
+            this.$nextTick(() => {
+                this.setupInteract();
+            });
+            
+            // Auto-refresh preview on changes
+            this.$watch('elements', () => {
+                this.debouncedPreview();
+            });
+            
+            // Re-setup Interact when elements change
+            this.$watch('elements.length', () => {
+                this.$nextTick(() => {
+                    this.setupInteract();
+                });
+            });
+        },
+        
+        // Load existing layout from database
+        loadExistingLayout() {
+            const layoutJson = document.getElementById('layoutJson');
+            if (!layoutJson) return;
+            
             try {
-                const inner = element.querySelector(type === 'qrcode' ? '.element-qrcode' : '.element-logo');
-                if (inner) {
-                    const px = (initialSizeMm / canvasMmWidth) * canvasRect.width;
-                    inner.style.width = px + 'px';
-                    inner.style.height = px + 'px';
-                    // store aspect ratio (width/height) - for QR it's 1:1
-                    const aspect = 1.0;
-                    element.setAttribute('data-aspect', aspect);
+                const existingLayout = JSON.parse(layoutJson.value || '{}');
+                console.log('Loading existing layout:', existingLayout);
+                
+                if (existingLayout.canvas) {
+                    this.canvas = { ...this.canvas, ...existingLayout.canvas };
                 }
-            } catch (e) {}
-        } else {
-            element.setAttribute('data-size-mm', 0);
-            element.setAttribute('data-aspect', 1);
-        }
-
-        // Make draggable
-        interact(element).draggable({
-            inertia: true,
-            modifiers: [
-                interact.modifiers.restrictRect({ restriction: 'parent', endOnly: true })
-            ],
-            listeners: { move: dragMoveListener }
-        });
-
-        // Make resizable for qrcode/logo preserving aspect ratio
-        if (type === 'qrcode' || type === 'logo') {
-            interact(element).resizable({
-                edges: { left: true, right: true, bottom: true, top: true },
-                modifiers: [
-                    interact.modifiers.restrictSize({ min: { width: 10, height: 10 }, max: { width: canvasRect.width - 10, height: canvasRect.height - 10 } })
-                ],
-                inertia: true
-            }).on('resizemove', function (evt) {
-                const target = evt.target;
-                let x = (parseFloat(target.getAttribute('data-x')) || 0);
-                let y = (parseFloat(target.getAttribute('data-y')) || 0);
-
-                // update the element's size
-                const newWidth = evt.rect.width;
-                // enforce proportional height based on stored aspect
-                const aspect = parseFloat(target.getAttribute('data-aspect')) || 1;
-                const newHeight = Math.round(newWidth / (aspect || 1));
-
-                // apply to inner proportionally
-                const inner = target.querySelector(type === 'qrcode' ? '.element-qrcode' : '.element-logo');
-                if (inner) {
-                    inner.style.width = newWidth + 'px';
-                    inner.style.height = newHeight + 'px';
+                
+                if (existingLayout.elements && Array.isArray(existingLayout.elements)) {
+                    this.elements = existingLayout.elements.map((el, idx) => ({
+                        id: `elem-${Date.now()}-${idx}`,
+                        ...el
+                    }));
                 }
-
-                // translate when resizing from edges
-                x += evt.deltaRect.left;
-                y += evt.deltaRect.top;
-
-                target.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
-                target.setAttribute('data-x', x);
-                target.setAttribute('data-y', y);
-
-                // update data-size-mm based on width (reference width)
-                const canvasW = canvas.getBoundingClientRect().width;
-                const sizeMm = (newWidth / canvasW) * canvasMmWidth;
-                target.setAttribute('data-size-mm', Math.round(sizeMm * 10) / 10);
-                updateElementsList();
-            });
-        }
-
-        updateElementsList();
-    }
-
-    function clearLongPress() {
-        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
-    }
-
-    function showToolbarForElement(el) {
-        // Show fixed toolbar and mark selection
-        toolbar.style.display = 'flex';
-        selectElement(el);
-        // Attach actions
-        toolbar.querySelectorAll('button').forEach(btn => {
-            btn.onclick = function(ev) {
-                ev.stopPropagation();
-                const action = this.getAttribute('data-action');
-                handleToolbarAction(el, action);
-                // Keep toolbar visible after action except delete
-                if (action === 'delete') toolbar.style.display = 'none';
+            } catch (e) {
+                console.error('Error loading layout:', e);
+            }
+        },
+        
+        // MM to PX conversion for display
+        mmToPx(mm) {
+            // Use a fixed scale for display: 1mm = 3.78px at 96 DPI
+            return mm * 3.78;
+        },
+        
+        // PX to MM conversion
+        pxToMm(px) {
+            return px / 3.78;
+        },
+        
+        // Swap orientation
+        swapOrientation() {
+            const temp = this.canvas.width;
+            this.canvas.width = this.canvas.height;
+            this.canvas.height = temp;
+            this.saveState();
+        },
+        
+        // Add element to canvas
+        addElement() {
+            const element = {
+                id: `elem-${Date.now()}`,
+                type: this.newElement.type,
+                x: 5,
+                y: 5,
+                z_index: this.elements.length + 1
             };
-        });
-    }
-
-    // Hide toolbar when clicking elsewhere
-    document.addEventListener('click', () => { toolbar.style.display = 'none'; selectElement(null); });
-
-    // When selecting element via list, show fixed toolbar
-    document.getElementById('elementsList').addEventListener('click', function(e) {
-        const item = e.target.closest('[data-el-id]');
-        if (!item) return;
-        const elId = item.getAttribute('data-el-id');
-        const el = document.getElementById(elId);
-        if (el) showToolbarForElement(el);
-    });
-
-    function handleToolbarAction(el, action) {
-        const canvas = document.getElementById('ticketCanvas');
-        const canvasRect = canvas.getBoundingClientRect();
-        const paddingMm = parseFloat(document.getElementById('canvasPadding').value || '5');
-        const paddingPx = (paddingMm / canvasMmWidth) * canvasRect.width;
-        const elRect = el.getBoundingClientRect();
-        const elW = elRect.width;
-
-        if (action === 'delete') {
-            if (confirm('Remover este elemento?')) { el.remove(); updateElementsList(); }
-            return;
-        }
-
-        // Compute new left in px
-        let newLeftPx = parseFloat(el.style.left || 0);
-        if (action === 'align-left') {
-            newLeftPx = paddingPx;
-        } else if (action === 'align-center') {
-            newLeftPx = (canvasRect.width - elW) / 2;
-        } else if (action === 'align-right') {
-            newLeftPx = canvasRect.width - paddingPx - elW;
-        }
-
-        // Preserve current vertical visual position (including any translate) before clearing transform
-        const currentTopPx = el.getBoundingClientRect().top - canvasRect.top;
-        const clampedTop = Math.max(0, Math.min(currentTopPx, canvasRect.height - elRect.height));
-        el.style.top = clampedTop + 'px';
-
-        // Apply horizontal position and reset transform/data-x
-        el.style.left = Math.max(0, Math.min(newLeftPx, canvasRect.width - elW)) + 'px';
-        el.style.transform = 'translate(0px, 0px)';
-        el.setAttribute('data-x', 0);
-        el.setAttribute('data-y', 0);
-
-        updateElementsList();
-    }
-
-    function selectElement(el) {
-        // Deselect previous
-        if (selectedElement) selectedElement.classList.remove('active');
-        selectedElement = el;
-        const selControls = document.getElementById('selectedControls');
-        if (!el) {
-            selControls.style.display = 'none';
-            return;
-        }
-        el.classList.add('active');
-        selControls.style.display = 'block';
-        document.getElementById('elementMargin').value = el.getAttribute('data-margin-mm') || 0;
-
-        // When margin changed, update element dataset
-        document.getElementById('elementMargin').onchange = function() {
-            el.setAttribute('data-margin-mm', this.value);
-        };
-    }
-
-    function dragMoveListener(event) {
-        var target = event.target;
-        var x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-        var y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-
-        target.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
-        target.setAttribute('data-x', x);
-        target.setAttribute('data-y', y);
-    }
-
-    function updateElementsList() {
-        const canvas = document.getElementById('ticketCanvas');
-        const listDiv = document.getElementById('elementsList');
-        const elems = canvas.querySelectorAll('.draggable-element');
-
-        if (elems.length === 0) {
-            listDiv.innerHTML = '<small>Nenhum elemento adicionado</small>';
-            return;
-        }
-
-        let html = '<div class="list-group">';
-        elems.forEach((el, index) => {
-            const type = el.getAttribute('data-type');
-            const value = el.getAttribute('data-value');
-            const id = el.id;
-            html += `
-                <div class="list-group-item md-card mb-2 p-2" data-el-id="${id}">
-                    <small>
-                        <strong>${type.toUpperCase()}</strong><br>
-                        ${value ? value.substring(0, 30) : 'Logo'}
-                    </small>
-                </div>
+            
+            // Type-specific properties
+            if (this.newElement.type === 'text') {
+                element.value = this.newElement.value || 'Texto';
+                element.size = this.newElement.size;
+                element.font = this.newElement.font;
+                element.align = this.newElement.align;
+                element.bold = this.newElement.bold;
+                element.italic = this.newElement.italic;
+                element.underline = this.newElement.underline;
+                element.strikethrough = this.newElement.strikethrough;
+            } else if (this.newElement.type === 'qrcode') {
+                element.value = '{qrcode_hash}';
+                element.size_mm = this.newElement.size_mm;
+            } else if (this.newElement.type === 'logo') {
+                element.value = 'LOGO';
+                element.size_mm = this.newElement.size_mm;
+            } else if (this.newElement.type === 'divider') {
+                element.direction = this.newElement.direction;
+                element.length_mm = this.newElement.length_mm;
+                element.thickness = this.newElement.thickness;
+            }
+            
+            this.elements.push(element);
+            this.saveState();
+            
+            // Setup Interact for new element
+            this.$nextTick(() => {
+                this.setupInteract();
+            });
+        },
+        
+        // Delete element
+        deleteElement(id) {
+            if (!confirm('Excluir este elemento?')) return;
+            
+            this.elements = this.elements.filter(el => el.id !== id);
+            if (this.selectedElement?.id === id) {
+                this.selectedElement = null;
+            }
+            this.saveState();
+        },
+        
+        // Select element
+        selectElement(id) {
+            const element = this.elements.find(el => el.id === id);
+            this.selectedElement = element || null;
+        },
+        
+        // Deselect element
+        deselectElement() {
+            this.selectedElement = null;
+        },
+        
+        // Update element property
+        updateElementProperty(prop, value) {
+            if (!this.selectedElement) return;
+            
+            const element = this.elements.find(el => el.id === this.selectedElement.id);
+            if (element) {
+                element[prop] = value;
+                this.selectedElement = element; // Trigger reactivity
+                this.saveState();
+            }
+        },
+        
+        // Toggle text format
+        toggleFormat(format) {
+            if (!this.selectedElement || this.selectedElement.type !== 'text') return;
+            
+            const element = this.elements.find(el => el.id === this.selectedElement.id);
+            if (element) {
+                element[format] = !element[format];
+                this.selectedElement = element;
+                this.saveState();
+            }
+        },
+        
+        // Quick alignment
+        quickAlign(alignment) {
+            if (!this.selectedElement) return;
+            
+            const element = this.elements.find(el => el.id === this.selectedElement.id);
+            if (!element) return;
+            
+            const padding = this.canvas.padding || 0;
+            
+            if (alignment === 'left') {
+                element.x = padding;
+            } else if (alignment === 'center') {
+                element.x = this.canvas.width / 2;
+            } else if (alignment === 'right') {
+                element.x = this.canvas.width - padding;
+            }
+            
+            this.selectedElement = element;
+            this.saveState();
+        },
+        
+        // Get element style for rendering
+        getElementStyle(element) {
+            let style = `
+                left: ${this.mmToPx(element.x)}px;
+                top: ${this.mmToPx(element.y)}px;
+                z-index: ${element.z_index || 1};
             `;
-        });
-        html += '</div>';
-        listDiv.innerHTML = html;
-
-        // Attach click to select from list
-        listDiv.querySelectorAll('[data-el-id]').forEach(node => {
-            node.onclick = function(e) {
-                e.stopPropagation();
-                const elId = this.getAttribute('data-el-id');
-                const el = document.getElementById(elId);
-                if (el) selectElement(el);
-            };
-        });
-    }
-
-    // Save layout (includes canvas padding and border state, element margins)
-    document.getElementById('saveLayoutBtn').addEventListener('click', async function() {
-        const canvas = document.getElementById('ticketCanvas');
-        const canvasRect = canvas.getBoundingClientRect();
-        const elems = canvas.querySelectorAll('.draggable-element');
-
-        const layout = {
-            canvas: {
-                width: canvasMmWidth,
-                height: canvasMmHeight,
-                unit: 'mm',
-                padding_mm: parseFloat(document.getElementById('canvasPadding').value || '5'),
-                border: document.getElementById('canvasBorder').checked,
-                orientation: (document.getElementById('canvasOrientation') && document.getElementById('canvasOrientation').value) ? document.getElementById('canvasOrientation').value : 'portrait'
-            },
-            elements: []
-        };
-
-        elems.forEach(el => {
-            // IMPORTANT: Use style.left/top instead of getBoundingClientRect to avoid offset issues
-            // getBoundingClientRect includes transforms which causes position drift
-            const leftPx = parseFloat(el.style.left) || 0;
-            const topPx = parseFloat(el.style.top) || 0;
-
-            // Convert px->mm
-            const xMm = Math.max(0, (leftPx / canvasRect.width) * layout.canvas.width);
-            const yMm = Math.max(0, (topPx / canvasRect.height) * layout.canvas.height);
-
-            // determine size_mm for images/qrcodes, and size for text
-            let sizeMmVal = 0;
-            const dtype = el.getAttribute('data-type');
-            if (el.getAttribute('data-size-mm')) {
-                sizeMmVal = parseFloat(el.getAttribute('data-size-mm')) || 0;
-            } else if (dtype === 'qrcode' || dtype === 'logo') {
-                // fallback compute from inner element width
-                const inner = el.querySelector(dtype === 'qrcode' ? '.element-qrcode' : '.element-logo');
-                if (inner) {
-                    const innerWidth = parseFloat(inner.style.width) || 60;
-                    sizeMmVal = Math.round(((innerWidth / canvasRect.width) * layout.canvas.width) * 10) / 10;
+            
+            if (element.type === 'text') {
+                style += `
+                    font-size: ${element.size}px;
+                    font-family: ${element.font};
+                    text-align: ${element.align};
+                    font-weight: ${element.bold ? 'bold' : 'normal'};
+                    font-style: ${element.italic ? 'italic' : 'normal'};
+                `;
+                
+                let decoration = '';
+                if (element.underline) decoration += 'underline ';
+                if (element.strikethrough) decoration += 'line-through ';
+                if (decoration) style += `text-decoration: ${decoration.trim()};`;
+            } else if (element.type === 'qrcode' || element.type === 'logo') {
+                const sizePx = this.mmToPx(element.size_mm);
+                style += `
+                    width: ${sizePx}px;
+                    height: ${sizePx}px;
+                `;
+            } else if (element.type === 'divider') {
+                if (element.direction === 'horizontal') {
+                    style += `
+                        width: ${this.mmToPx(element.length_mm)}px;
+                        height: ${element.thickness}px;
+                    `;
                 } else {
-                    sizeMmVal = 30; // fallback default
+                    style += `
+                        width: ${element.thickness}px;
+                        height: ${this.mmToPx(element.length_mm)}px;
+                    `;
                 }
             }
-
-            const elementObj = {
-                type: dtype,
-                value: el.getAttribute('data-value'),
-                x: Math.round(xMm * 10) / 10,
-                y: Math.round(yMm * 10) / 10,
-                margin_mm: parseFloat(el.getAttribute('data-margin-mm')) || 0
-            };
-
-            if (dtype === 'text') {
-                elementObj.size = parseInt(el.getAttribute('data-size')) || 12;
-            } else if (dtype === 'qrcode' || dtype === 'logo') {
-                // Always save size_mm for qrcode and logo
-                elementObj.size_mm = sizeMmVal || 30;
-            }
-
-            layout.elements.push(elementObj);
-        });
-
-        console.log('Saving layout with mm coordinates and canvas padding:', layout);
-
-        try {
-            const response = await fetch('/admin/eventos/layout/{{ evento.id }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ layout_ingresso: layout })
-            });
-            if (response.ok) {
-                // Show success toast with proper styling then redirect to event details
-                showToast('Layout salvo com sucesso!', 'success');
-                // small delay so user sees the toast
-                setTimeout(function(){ window.location.href = '/admin/eventos/{{ evento.id }}'; }, 600);
-            } else {
-                console.error('Save failed', await response.text());
-                showToast('Erro ao salvar layout', 'danger');
-            }
-        } catch (err) { console.error(err); showToast('Erro ao salvar layout', 'danger'); }
-    });
-
-    // Preview button - generates preview with fake data
-    document.getElementById('previewBtn').addEventListener('click', async function() {
-        const canvas = document.getElementById('ticketCanvas');
-        const canvasRect = canvas.getBoundingClientRect();
-        const elems = canvas.querySelectorAll('.draggable-element');
-
-        const layout = {
-            canvas: {
-                width: canvasMmWidth,
-                height: canvasMmHeight,
-                unit: 'mm',
-                padding_mm: parseFloat(document.getElementById('canvasPadding').value || '5'),
-                border: document.getElementById('canvasBorder').checked,
-                orientation: (document.getElementById('canvasOrientation') && document.getElementById('canvasOrientation').value) ? document.getElementById('canvasOrientation').value : 'portrait'
-            },
-            elements: []
-        };
-
-        elems.forEach(el => {
-            const leftPx = parseFloat(el.style.left) || 0;
-            const topPx = parseFloat(el.style.top) || 0;
-            const xMm = Math.max(0, (leftPx / canvasRect.width) * layout.canvas.width);
-            const yMm = Math.max(0, (topPx / canvasRect.height) * layout.canvas.height);
             
-            let sizeMmVal = 0;
-            const dtype = el.getAttribute('data-type');
-            if (el.getAttribute('data-size-mm')) {
-                sizeMmVal = parseFloat(el.getAttribute('data-size-mm')) || 0;
-            } else if (dtype === 'qrcode' || dtype === 'logo') {
-                const inner = el.querySelector(dtype === 'qrcode' ? '.element-qrcode' : '.element-logo');
-                if (inner) {
-                    const innerWidth = parseFloat(inner.style.width) || 60;
-                    sizeMmVal = Math.round(((innerWidth / canvasRect.width) * layout.canvas.width) * 10) / 10;
-                } else {
-                    sizeMmVal = 30;
-                }
+            return style;
+        },
+        
+        // Get element display text
+        getElementDisplay(element) {
+            if (element.type === 'text') {
+                return element.value || 'Texto';
+            } else if (element.type === 'qrcode') {
+                return '📱 QR';
+            } else if (element.type === 'logo') {
+                return '🖼️ Logo';
+            } else if (element.type === 'divider') {
+                return '';
             }
-
-            const elementObj = {
-                type: dtype,
-                value: el.getAttribute('data-value'),
-                x: Math.round(xMm * 10) / 10,
-                y: Math.round(yMm * 10) / 10,
-                margin_mm: parseFloat(el.getAttribute('data-margin-mm')) || 0
+            return '';
+        },
+        
+        // Get element icon
+        getElementIcon(type) {
+            const icons = {
+                text: '📝',
+                qrcode: '🔲',
+                logo: '🖼️',
+                divider: '➖'
             };
-
-            if (dtype === 'text') {
-                elementObj.size = parseInt(el.getAttribute('data-size')) || 12;
-            } else if (dtype === 'qrcode' || dtype === 'logo') {
-                elementObj.size_mm = sizeMmVal || 30;
+            return icons[type] || '❓';
+        },
+        
+        // Get element label
+        getElementLabel(element) {
+            if (element.type === 'text') {
+                return element.value?.substring(0, 20) || 'Texto';
+            } else if (element.type === 'qrcode') {
+                return 'QR Code';
+            } else if (element.type === 'logo') {
+                return 'Logo';
+            } else if (element.type === 'divider') {
+                return `Linha ${element.direction === 'horizontal' ? 'Horizontal' : 'Vertical'}`;
             }
-
-            layout.elements.push(elementObj);
-        });
-
-        try {
-            const response = await fetch('/admin/eventos/layout/{{ evento.id }}/preview', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ layout_ingresso: layout })
+            return element.type;
+        },
+        
+        // Insert tag into text input
+        insertTag(tag) {
+            if (this.newElement.type === 'text') {
+                this.newElement.value += tag;
+            }
+        },
+        
+        // Setup Interact.js for drag and drop
+        setupInteract() {
+            this.elements.forEach(element => {
+                const el = document.getElementById(element.id);
+                if (!el || this._interactElements.has(el)) return;
+                
+                interact(`#${element.id}`)
+                    .draggable({
+                        inertia: false,
+                        modifiers: [
+                            interact.modifiers.restrictRect({
+                                restriction: 'parent',
+                                endOnly: true
+                            })
+                        ],
+                        listeners: {
+                            start: (event) => {
+                                this.draggedElementId = element.id;
+                                this.showConfirmPosition = false;
+                            },
+                            move: (event) => {
+                                const target = event.target;
+                                const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                                const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+                                
+                                target.style.transform = `translate(${x}px, ${y}px)`;
+                                target.setAttribute('data-x', x);
+                                target.setAttribute('data-y', y);
+                                
+                                this.dragTransform = { x, y };
+                            },
+                            end: (event) => {
+                                this.showConfirmPosition = true;
+                            }
+                        }
+                    });
+                
+                // Mark element as configured
+                this._interactElements.add(el);
             });
+        },
+        
+        // Confirm position after drag
+        confirmPosition() {
+            if (!this.draggedElementId) return;
             
-            if (response.ok) {
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                document.getElementById('previewImg').src = url;
-                document.getElementById('previewModal').style.display = 'block';
-            } else {
-                alert('Erro ao gerar preview');
-            }
-        } catch (err) {
-            console.error(err);
-            alert('Erro ao gerar preview');
-        }
-    });
-
-    // Clear all elements
-    document.getElementById('clearLayoutBtn').addEventListener('click', function() {
-        if (confirm('Deseja remover TODOS os elementos do layout?')) {
+            const element = this.elements.find(el => el.id === this.draggedElementId);
+            const domElement = document.getElementById(this.draggedElementId);
+            
+            if (!element || !domElement) return;
+            
             const canvas = document.getElementById('ticketCanvas');
-            canvas.innerHTML = '';
-            updateElementsList();
-            showToast('Layout limpo', 'success');
+            const rect = domElement.getBoundingClientRect();
+            const canvasRect = canvas.getBoundingClientRect();
+            
+            // Calculate position in MM
+            const xPx = rect.left - canvasRect.left;
+            const yPx = rect.top - canvasRect.top;
+            
+            element.x = Math.max(0, this.pxToMm(xPx));
+            element.y = Math.max(0, this.pxToMm(yPx));
+            
+            // Reset transform
+            domElement.style.transform = '';
+            domElement.setAttribute('data-x', 0);
+            domElement.setAttribute('data-y', 0);
+            
+            this.draggedElementId = null;
+            this.showConfirmPosition = false;
+            this.saveState();
+            
+            // Trigger re-render
+            this.$nextTick(() => {
+                this.setupInteract();
+            });
+        },
+        
+        // Save state for undo/redo
+        saveState() {
+            const state = {
+                canvas: { ...this.canvas },
+                elements: JSON.parse(JSON.stringify(this.elements))
+            };
+            
+            // Remove future states if we're not at the end
+            if (this.historyIndex < this.history.length - 1) {
+                this.history = this.history.slice(0, this.historyIndex + 1);
+            }
+            
+            // Add new state
+            this.history.push(state);
+            
+            // Limit history to 50 states
+            if (this.history.length > 50) {
+                this.history.shift();
+            } else {
+                this.historyIndex++;
+            }
+        },
+        
+        // Undo
+        undo() {
+            if (this.historyIndex <= 0) return;
+            
+            this.historyIndex--;
+            const state = this.history[this.historyIndex];
+            this.canvas = { ...state.canvas };
+            this.elements = JSON.parse(JSON.stringify(state.elements));
+            this.selectedElement = null;
+            
+            this.$nextTick(() => {
+                this.setupInteract();
+            });
+        },
+        
+        // Redo
+        redo() {
+            if (this.historyIndex >= this.history.length - 1) return;
+            
+            this.historyIndex++;
+            const state = this.history[this.historyIndex];
+            this.canvas = { ...state.canvas };
+            this.elements = JSON.parse(JSON.stringify(state.elements));
+            this.selectedElement = null;
+            
+            this.$nextTick(() => {
+                this.setupInteract();
+            });
+        },
+        
+        // Setup keyboard shortcuts
+        setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === 'z' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.undo();
+                    } else if (e.key === 'z' && e.shiftKey) {
+                        e.preventDefault();
+                        this.redo();
+                    } else if (e.key === 'y') {
+                        e.preventDefault();
+                        this.redo();
+                    }
+                }
+            });
+        },
+        
+        // Debounced preview refresh
+        debouncedPreview() {
+            clearTimeout(this._previewTimeout);
+            this._previewTimeout = setTimeout(() => {
+                this.refreshPreview();
+            }, 500);
+        },
+        
+        // Refresh preview
+        async refreshPreview() {
+            const eventoId = document.getElementById('eventoId').value;
+            if (!eventoId) return;
+            
+            this.previewLoading = true;
+            
+            try {
+                const response = await fetch(`/admin/eventos/layout/${eventoId}/preview`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        canvas: this.canvas,
+                        elements: this.elements
+                    })
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    this.previewUrl = URL.createObjectURL(blob);
+                } else {
+                    console.error('Preview error:', await response.text());
+                    this.showToast('Erro ao gerar preview', 'error');
+                }
+            } catch (error) {
+                console.error('Preview error:', error);
+                this.showToast('Erro ao gerar preview: ' + error.message, 'error');
+            } finally {
+                this.previewLoading = false;
+            }
+        },
+        
+        // Save layout
+        async saveLayout() {
+            const eventoId = document.getElementById('eventoId').value;
+            if (!eventoId) return;
+            
+            // Validate layout
+            const validation = this.validateLayout();
+            if (!validation.valid) {
+                this.showToast(validation.errors.join('\n'), 'error');
+                return;
+            }
+            
+            const layout = {
+                canvas: this.canvas,
+                elements: this.elements.map(el => {
+                    // Remove internal properties
+                    const { id, ...rest } = el;
+                    return rest;
+                })
+            };
+            
+            try {
+                const response = await fetch(`/admin/eventos/layout/${eventoId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        layout_ingresso: layout
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    this.showToast('Layout salvo com sucesso!', 'success');
+                } else {
+                    this.showToast('Erro ao salvar: ' + (result.error || 'Desconhecido'), 'error');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                this.showToast('Erro ao salvar: ' + error.message, 'error');
+            }
+        },
+        
+        // Validate layout
+        validateLayout() {
+            const errors = [];
+            
+            // Check if canvas is valid
+            if (this.canvas.width < 10 || this.canvas.height < 10) {
+                errors.push('Canvas muito pequeno (mínimo 10mm)');
+            }
+            
+            // Check each element
+            this.elements.forEach((el, idx) => {
+                // Check if element is within canvas bounds
+                if (el.x < 0 || el.y < 0) {
+                    errors.push(`Elemento ${idx + 1} está fora do canvas (posição negativa)`);
+                }
+                
+                if (el.x > this.canvas.width || el.y > this.canvas.height) {
+                    errors.push(`Elemento ${idx + 1} está fora do canvas`);
+                }
+                
+                // Check text element
+                if (el.type === 'text') {
+                    if (!el.value || el.value.trim() === '') {
+                        errors.push(`Elemento de texto ${idx + 1} está vazio`);
+                    }
+                    if (el.size < 6 || el.size > 72) {
+                        errors.push(`Elemento ${idx + 1}: tamanho de fonte inválido (6-72px)`);
+                    }
+                }
+                
+                // Check QR code and logo
+                if (el.type === 'qrcode' || el.type === 'logo') {
+                    if (el.size_mm < 5 || el.size_mm > 100) {
+                        errors.push(`Elemento ${idx + 1}: tamanho inválido (5-100mm)`);
+                    }
+                }
+            });
+            
+            return {
+                valid: errors.length === 0,
+                errors
+            };
+        },
+        
+        // Show toast notification
+        showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type}`;
+            
+            const icon = type === 'success' ? '✓' : 
+                        type === 'error' ? '✕' : 
+                        type === 'warning' ? '⚠' : 'ℹ';
+            
+            toast.innerHTML = `
+                <span style="font-size: 1.5rem;">${icon}</span>
+                <span style="flex: 1;">${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Auto-remove after 4 seconds
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => {
+                    container.removeChild(toast);
+                }, 300);
+            }, 4000);
+        },
+        
+        // Load template
+        async loadTemplate(templateId) {
+            if (!confirm('Carregar template? Isso substituirá o layout atual.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/admin/templates/layout/${templateId}`);
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar template');
+                }
+                
+                const template = await response.json();
+                
+                // Apply template
+                this.canvas = { ...this.canvas, ...template.canvas };
+                this.elements = template.elements.map((el, idx) => ({
+                    id: `elem-${Date.now()}-${idx}`,
+                    ...el
+                }));
+                
+                this.showTemplateSelector = false;
+                this.saveState();
+                this.showToast('Template carregado com sucesso!', 'success');
+                
+                // Setup interact for new elements
+                this.$nextTick(() => {
+                    this.setupInteract();
+                });
+            } catch (error) {
+                console.error('Load template error:', error);
+                this.showToast('Erro ao carregar template: ' + error.message, 'error');
+            }
         }
-    });
-
-    function showToast(message, type) {
-        // type: 'success'|'danger'|'warning'|'info'
-        const container = document.querySelector('.toast-container');
-        if (!container) return;
-        // create toast element with bg according to type
-        const bgClass = (type === 'success') ? 'bg-success text-white' : (type === 'danger') ? 'bg-danger text-white' : (type === 'warning') ? 'bg-warning text-dark' : 'bg-light text-dark';
-        const toastHtml = `
-            <div class="toast  items-center  ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class=" flex ">
-                    <div class="toast-body">${message}</div>
-                    <button type="button" class="btn-close  inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                </div>
-            </div>
-        `;
-        container.innerHTML = toastHtml;
-        const toastEl = container.querySelector('.toast');
-        try {
-            const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
-            toast.show();
-        } catch (e) {
-            // fallback: simple alert
-            console.warn('Toast failed, falling back to alert', e);
-            alert(message);
-        }
-    }
+    };
+}
 </script>
 {% endblock %}
