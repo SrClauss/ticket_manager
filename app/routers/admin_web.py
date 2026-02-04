@@ -740,7 +740,13 @@ async def admin_evento_layout_preview(
     
     try:
         data = await request.json()
-        layout = data.get("layout_ingresso")
+        # Accept both {layout_ingresso: {...}} and editor payload {canvas:..., elements: [...]}
+        if isinstance(data, dict) and "layout_ingresso" in data:
+            layout = data.get("layout_ingresso")
+        elif isinstance(data, dict) and ("canvas" in data or "elements" in data):
+            layout = {"canvas": data.get("canvas", {}), "elements": data.get("elements", [])}
+        else:
+            layout = data
         
         if not layout:
             raise HTTPException(status_code=400, detail="Layout inválido")
