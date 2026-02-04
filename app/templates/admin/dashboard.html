@@ -6,7 +6,12 @@
 <!-- Tailwind-based Material Dark Dashboard -->
 
 
-<header class="p-6 md:px-12 pt-8">
+<header class="p-6 md:px-12 pt-8 relative">
+    <div class="absolute top-4 right-4 md:right-12">
+        <span class="text-xs font-mono text-slate-500 bg-slate-800/50 px-2 py-1 rounded border border-slate-700/50">
+            v: {{ git_version | default('dev') }}
+        </span>
+    </div>
     <h1 class="text-3xl font-light text-slate-100">Dashboard</h1>
     <p class="text-sm text-slate-400 font-light">Visão geral do sistema</p>
 </header>

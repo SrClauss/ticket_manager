@@ -119,13 +119,10 @@
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
     <!-- Frame A: Control Panel -->
     <div class="lg:col-span-4 mb-4 space-y-4">
-        <!-- Accordion Section 1: Canvas Settings -->
+        <!-- Canvas Settings -->
         <div class="md-card p-4">
-            <button type="button" class="w-full flex justify-between items-center text-left" onclick="toggleAccordion('canvasSettings')">
-                <h5 class="text-slate-100 mb-0">⚙️ Configurações do Canvas</h5>
-                <span id="canvasSettingsIcon" class="text-slate-400">▼</span>
-            </button>
-            <div id="canvasSettings" class="mt-3">
+            <h5 class="text-slate-100 mb-3">⚙️ Configurações do Canvas</h5>
+            <div>
                 <!-- Canvas orientation and fixed size controls -->
                 <div class="mb-3">
                     <label class="text-sm text-slate-100">Orientação</label>
@@ -150,13 +147,10 @@
             </div>
         </div>
 
-        <!-- Accordion Section 2: Add Elements -->
+        <!-- Add Elements -->
         <div class="md-card p-4">
-            <button type="button" class="w-full flex justify-between items-center text-left" onclick="toggleAccordion('addElements')">
-                <h5 class="text-slate-100 mb-0">➕ Adicionar Elementos</h5>
-                <span id="addElementsIcon" class="text-slate-400">▼</span>
-            </button>
-            <div id="addElements" class="mt-3">
+            <h5 class="text-slate-100 mb-3">➕ Adicionar Elementos</h5>
+            <div>
             <div class="mb-3">
                 <label class="text-sm text-slate-100">Tipo de Elemento</label>
                 <select id="elementType" class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100">
