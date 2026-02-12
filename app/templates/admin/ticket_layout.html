@@ -1130,9 +1130,11 @@ function layoutEditor() {
             } else if (this.newElement.type === 'qrcode') {
                 element.value = '{qrcode_hash}';
                 element.size_mm = this.newElement.size_mm;
+                element.align = 'left'; // Default alignment for QR codes
             } else if (this.newElement.type === 'logo') {
                 element.value = 'LOGO';
                 element.size_mm = this.newElement.size_mm;
+                element.align = 'left'; // Default alignment for logos
             } else if (this.newElement.type === 'divider') {
                 element.direction = this.newElement.direction;
                 element.length_mm = this.newElement.length_mm;
