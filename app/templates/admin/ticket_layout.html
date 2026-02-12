@@ -1211,7 +1211,7 @@ function layoutEditor() {
             const element = this.elements.find(el => el.id === this.selectedElement.id);
             if (element) {
                 element[format] = !element[format];
-                this.selectedElement = element;
+                this.selectedElement = {...element}; // Trigger reactivity
                 this.saveState();
             }
         },
@@ -1391,7 +1391,7 @@ function layoutEditor() {
                                 // Só atualizar Y, X sempre 0
                                 const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
                                 
-                                // Manter transform do alinhamento
+                                // Manter transform do alinhamento com espaço correto
                                 const alignTransform = this.getTransformForAlign(element.align || 'left');
                                 target.style.transform = `${alignTransform} translateY(${y}px)`;
                                 target.setAttribute('data-x', 0);
@@ -1425,10 +1425,9 @@ function layoutEditor() {
             
             // Calcular apenas Y (X mantém do alinhamento)
             const yPx = rect.top - canvasRect.top;
-            const yMm = (yPx / canvasRect.height) * this.canvas.height;
             
-            // Atualizar APENAS Y no elemento
-            element.y = Math.max(0, Math.min(yMm, this.canvas.height));
+            // Atualizar APENAS Y no elemento usando método consistente
+            element.y = Math.max(0, this.pxToMm(yPx));
             // element.x NÃO é alterado - mantém do alinhamento
             
             // Reset transform mantendo o alinhamento
