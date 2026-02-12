@@ -656,9 +656,27 @@
                     </select>
                 </div>
                 
+                <!-- Text content field (shown only for text type) -->
+                <div x-show="newElement.type === 'text'" class="mb-3">
+                    <label class="block text-slate-300 text-sm mb-1">Conteúdo do Texto</label>
+                    <input 
+                        type="text"
+                        x-model="newElement.value"
+                        placeholder="Digite o texto ou use tags como {NOME}"
+                        class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                    />
+                    <div class="mt-2 flex flex-wrap gap-1">
+                        <span class="template-tag" @click="newElement.value += '{NOME}'">{NOME}</span>
+                        <span class="template-tag" @click="newElement.value += '{CPF}'">{CPF}</span>
+                        <span class="template-tag" @click="newElement.value += '{EMAIL}'">{EMAIL}</span>
+                        <span class="template-tag" @click="newElement.value += '{TIPO_INGRESSO}'">{TIPO_INGRESSO}</span>
+                    </div>
+                </div>
+                
                 <p class="text-slate-400 text-xs mb-3">
                     <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">info</span>
-                    O elemento será adicionado com configurações padrão. Use o painel de Propriedades para personalizar.
+                    <span x-show="newElement.type !== 'text'">O elemento será adicionado com configurações padrão. Use o painel de Propriedades para personalizar.</span>
+                    <span x-show="newElement.type === 'text'">Digite o conteúdo acima ou ajuste depois nas Propriedades.</span>
                 </p>
                 
                 <button 
@@ -808,41 +826,41 @@
         <span class="material-symbols-outlined">check_circle</span>
         Confirmar Posição
     </button>
-</div>
-
-<!-- Fixed Save Bar -->
-<div class="fixed-save-bar">
-    <div class="container mx-auto px-4 flex justify-center gap-3 flex-wrap">
-        <button 
-            @click="saveLayout()"
-            class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition"
-        >
-            <span class="material-symbols-outlined">save</span>
-            <span>Salvar Layout</span>
-        </button>
-        <button 
-            @click="if(confirm('Limpar todos os elementos?')) { elements = []; saveState(); }"
-            class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 transition"
-        >
-            <span class="material-symbols-outlined">delete_sweep</span>
-            <span>Limpar Tudo</span>
-        </button>
-        <button 
-            @click="undo()"
-            :disabled="historyIndex <= 0"
-            class="px-6 py-2 bg-slate-600 hover:bg-slate-700 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-lg flex items-center gap-2 transition"
-            title="Desfazer (Ctrl+Z)"
-        >
-            <span class="material-symbols-outlined">undo</span>
-        </button>
-        <button 
-            @click="redo()"
-            :disabled="historyIndex >= history.length - 1"
-            class="px-6 py-2 bg-slate-600 hover:bg-slate-700 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-lg flex items-center gap-2 transition"
-            title="Refazer (Ctrl+Shift+Z)"
-        >
-            <span class="material-symbols-outlined">redo</span>
-        </button>
+    
+    <!-- Fixed Save Bar -->
+    <div class="fixed-save-bar">
+        <div class="container mx-auto px-4 flex justify-center gap-3 flex-wrap">
+            <button 
+                @click="saveLayout()"
+                class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition"
+            >
+                <span class="material-symbols-outlined">save</span>
+                <span>Salvar Layout</span>
+            </button>
+            <button 
+                @click="if(confirm('Limpar todos os elementos?')) { elements = []; saveState(); }"
+                class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 transition"
+            >
+                <span class="material-symbols-outlined">delete_sweep</span>
+                <span>Limpar Tudo</span>
+            </button>
+            <button 
+                @click="undo()"
+                :disabled="historyIndex <= 0"
+                class="px-6 py-2 bg-slate-600 hover:bg-slate-700 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-lg flex items-center gap-2 transition"
+                title="Desfazer (Ctrl+Z)"
+            >
+                <span class="material-symbols-outlined">undo</span>
+            </button>
+            <button 
+                @click="redo()"
+                :disabled="historyIndex >= history.length - 1"
+                class="px-6 py-2 bg-slate-600 hover:bg-slate-700 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-lg flex items-center gap-2 transition"
+                title="Refazer (Ctrl+Shift+Z)"
+            >
+                <span class="material-symbols-outlined">redo</span>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -1002,7 +1020,7 @@ function layoutEditor() {
             
             // Type-specific properties with default centralized configuration
             if (this.newElement.type === 'text') {
-                element.value = 'Texto';
+                element.value = this.newElement.value || 'Texto';
                 element.size = 12;
                 element.font = 'Arial';
                 element.align = 'left';
@@ -1025,6 +1043,10 @@ function layoutEditor() {
             }
             
             this.elements.push(element);
+            
+            // Reset form
+            this.newElement.value = '';
+            
             this.saveState();
             
             // Auto-select the new element so user can configure it
@@ -1521,10 +1543,10 @@ function layoutEditor() {
                 
                 if (result.success) {
                     this.showToast('Layout salvo com sucesso!', 'success');
-                    // Redirect back to the previous page after successful save
+                    // Redirect to eventos list after successful save
                     setTimeout(() => {
-                        window.history.back();
-                    }, 1000);
+                        window.location.href = '/admin/eventos';
+                    }, 800);
                 } else {
                     this.showToast('Erro ao salvar: ' + (result.error || 'Desconhecido'), 'error');
                 }
