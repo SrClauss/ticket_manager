@@ -4,12 +4,32 @@
 
 {% block extra_css %}
 <style>
-    /* Layout Grid - Properties on LEFT, Canvas on RIGHT */
+    /* Layout Grid - Sidebar LEFT, Canvas+Properties CENTER/RIGHT */
     .layout-editor {
         display: grid;
-        grid-template-columns: 360px 1fr;
+        grid-template-columns: 320px 1fr;
         gap: 1rem;
         margin-top: 1rem;
+    }
+    
+    /* Canvas + Properties container */
+    .canvas-properties-container {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .canvas-wrapper-main {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .properties-panel-right {
+        width: 340px;
+        background: rgba(30, 41, 59, 0.8);
+        border-radius: 12px;
+        padding: 1.5rem;
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
     }
     
     /* Sidebar - Now used for properties */
