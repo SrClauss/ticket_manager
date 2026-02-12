@@ -1177,8 +1177,28 @@ function layoutEditor() {
             const element = this.elements.find(el => el.id === this.selectedElement.id);
             if (element) {
                 element[prop] = value;
-                this.selectedElement = element; // Trigger reactivity
+                
+                // Se alterou o alinhamento, atualizar também a posição X
+                if (prop === 'align') {
+                    const padding = this.canvas.padding || 0;
+                    if (value === 'left') {
+                        element.x = padding;
+                    } else if (value === 'center') {
+                        element.x = this.canvas.width / 2;
+                    } else if (value === 'right') {
+                        element.x = this.canvas.width - padding;
+                    }
+                }
+                
+                this.selectedElement = {...element}; // Trigger reactivity
                 this.saveState();
+                
+                // Re-setup interact for alignment changes
+                if (prop === 'align') {
+                    this.$nextTick(() => {
+                        this.setupInteract();
+                    });
+                }
             }
         },
         
