@@ -675,6 +675,7 @@
                                         type="text"
                                         :value="selectedElement?.value || ''"
                                         @input="updateElementProperty('value', $event.target.value)"
+                                        @blur="persistLayout()"
                                         class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
                                     />
                                 </div>
@@ -969,6 +970,8 @@ function layoutEditor() {
         
         // Preview timeout (for debouncing)
         _previewTimeout: null,
+        // Save debounce timeout
+        _saveTimeout: null,
         
         // Track elements with Interact.js configured (WeakSet for better memory management)
         _interactElements: new WeakSet(),
@@ -1086,6 +1089,9 @@ function layoutEditor() {
             
             this.saveState();
             
+            // Persist immediately after adding an element
+            this.persistLayout().catch(err => console.error('Erro ao salvar após adicionar elemento:', err));
+
             // Auto-select the new element so user can configure it
             this.$nextTick(() => {
                 this.selectElement(element.id);
@@ -1125,6 +1131,8 @@ function layoutEditor() {
                 this.selectedElement = null;
             }
             this.saveState();
+            // Persist immediately after deletion
+            this.persistLayout().catch(err => console.error('Erro ao salvar após exclusão:', err));
         },
         
         // Select element
@@ -1160,6 +1168,8 @@ function layoutEditor() {
                 
                 this.selectedElement = {...element}; // Trigger reactivity
                 this.saveState();
+                // Auto-save after property change (debounced)
+                this.saveLayoutDebounced();
                 
                 // Re-setup interact for alignment changes
                 if (prop === 'align') {
@@ -1179,6 +1189,8 @@ function layoutEditor() {
                 element.value = (element.value || '') + tag;
                 this.selectedElement = {...element}; // Trigger reactivity
                 this.saveState();
+                // Auto-save after tag insertion
+                this.saveLayoutDebounced();
             }
         },
         
@@ -1191,10 +1203,8 @@ function layoutEditor() {
                 element[format] = !element[format];
                 this.selectedElement = {...element}; // Trigger reactivity
                 this.saveState();
-            }
-        },
-        
-        // Quick alignment
+                // Auto-save after formatting change
+                this.saveLayoutDebounced();
         quickAlign(alignment) {
             if (!this.selectedElement) return;
             
@@ -1217,6 +1227,8 @@ function layoutEditor() {
             
             this.selectedElement = {...element};
             this.saveState();
+            // Auto-save after quick alignment
+            this.saveLayoutDebounced();
             
             this.$nextTick(() => {
                 this.setupInteract();
@@ -1389,7 +1401,7 @@ function layoutEditor() {
         },
         
         // Confirm position after drag
-        confirmPosition() {
+        async confirmPosition() {
             if (!this.draggedElementId) return;
             
             const element = this.elements.find(el => el.id === this.draggedElementId);
@@ -1417,6 +1429,13 @@ function layoutEditor() {
             this.draggedElementId = null;
             this.showConfirmPosition = false;
             this.saveState();
+
+            // Persistir imediatamente após confirmação de posição
+            try {
+                await this.persistLayout();
+            } catch (err) {
+                console.error('Erro ao salvar após confirmar posição:', err);
+            }
             
             // Trigger re-render
             this.$nextTick(() => {
@@ -1509,6 +1528,56 @@ function layoutEditor() {
                 this.refreshPreview();
             }, 500);
         },
+
+        // Debounced save (used for user interactions to avoid spamming requests)
+        saveLayoutDebounced() {
+            clearTimeout(this._saveTimeout);
+            this._saveTimeout = setTimeout(() => {
+                this.persistLayout();
+            }, 700);
+        },
+
+        // Persist layout to server WITHOUT redirect (used for autosave)
+        async persistLayout() {
+            const eventoId = document.getElementById('eventoId').value;
+            if (!eventoId) return { success: false, error: 'eventoId ausente' };
+
+            const validation = this.validateLayout();
+            if (!validation.valid) {
+                // Do not show blocking toast on autosave; return the error
+                console.warn('Layout validation failed (autosave):', validation.errors);
+                return { success: false, error: validation.errors.join('; ') };
+            }
+
+            const layout = {
+                canvas: this.canvas,
+                elements: this.elements.map(el => {
+                    const { id, ...rest } = el;
+                    return rest;
+                })
+            };
+
+            try {
+                const response = await fetch(`/admin/eventos/layout/${eventoId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ layout_ingresso: layout })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    // silent toast for autosave
+                    this.showToast('Alterações salvas', 'success', 1000);
+                    return { success: true };
+                } else {
+                    console.error('Persist layout error:', result);
+                    return { success: false, error: result.error || 'Desconhecido' };
+                }
+            } catch (err) {
+                console.error('Persist layout exception:', err);
+                return { success: false, error: err.message };
+            }
+        },
         
         // Refresh preview
         async refreshPreview() {
@@ -1546,50 +1615,16 @@ function layoutEditor() {
         
         // Save layout
         async saveLayout() {
-            const eventoId = document.getElementById('eventoId').value;
-            if (!eventoId) return;
-            
-            // Validate layout
-            const validation = this.validateLayout();
-            if (!validation.valid) {
-                this.showToast(validation.errors.join('\n'), 'error');
-                return;
-            }
-            
-            const layout = {
-                canvas: this.canvas,
-                elements: this.elements.map(el => {
-                    // Remove internal properties
-                    const { id, ...rest } = el;
-                    return rest;
-                })
-            };
-            
-            try {
-                const response = await fetch(`/admin/eventos/layout/${eventoId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        layout_ingresso: layout
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    this.showToast('Layout salvo com sucesso!', 'success');
-                    // Redirect to eventos list after successful save
-                    setTimeout(() => {
-                        window.location.href = '/admin/eventos';
-                    }, 800);
-                } else {
-                    this.showToast('Erro ao salvar: ' + (result.error || 'Desconhecido'), 'error');
-                }
-            } catch (error) {
-                console.error('Save error:', error);
-                this.showToast('Erro ao salvar: ' + error.message, 'error');
+            // Use persistLayout for the actual POST and then redirect on success
+            const res = await this.persistLayout();
+            if (res && res.success) {
+                // explicit save: show confirmation and redirect
+                this.showToast('Layout salvo com sucesso!', 'success');
+                setTimeout(() => {
+                    window.location.href = '/admin/eventos';
+                }, 800);
+            } else {
+                this.showToast('Erro ao salvar: ' + (res?.error || 'Desconhecido'), 'error');
             }
         },
         

@@ -84,6 +84,13 @@
         </button>
       </div>
     </div>
+
+    <!-- Mostrar status de inscrições públicas quando presente na query-string -->
+    {% if insc_saved %}
+    <div id="insc-status" class="mt-4 p-3 rounded-md bg-emerald-800 text-emerald-100">✅ Inscrições públicas ativadas com sucesso.</div>
+    {% elif insc_error %}
+    <div id="insc-status" class="mt-4 p-3 rounded-md bg-rose-800 text-rose-100">⚠️ Não foi possível ativar inscrições públicas — verifique os campos obrigatórios da planilha.</div>
+    {% endif %}
   </div>
 
   <!-- Ilhas/Setores -->

@@ -71,6 +71,19 @@ def test_evento_detalhes_ui_and_snapshot(monkeypatch, tmp_path):
     assert resp.status_code == 200
     html = resp.text
 
+    # no status flag by default
+    assert 'id="insc-status"' not in html
+
+    # when insc_saved=1 should show success
+    resp2 = client.get(f"/admin/eventos/{str(evento['_id'])}?insc_saved=1")
+    assert resp2.status_code == 200
+    assert 'Inscrições públicas ativadas com sucesso' in resp2.text
+
+    # when insc_error=1 should show error
+    resp3 = client.get(f"/admin/eventos/{str(evento['_id'])}?insc_error=1")
+    assert resp3.status_code == 200
+    assert 'Não foi possível ativar inscrições públicas' in resp3.text
+
     # Basic presence checks
     assert 'Token Bilheteria' in html
     assert 'Token Portaria' in html

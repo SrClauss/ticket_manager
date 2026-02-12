@@ -371,6 +371,10 @@ async def admin_evento_detalhes(request: Request, evento_id: str):
             tipo["id"] = tipo["_id"]
             tipos_ingresso.append(tipo)
         
+        # Propagar flags de query-string (ex.: ?insc_saved=1 ou ?insc_error=1)
+        insc_saved = request.query_params.get('insc_saved') == '1'
+        insc_error = request.query_params.get('insc_error') == '1'
+
         return templates.TemplateResponse(
             "admin/evento_detalhes.html",
             {
@@ -378,7 +382,9 @@ async def admin_evento_detalhes(request: Request, evento_id: str):
                 "active_page": "eventos",
                 "evento": evento,
                 "ilhas": ilhas,
-                "tipos_ingresso": tipos_ingresso
+                "tipos_ingresso": tipos_ingresso,
+                "insc_saved": insc_saved,
+                "insc_error": insc_error
             }
         )
     except Exception as e:
@@ -685,7 +691,7 @@ async def admin_evento_planilhas_inscricoes(request: Request, evento_id: str):
     required = set(PLANILHA_BASE_FIELDS)
     if aceita and not required.issubset(set(campos)):
         # Não pode ativar inscrições públicas sem os campos base
-        return RedirectResponse(url=f"/admin/eventos/{evento_id}/planilhas?insc_error=1", status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse(url=f"/admin/eventos/{evento_id}?insc_error=1", status_code=status.HTTP_303_SEE_OTHER)
 
     updates = {"aceita_inscricoes": aceita}
     if regenerate or (aceita and not evento.get("token_inscricao")):
@@ -694,7 +700,7 @@ async def admin_evento_planilhas_inscricoes(request: Request, evento_id: str):
 
     await db.eventos.update_one({"_id": object_id}, {"$set": updates})
 
-    return RedirectResponse(url=f"/admin/eventos/{evento_id}/planilhas?insc_saved=1", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url=f"/admin/eventos/{evento_id}?insc_saved=1", status_code=status.HTTP_303_SEE_OTHER)
 
 
 def _format_planilha_datetime(value):
