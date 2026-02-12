@@ -111,13 +111,13 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
             
             # Apply anchor-based positioning
             if align == "center":
-                x = x_base - (text_width / 2)
+                x = int(x_base - (text_width / 2))
             elif align == "right":
-                x = x_base - text_width
+                x = int(x_base - text_width)
             else:  # left or default
-                x = x_base
+                x = int(x_base)
             
-            draw.text((x, y), text, fill='black', font=font)
+            draw.text((x, int(y)), text, fill='black', font=font)
             
         elif etype == "qrcode":
 
@@ -140,13 +140,13 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
             
             # Apply anchor-based positioning for QR codes
             if align == "center":
-                x = x_base - (size_px / 2)
+                x = int(x_base - (size_px / 2))
             elif align == "right":
-                x = x_base - size_px
+                x = int(x_base - size_px)
             else:  # left or default
-                x = x_base
+                x = int(x_base)
             
-            img.paste(qr, (int(x), int(y)))
+            img.paste(qr, (x, int(y)))
     
     return img
 
