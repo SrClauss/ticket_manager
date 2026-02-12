@@ -4,21 +4,34 @@
 
 {% block extra_css %}
 <style>
-    /* Layout Grid */
+    /* Layout Grid - Properties on LEFT, Canvas on RIGHT */
     .layout-editor {
         display: grid;
-        grid-template-columns: 320px 1fr;
+        grid-template-columns: 360px 1fr;
         gap: 1rem;
         margin-top: 1rem;
     }
     
-    /* Sidebar */
+    /* Sidebar - Now used for properties */
     .sidebar {
         background: rgba(30, 41, 59, 0.8);
         border-radius: 12px;
         padding: 1.5rem;
         max-height: calc(100vh - 200px);
         overflow-y: auto;
+    }
+    
+    /* Collapsible section */
+    .collapsible-section {
+        transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+        overflow: hidden;
+    }
+    
+    .collapsible-section.hidden {
+        max-height: 0 !important;
+        opacity: 0;
+        padding: 0;
+        margin: 0;
     }
     
     /* Canvas Area */
@@ -353,14 +366,187 @@
     
     <!-- Main Layout Grid -->
     <div class="layout-editor">
-        <!-- SIDEBAR -->
+        <!-- LEFT SIDEBAR - PROPERTIES -->
         <div class="sidebar">
-            <!-- Canvas Configuration -->
+            <!-- Properties Panel (when element selected) - NOW AT TOP -->
+            <template x-if="selectedElement">
+                <div class="mb-4 p-3 bg-blue-900/30 rounded-lg border-2 border-blue-500">
+                    <h5 class="text-slate-100 font-semibold mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined">tune</span>
+                        Propriedades do Elemento
+                    </h5>
+                    
+                    <div class="mb-3">
+                        <label class="block text-slate-300 text-sm mb-1">
+                            Posição X (mm) 
+                            <span class="text-xs text-slate-400">- Controlado pelo alinhamento</span>
+                        </label>
+                        <input 
+                            type="number"
+                            :value="selectedElement.x"
+                            readonly
+                            disabled
+                            step="0.1"
+                            class="w-full bg-slate-600 border border-slate-600 rounded-lg py-2 px-3 text-slate-400 cursor-not-allowed"
+                            title="A posição X é controlada pelo alinhamento (Esquerda/Centro/Direita)"
+                        />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="block text-slate-300 text-sm mb-1">Posição Y (mm)</label>
+                        <input 
+                            type="number"
+                            :value="selectedElement.y"
+                            @input="updateElementProperty('y', parseFloat($event.target.value))"
+                            step="0.1"
+                            class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                        />
+                    </div>
+                    
+                    <!-- Text-specific properties -->
+                    <template x-if="selectedElement.type === 'text'">
+                        <div>
+                            <div class="mb-3">
+                                <label class="block text-slate-300 text-sm mb-1">Conteúdo</label>
+                                <input 
+                                    type="text"
+                                    :value="selectedElement.value"
+                                    @input="updateElementProperty('value', $event.target.value)"
+                                    class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                                />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="block text-slate-300 text-sm mb-1">Tamanho (px)</label>
+                                <input 
+                                    type="number"
+                                    :value="selectedElement.size"
+                                    @input="updateElementProperty('size', parseInt($event.target.value))"
+                                    min="8"
+                                    max="72"
+                                    class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                                />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="block text-slate-300 text-sm mb-1">Alinhamento</label>
+                                <select 
+                                    :value="selectedElement.align"
+                                    @change="updateElementProperty('align', $event.target.value)"
+                                    class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                                >
+                                    <option value="left">⬅️ Esquerda</option>
+                                    <option value="center">↔️ Centro</option>
+                                    <option value="right">➡️ Direita</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="block text-slate-300 text-sm mb-2">Formatação</label>
+                                <div class="format-buttons">
+                                    <button 
+                                        @click="updateElementProperty('bold', !selectedElement.bold)"
+                                        :class="{ 'active': selectedElement.bold }"
+                                        title="Negrito"
+                                    >B</button>
+                                    <button 
+                                        @click="updateElementProperty('italic', !selectedElement.italic)"
+                                        :class="{ 'active': selectedElement.italic }"
+                                        title="Itálico"
+                                    >I</button>
+                                    <button 
+                                        @click="updateElementProperty('underline', !selectedElement.underline)"
+                                        :class="{ 'active': selectedElement.underline }"
+                                        title="Sublinhado"
+                                    >U</button>
+                                    <button 
+                                        @click="updateElementProperty('strikethrough', !selectedElement.strikethrough)"
+                                        :class="{ 'active': selectedElement.strikethrough }"
+                                        title="Tachado"
+                                    >S</button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    
+                    <!-- QR Code properties -->
+                    <template x-if="selectedElement.type === 'qrcode'">
+                        <div class="mb-3">
+                            <label class="block text-slate-300 text-sm mb-1">Tamanho (mm)</label>
+                            <input 
+                                type="number"
+                                :value="selectedElement.size_mm"
+                                @input="updateElementProperty('size_mm', parseFloat($event.target.value))"
+                                min="10"
+                                max="50"
+                                class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                            />
+                        </div>
+                    </template>
+                    
+                    <!-- Logo properties -->
+                    <template x-if="selectedElement.type === 'logo'">
+                        <div class="mb-3">
+                            <label class="block text-slate-300 text-sm mb-1">Tamanho (mm)</label>
+                            <input 
+                                type="number"
+                                :value="selectedElement.size_mm"
+                                @input="updateElementProperty('size_mm', parseFloat($event.target.value))"
+                                min="10"
+                                max="80"
+                                class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                            />
+                        </div>
+                    </template>
+                    
+                    <!-- Quick Alignment (for all types) -->
+                    <div class="mb-3">
+                        <label class="block text-slate-300 text-sm mb-2">Alinhamento Rápido</label>
+                        <div class="flex gap-2">
+                            <button 
+                                @click="updateElementProperty('align', 'left')"
+                                :class="{ 'bg-blue-600': selectedElement.align === 'left' }"
+                                class="flex-1 px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded text-sm"
+                            >
+                                ⬅️
+                            </button>
+                            <button 
+                                @click="updateElementProperty('align', 'center')"
+                                :class="{ 'bg-blue-600': selectedElement.align === 'center' }"
+                                class="flex-1 px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded text-sm"
+                            >
+                                ↔️
+                            </button>
+                            <button 
+                                @click="updateElementProperty('align', 'right')"
+                                :class="{ 'bg-blue-600': selectedElement.align === 'right' }"
+                                class="flex-1 px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded text-sm"
+                            >
+                                ➡️
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button 
+                        @click="deselectElement()"
+                        class="w-full mt-3 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg"
+                    >
+                        Fechar Propriedades
+                    </button>
+                </div>
+            </template>
+            
+            <hr x-show="selectedElement" class="border-slate-700 my-4">
+            
+            <!-- Canvas Configuration (collapsible) -->
             <div class="mb-4">
-                <h5 class="text-slate-100 font-semibold mb-3 flex items-center gap-2">
+                <h5 class="text-slate-100 font-semibold mb-3 flex items-center gap-2 cursor-pointer" @click="showCanvasSettings = !showCanvasSettings">
                     <span class="material-symbols-outlined">settings</span>
                     Configuração do Canvas
+                    <span class="material-symbols-outlined ml-auto" x-text="showCanvasSettings ? 'expand_less' : 'expand_more'"></span>
                 </h5>
+                
+                <div x-show="showCanvasSettings" x-transition class="collapsible-section">
                 
                 <div class="mb-3">
                     <label class="block text-slate-300 text-sm mb-1">Orientação</label>
@@ -425,6 +611,12 @@
                     <div x-show="showTemplateSelector" class="mt-2 p-3 bg-slate-700/50 rounded-lg border border-slate-600">
                         <div class="mb-2">
                             <button 
+                                @click="loadTemplate('padrao')"
+                                class="w-full px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded text-sm mb-2 text-left"
+                            >
+                                📋 Padrão
+                            </button>
+                            <button 
                                 @click="loadTemplate('padrao_vip')"
                                 class="w-full px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded text-sm mb-2 text-left"
                             >
@@ -439,6 +631,7 @@
                         </div>
                     </div>
                 </div>
+                </div><!-- Close collapsible-section -->
             </div>
             
             <hr class="border-slate-700 my-4">
@@ -666,161 +859,6 @@
                     </div>
                 </template>
             </div>
-            
-            <!-- Properties Panel (when element selected) -->
-            <template x-if="selectedElement">
-                <div class="mt-4 p-3 bg-slate-700/50 rounded-lg border border-slate-600">
-                    <h6 class="text-slate-100 font-semibold mb-3 flex items-center gap-2">
-                        <span class="material-symbols-outlined">tune</span>
-                        Propriedades
-                    </h6>
-                    
-                    <div class="mb-3">
-                        <label class="block text-slate-300 text-sm mb-1">
-                            Posição X (mm) 
-                            <span class="text-xs text-slate-400">- Controlado pelo alinhamento</span>
-                        </label>
-                        <input 
-                            type="number"
-                            :value="selectedElement.x"
-                            readonly
-                            disabled
-                            step="0.1"
-                            class="w-full bg-slate-600 border border-slate-600 rounded-lg py-2 px-3 text-slate-400 cursor-not-allowed"
-                            title="A posição X é controlada pelo alinhamento (Esquerda/Centro/Direita)"
-                        />
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="block text-slate-300 text-sm mb-1">Posição Y (mm)</label>
-                        <input 
-                            type="number"
-                            :value="selectedElement.y"
-                            @input="updateElementProperty('y', parseFloat($event.target.value))"
-                            step="0.1"
-                            class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
-                        />
-                    </div>
-                    
-                    <!-- Text-specific properties -->
-                    <template x-if="selectedElement.type === 'text'">
-                        <div>
-                            <div class="mb-3">
-                                <label class="block text-slate-300 text-sm mb-1">Conteúdo</label>
-                                <input 
-                                    type="text"
-                                    :value="selectedElement.value"
-                                    @input="updateElementProperty('value', $event.target.value)"
-                                    class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
-                                />
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="block text-slate-300 text-sm mb-1">Tamanho (px)</label>
-                                <input 
-                                    type="number"
-                                    :value="selectedElement.size"
-                                    @input="updateElementProperty('size', parseInt($event.target.value))"
-                                    class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
-                                />
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="block text-slate-300 text-sm mb-1">Alinhamento</label>
-                                <select 
-                                    :value="selectedElement.align"
-                                    @change="updateElementProperty('align', $event.target.value)"
-                                    class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
-                                >
-                                    <option value="left">⬅️ Esquerda</option>
-                                    <option value="center">↔️ Centro</option>
-                                    <option value="right">➡️ Direita</option>
-                                </select>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="block text-slate-300 text-sm mb-2">Formatação</label>
-                                <div class="format-buttons">
-                                    <button 
-                                        :class="{ 'active': selectedElement.bold }"
-                                        @click="toggleFormat('bold')"
-                                        title="Negrito"
-                                    >B</button>
-                                    <button 
-                                        :class="{ 'active': selectedElement.italic }"
-                                        @click="toggleFormat('italic')"
-                                        title="Itálico"
-                                    >I</button>
-                                    <button 
-                                        :class="{ 'active': selectedElement.underline }"
-                                        @click="toggleFormat('underline')"
-                                        title="Sublinhado"
-                                    >U</button>
-                                    <button 
-                                        :class="{ 'active': selectedElement.strikethrough }"
-                                        @click="toggleFormat('strikethrough')"
-                                        title="Tachado"
-                                    >S</button>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                    
-                    <!-- QR Code properties -->
-                    <template x-if="selectedElement.type === 'qrcode'">
-                        <div class="mb-3">
-                            <label class="block text-slate-300 text-sm mb-1">Tamanho (mm)</label>
-                            <input 
-                                type="number"
-                                :value="selectedElement.size_mm"
-                                @input="updateElementProperty('size_mm', parseFloat($event.target.value))"
-                                class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
-                            />
-                        </div>
-                    </template>
-                    
-                    <!-- Logo properties -->
-                    <template x-if="selectedElement.type === 'logo'">
-                        <div class="mb-3">
-                            <label class="block text-slate-300 text-sm mb-1">Tamanho (mm)</label>
-                            <input 
-                                type="number"
-                                :value="selectedElement.size_mm"
-                                @input="updateElementProperty('size_mm', parseFloat($event.target.value))"
-                                class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
-                            />
-                        </div>
-                    </template>
-                    
-                    <!-- Quick Alignment -->
-                    <div class="mt-4">
-                        <label class="block text-slate-300 text-sm mb-2">Alinhamento Rápido</label>
-                        <div class="flex gap-2">
-                            <button 
-                                @click="quickAlign('left')"
-                                class="flex-1 px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded text-sm"
-                                title="Alinhar à esquerda"
-                            >
-                                ⬅️
-                            </button>
-                            <button 
-                                @click="quickAlign('center')"
-                                class="flex-1 px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded text-sm"
-                                title="Centralizar"
-                            >
-                                ↔️
-                            </button>
-                            <button 
-                                @click="quickAlign('right')"
-                                class="flex-1 px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded text-sm"
-                                title="Alinhar à direita"
-                            >
-                                ➡️
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </template>
         </div>
         
         <!-- CANVAS AREA -->
@@ -1024,6 +1062,9 @@ function layoutEditor() {
         // Template selector
         showTemplateSelector: false,
         
+        // Canvas settings visibility
+        showCanvasSettings: true,
+        
         // Drag state
         showConfirmPosition: false,
         draggedElementId: null,
@@ -1144,10 +1185,32 @@ function layoutEditor() {
             this.elements.push(element);
             this.saveState();
             
+            // Clear the form after adding element
+            this.resetNewElementForm();
+            
             // Setup Interact for new element
             this.$nextTick(() => {
                 this.setupInteract();
             });
+        },
+        
+        // Reset new element form to defaults
+        resetNewElementForm() {
+            this.newElement = {
+                type: 'text',
+                value: '',
+                size: 12,
+                size_mm: 30,
+                font: 'Arial',
+                align: 'left',
+                bold: false,
+                italic: false,
+                underline: false,
+                strikethrough: false,
+                direction: 'horizontal',
+                length_mm: 50,
+                thickness: 2
+            };
         },
         
         // Delete element

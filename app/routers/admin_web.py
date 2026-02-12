@@ -934,6 +934,72 @@ async def admin_evento_layout_salvar(
 
 # Layout Templates
 LAYOUT_TEMPLATES = {
+    "padrao": {
+        "name": "Padrão",
+        "canvas": {"width": 62, "height": 120, "orientation": "portrait", "padding": 5, "dpi": 300},
+        "elements": [
+            {
+                "type": "text",
+                "x": 31,
+                "y": 10,
+                "value": "{EVENTO_NOME}",
+                "size": 14,
+                "font": "Arial",
+                "align": "center",
+                "bold": True,
+                "z_index": 1
+            },
+            {
+                "type": "divider",
+                "x": 5,
+                "y": 25,
+                "direction": "horizontal",
+                "length_mm": 52,
+                "thickness": 2,
+                "z_index": 2
+            },
+            {
+                "type": "qrcode",
+                "x": 16,
+                "y": 35,
+                "value": "{qrcode_hash}",
+                "size_mm": 30,
+                "align": "left",
+                "z_index": 3
+            },
+            {
+                "type": "text",
+                "x": 31,
+                "y": 75,
+                "value": "{NOME}",
+                "size": 12,
+                "font": "Arial",
+                "align": "center",
+                "bold": False,
+                "z_index": 4
+            },
+            {
+                "type": "text",
+                "x": 31,
+                "y": 90,
+                "value": "{TIPO_INGRESSO}",
+                "size": 10,
+                "font": "Arial",
+                "align": "center",
+                "z_index": 5
+            },
+            {
+                "type": "text",
+                "x": 31,
+                "y": 105,
+                "value": "{DATA_EVENTO}",
+                "size": 8,
+                "font": "Arial",
+                "align": "center",
+                "z_index": 6
+            }
+        ]
+    },
     "padrao_vip": {
         "name": "Padrão VIP",
         "canvas": {"width": 62, "height": 120, "orientation": "portrait", "padding": 5, "dpi": 300},
