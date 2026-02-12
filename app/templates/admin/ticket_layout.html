@@ -421,7 +421,7 @@
                                 <input 
                                     type="number"
                                     :value="selectedElement.size"
-                                    @input="updateElementProperty('size', parseFloat($event.target.value))"
+                                    @input="updateElementProperty('size', parseInt($event.target.value))"
                                     min="8"
                                     max="72"
                                     class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
