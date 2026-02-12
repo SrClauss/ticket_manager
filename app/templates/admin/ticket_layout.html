@@ -676,13 +676,18 @@
                     </h6>
                     
                     <div class="mb-3">
-                        <label class="block text-slate-300 text-sm mb-1">Posição X (mm)</label>
+                        <label class="block text-slate-300 text-sm mb-1">
+                            Posição X (mm) 
+                            <span class="text-xs text-slate-400">- Controlado pelo alinhamento</span>
+                        </label>
                         <input 
                             type="number"
                             :value="selectedElement.x"
-                            @input="updateElementProperty('x', parseFloat($event.target.value))"
+                            readonly
+                            disabled
                             step="0.1"
-                            class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
+                            class="w-full bg-slate-600 border border-slate-600 rounded-lg py-2 px-3 text-slate-400 cursor-not-allowed"
+                            title="A posição X é controlada pelo alinhamento (Esquerda/Centro/Direita)"
                         />
                     </div>
                     
@@ -843,6 +848,22 @@
                     :style="`width: ${mmToPx(canvas.width)}px; height: ${mmToPx(canvas.height)}px;`"
                     @click.self="deselectElement()"
                 >
+                    <!-- Linhas guia de alinhamento -->
+                    <div 
+                        class="guide-line guide-left"
+                        :style="`left: ${mmToPx(canvas.padding)}px; top: 0; bottom: 0; width: 1px; background: rgba(59, 130, 246, 0.3); position: absolute; pointer-events: none; z-index: 0;`"
+                    ></div>
+                    
+                    <div 
+                        class="guide-line guide-center"
+                        :style="`left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(59, 130, 246, 0.3); position: absolute; pointer-events: none; transform: translateX(-50%); z-index: 0;`"
+                    ></div>
+                    
+                    <div 
+                        class="guide-line guide-right"
+                        :style="`right: ${mmToPx(canvas.padding)}px; top: 0; bottom: 0; width: 1px; background: rgba(59, 130, 246, 0.3); position: absolute; pointer-events: none; z-index: 0;`"
+                    ></div>
+                    
                     <!-- Draggable Elements -->
                     <template x-for="element in elements" :key="element.id">
                         <div
@@ -1109,9 +1130,11 @@ function layoutEditor() {
             } else if (this.newElement.type === 'qrcode') {
                 element.value = '{qrcode_hash}';
                 element.size_mm = this.newElement.size_mm;
+                element.align = 'left'; // Default alignment for QR codes
             } else if (this.newElement.type === 'logo') {
                 element.value = 'LOGO';
                 element.size_mm = this.newElement.size_mm;
+                element.align = 'left'; // Default alignment for logos
             } else if (this.newElement.type === 'divider') {
                 element.direction = this.newElement.direction;
                 element.length_mm = this.newElement.length_mm;
@@ -1156,8 +1179,28 @@ function layoutEditor() {
             const element = this.elements.find(el => el.id === this.selectedElement.id);
             if (element) {
                 element[prop] = value;
-                this.selectedElement = element; // Trigger reactivity
+                
+                // Se alterou o alinhamento, atualizar também a posição X
+                if (prop === 'align') {
+                    const padding = this.canvas.padding || 0;
+                    if (value === 'left') {
+                        element.x = padding;
+                    } else if (value === 'center') {
+                        element.x = this.canvas.width / 2;
+                    } else if (value === 'right') {
+                        element.x = this.canvas.width - padding;
+                    }
+                }
+                
+                this.selectedElement = {...element}; // Trigger reactivity
                 this.saveState();
+                
+                // Re-setup interact for alignment changes
+                if (prop === 'align') {
+                    this.$nextTick(() => {
+                        this.setupInteract();
+                    });
+                }
             }
         },
         
@@ -1168,7 +1211,7 @@ function layoutEditor() {
             const element = this.elements.find(el => el.id === this.selectedElement.id);
             if (element) {
                 element[format] = !element[format];
-                this.selectedElement = element;
+                this.selectedElement = {...element}; // Trigger reactivity
                 this.saveState();
             }
         },
@@ -1182,33 +1225,61 @@ function layoutEditor() {
             
             const padding = this.canvas.padding || 0;
             
+            // Calcular X baseado no ponto de ancoragem
             if (alignment === 'left') {
                 element.x = padding;
+                element.align = 'left';
             } else if (alignment === 'center') {
                 element.x = this.canvas.width / 2;
+                element.align = 'center';
             } else if (alignment === 'right') {
                 element.x = this.canvas.width - padding;
+                element.align = 'right';
             }
             
-            this.selectedElement = element;
+            this.selectedElement = {...element};
             this.saveState();
+            
+            this.$nextTick(() => {
+                this.setupInteract();
+            });
         },
         
         // Get element style for rendering
         getElementStyle(element) {
             let style = `
-                left: ${this.mmToPx(element.x)}px;
                 top: ${this.mmToPx(element.y)}px;
                 z-index: ${element.z_index || 1};
+                position: absolute;
             `;
             
             if (element.type === 'text') {
+                const leftPx = this.mmToPx(element.x);
+                
+                // Aplicar transform baseado no alinhamento
+                if (element.align === 'left') {
+                    // Extremidade ESQUERDA do elemento na posição X
+                    style += `left: ${leftPx}px;`;
+                    style += `transform: translateX(0%);`;
+                } 
+                else if (element.align === 'center') {
+                    // CENTRO do elemento na posição X
+                    style += `left: ${leftPx}px;`;
+                    style += `transform: translateX(-50%);`;
+                } 
+                else if (element.align === 'right') {
+                    // Extremidade DIREITA do elemento na posição X
+                    style += `left: ${leftPx}px;`;
+                    style += `transform: translateX(-100%);`;
+                }
+                
                 style += `
                     font-size: ${element.size}px;
                     font-family: ${element.font};
-                    text-align: ${element.align};
+                    text-align: ${element.align || 'left'};
                     font-weight: ${element.bold ? 'bold' : 'normal'};
                     font-style: ${element.italic ? 'italic' : 'normal'};
+                    white-space: nowrap;
                 `;
                 
                 let decoration = '';
@@ -1216,12 +1287,22 @@ function layoutEditor() {
                 if (element.strikethrough) decoration += 'line-through ';
                 if (decoration) style += `text-decoration: ${decoration.trim()};`;
             } else if (element.type === 'qrcode' || element.type === 'logo') {
+                const leftPx = this.mmToPx(element.x);
                 const sizePx = this.mmToPx(element.size_mm);
-                style += `
-                    width: ${sizePx}px;
-                    height: ${sizePx}px;
-                `;
+                
+                // QRCode e Logo também podem usar ancoragem
+                if (element.align === 'center') {
+                    style += `left: ${leftPx}px; transform: translateX(-50%);`;
+                } else if (element.align === 'right') {
+                    style += `left: ${leftPx}px; transform: translateX(-100%);`;
+                } else {
+                    style += `left: ${leftPx}px;`;
+                }
+                
+                style += `width: ${sizePx}px; height: ${sizePx}px;`;
             } else if (element.type === 'divider') {
+                style += `left: ${this.mmToPx(element.x)}px;`;
+                // Manter comportamento atual para linhas
                 if (element.direction === 'horizontal') {
                     style += `
                         width: ${this.mmToPx(element.length_mm)}px;
@@ -1293,6 +1374,7 @@ function layoutEditor() {
                 interact(`#${element.id}`)
                     .draggable({
                         inertia: false,
+                        lockAxis: 'y',  // Só permite movimento vertical
                         modifiers: [
                             interact.modifiers.restrictRect({
                                 restriction: 'parent',
@@ -1306,14 +1388,16 @@ function layoutEditor() {
                             },
                             move: (event) => {
                                 const target = event.target;
-                                const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                                // Só atualizar Y, X sempre 0
                                 const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
                                 
-                                target.style.transform = `translate(${x}px, ${y}px)`;
-                                target.setAttribute('data-x', x);
+                                // Manter transform do alinhamento com espaço correto
+                                const alignTransform = this.getTransformForAlign(element.align || 'left');
+                                target.style.transform = `${alignTransform} translateY(${y}px)`;
+                                target.setAttribute('data-x', 0);
                                 target.setAttribute('data-y', y);
                                 
-                                this.dragTransform = { x, y };
+                                this.dragTransform = { x: 0, y };
                             },
                             end: (event) => {
                                 this.showConfirmPosition = true;
@@ -1339,15 +1423,16 @@ function layoutEditor() {
             const rect = domElement.getBoundingClientRect();
             const canvasRect = canvas.getBoundingClientRect();
             
-            // Calculate position in MM
-            const xPx = rect.left - canvasRect.left;
+            // Calcular apenas Y (X mantém do alinhamento)
             const yPx = rect.top - canvasRect.top;
             
-            element.x = Math.max(0, this.pxToMm(xPx));
+            // Atualizar APENAS Y no elemento usando método consistente
             element.y = Math.max(0, this.pxToMm(yPx));
+            // element.x NÃO é alterado - mantém do alinhamento
             
-            // Reset transform
-            domElement.style.transform = '';
+            // Reset transform mantendo o alinhamento
+            const transformAlign = this.getTransformForAlign(element.align || 'left');
+            domElement.style.transform = transformAlign;
             domElement.setAttribute('data-x', 0);
             domElement.setAttribute('data-y', 0);
             
@@ -1359,6 +1444,13 @@ function layoutEditor() {
             this.$nextTick(() => {
                 this.setupInteract();
             });
+        },
+        
+        // Helper function to get transform based on alignment
+        getTransformForAlign(align) {
+            if (align === 'center') return 'translateX(-50%)';
+            if (align === 'right') return 'translateX(-100%)';
+            return 'translateX(0%)';
         },
         
         // Save state for undo/redo

@@ -96,9 +96,28 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
                 except Exception:
                     font = ImageFont.load_default()
 
-            x = _mm_to_px(x_mm, dpi_effective) + margin_px
+            # Get alignment and calculate anchor-based position
+            align = el.get("align", "left")
+            x_base = _mm_to_px(x_mm, dpi_effective) + margin_px
             y = _mm_to_px(y_mm, dpi_effective) + margin_px
-            draw.text((x, y), text, fill='black', font=font)
+            
+            # Calculate text width for alignment
+            try:
+                bbox = draw.textbbox((0, 0), text, font=font)
+                text_width = bbox[2] - bbox[0]
+            except:
+                # Fallback for older Pillow versions
+                text_width = draw.textsize(text, font=font)[0]
+            
+            # Apply anchor-based positioning
+            if align == "center":
+                x = int(x_base - (text_width / 2))
+            elif align == "right":
+                x = int(x_base - text_width)
+            else:  # left or default
+                x = int(x_base)
+            
+            draw.text((x, int(y)), text, fill='black', font=font)
             
         elif etype == "qrcode":
 
@@ -114,9 +133,20 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
             qr = qrcode.make(qr_text)
             qr = qr.resize((size_px, size_px))
             
-            x = _mm_to_px(x_mm, dpi_effective) + margin_px
+            # Get alignment for QR codes (optional feature)
+            align = el.get("align", "left")
+            x_base = _mm_to_px(x_mm, dpi_effective) + margin_px
             y = _mm_to_px(y_mm, dpi_effective) + margin_px
-            img.paste(qr, (x, y))
+            
+            # Apply anchor-based positioning for QR codes
+            if align == "center":
+                x = int(x_base - (size_px / 2))
+            elif align == "right":
+                x = int(x_base - size_px)
+            else:  # left or default
+                x = int(x_base)
+            
+            img.paste(qr, (x, int(y)))
     
     return img
 
