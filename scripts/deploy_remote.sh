@@ -54,39 +54,4 @@ fi
 
 SSH
 
-echo "ok"
-#!/usr/bin/env bash
-set -euo pipefail
-
-MSG="${1:-Deploy: automatic deploy from script}"
-
-# Commit and push local changes
-git add -A
-if ! git diff --staged --quiet; then
-  git commit -m "$MSG" || git commit --allow-empty -m "$MSG"
-else
-  # no staged changes - still create an empty commit to mark deploy
-  git commit --allow-empty -m "$MSG" || true
-fi
-
-BRANCH=$(git rev-parse --abbrev-ref HEAD || echo "HEAD")
-
-echo "Pushing branch $BRANCH to origin..."
-git push origin "$BRANCH" || {
-  echo "git push failed" >&2
-}
-
-# Remote deploy
-SSH_TARGET="root@129.121.32.101"
-REMOTE_DIR="/srv/ticket_manager"
-# use port 22022 for SSH connections
-SSH_OPTS="-p 22022 -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10"
-
-echo "Attempting remote deploy to $SSH_TARGET:$REMOTE_DIR"
-ssh $SSH_OPTS "$SSH_TARGET" "set -euo pipefail; cd $REMOTE_DIR || (echo 'remote dir missing' && exit 1); git pull origin $BRANCH || true; docker compose pull --quiet || true; docker compose up -d --build || true; if [ -x ./start.sh ]; then ./start.sh || true; fi"
-
-if [ $? -eq 0 ]; then
-  echo "Remote deploy command completed (may have warnings)."
-else
-  echo "Remote deploy encountered errors or SSH not available. See above output." >&2
-fi
+echo "Remote deploy command completed (may have warnings)."
