@@ -27,7 +27,9 @@
   </div>
 
   <div class="flex items-center gap-3">
-    <a href="/admin/eventos/{{ evento.id }}/edit" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg hover:bg-blue-400 transition">Editar</a>
+    <form action="/admin/eventos/{{ evento.id }}/delete" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.');" class="inline">
+      <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition">Excluir</button>
+    </form>
     <a href="/admin/eventos" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 rounded-lg">Voltar</a>
   </div>
 </header>
