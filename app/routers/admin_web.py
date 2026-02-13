@@ -15,7 +15,8 @@ from app.config.auth import (
     verify_admin_access, 
     verify_admin_credentials, 
     create_access_token,
-    verify_jwt_token
+    verify_jwt_token,
+    generate_token
 )
 from app.models.admin import Admin
 from PIL import Image
@@ -317,8 +318,8 @@ async def admin_evento_criar(
         "data_evento": datetime.fromisoformat(data_evento),
         "ativo": ativo == "on",
         "data_criacao": datetime.now(timezone.utc),
-        "token_bilheteria": base64.b64encode(f"bilheteria_{nome}_{datetime.now(timezone.utc).isoformat()}".encode()).decode()[:32],
-        "token_portaria": base64.b64encode(f"portaria_{nome}_{datetime.now(timezone.utc).isoformat()}".encode()).decode()[:32],
+        "token_bilheteria": generate_token(7),
+        "token_portaria": generate_token(7),
         "layout_ingresso": {
             "canvas": {"width": 80, "height": 120, "unit": "mm"},
             "elements": []
@@ -516,7 +517,7 @@ async def admin_evento_planilhas_empresas_generate(request: Request, evento_id: 
 
     form = await request.form()
     descricao = form.get('descricao')
-    token = secrets.token_urlsafe(20)
+    token = generate_token(7)
     created_at = datetime.now(timezone.utc)
     link_doc = {"evento_id": str(object_id), "token": token, "descricao": descricao, "created_at": created_at}
     await db.planilha_upload_links.insert_one(link_doc)
@@ -695,7 +696,7 @@ async def admin_evento_planilhas_inscricoes(request: Request, evento_id: str):
 
     updates = {"aceita_inscricoes": aceita}
     if regenerate or (aceita and not evento.get("token_inscricao")):
-        token = secrets.token_urlsafe(24)
+        token = generate_token(7)
         updates["token_inscricao"] = token
 
     await db.eventos.update_one({"_id": object_id}, {"$set": updates})
