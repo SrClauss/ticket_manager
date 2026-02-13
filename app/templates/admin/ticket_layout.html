@@ -4,28 +4,22 @@
 
 {% block extra_css %}
 <style>
-    /* Layout Grid - Properties on LEFT, Canvas on RIGHT */
+    /* Layout Grid - 3 columns: LEFT sidebar, CENTER canvas, RIGHT empty */
     .layout-editor {
         display: grid;
-        /* Properties panel moved to the RIGHT of the canvas */
-        grid-template-columns: 1fr 360px;
+        /* Left sidebar (360px), center canvas (1fr) */
+        grid-template-columns: 360px 1fr;
         gap: 1rem;
         margin-top: 1rem;
     }
     
-    /* Sidebar - Now used for properties */
+    /* Unified left sidebar - toggles between controls and properties */
     .sidebar {
         background: rgba(30, 41, 59, 0.8);
         border-radius: 12px;
         padding: 1.5rem;
         max-height: calc(100vh - 200px);
         overflow-y: auto;
-        /* force sidebar into second grid column (right) regardless of DOM order */
-        grid-column: 2;
-    }
-
-    /* Left controls container (Adicionar Elemento, Lista de elementos, Config canvas) */
-    .left-controls {
         grid-column: 1;
     }
     
@@ -42,7 +36,7 @@
         margin: 0;
     }
     
-    /* Canvas Area */
+    /* Canvas Area - center column */
     .canvas-area {
         background: rgba(30, 41, 59, 0.8);
         border-radius: 12px;
@@ -50,8 +44,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        /* ensure canvas occupies first grid column */
-        grid-column: 1;
+        grid-column: 2;
     }
     
     /* Canvas Container with rulers */
@@ -157,7 +150,7 @@
     }
     
     .preview-image {
-        max-width: 100%;
+        max-width: 300px;
         height: auto;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
         border-radius: 8px;
@@ -373,9 +366,12 @@
         <p class="text-slate-400">Configure o layout do ingresso: adicione elementos, posicione e visualize em tempo real</p>
     </div>
     
-    <!-- Main Layout Grid -->
+    <!-- Main Layout Grid: LEFT sidebar | CENTER canvas -->
     <div class="layout-editor">
-        <div class="left-controls">
+        <!-- LEFT SIDEBAR: toggles between controls and properties -->
+        <div class="sidebar">
+            <!-- CONTROLS: shown when NO element selected -->
+            <div x-show="!selectedElement">
             
             <!-- Canvas Configuration (collapsible) -->
             <div class="mb-4">
@@ -547,75 +543,10 @@
                     </div>
                 </template>
             </div>
-        </div>
-        
-        <!-- CANVAS AREA -->
-        <div class="canvas-area">
-            <h5 class="text-slate-100 mb-4">Canvas do Ingresso</h5>
+            </div><!-- end controls section -->
             
-            <div class="canvas-wrapper">
-                <!-- Rulers -->
-                <div class="ruler ruler-horizontal">
-                    <template x-for="i in Math.ceil(canvas.width / 10)" :key="i">
-                        <span class="ruler-mark" :style="`width: ${mmToPx(10)}px; padding-left: 2px;`" x-text="`${i * 10}`"></span>
-                    </template>
-                </div>
-                
-                <div class="ruler ruler-vertical">
-                    <template x-for="i in Math.ceil(canvas.height / 10)" :key="i">
-                        <span class="ruler-mark" :style="`height: ${mmToPx(10)}px; padding-top: 2px;`" x-text="`${i * 10}`"></span>
-                    </template>
-                </div>
-                
-                <!-- Ticket Canvas -->
-                <div 
-                    id="ticketCanvas"
-                    class="ticket-canvas"
-                    :style="`width: ${mmToPx(canvas.width)}px; height: ${mmToPx(canvas.height)}px;`"
-                    @click.self="deselectElement()"
-                >
-                    <!-- Linhas guia de alinhamento -->
-                    <div 
-                        class="guide-line guide-left"
-                        :style="`left: ${mmToPx(canvas.padding)}px; top: 0; bottom: 0; width: 1px; background: rgba(59, 130, 246, 0.3); position: absolute; pointer-events: none; z-index: 0;`"
-                    ></div>
-                    
-                    <div 
-                        class="guide-line guide-center"
-                        :style="`left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(59, 130, 246, 0.3); position: absolute; pointer-events: none; transform: translateX(-50%); z-index: 0;`"
-                    ></div>
-                    
-                    <div 
-                        class="guide-line guide-right"
-                        :style="`right: ${mmToPx(canvas.padding)}px; top: 0; bottom: 0; width: 1px; background: rgba(59, 130, 246, 0.3); position: absolute; pointer-events: none; z-index: 0;`"
-                    ></div>
-                    
-                    <!-- Draggable Elements -->
-                    <template x-for="element in elements" :key="element.id">
-                        <div
-                            :id="element.id"
-                            class="draggable-element"
-                            :class="{ 
-                                'selected': selectedElement?.id === element.id,
-                                [`element-${element.type}`]: true
-                            }"
-                            :style="getElementStyle(element)"
-                            @click.stop="selectElement(element.id)"
-                            x-text="getElementDisplay(element)"
-                        ></div>
-                    </template>
-                </div>
-            </div>
-            
-            <div class="mt-3 text-slate-400 text-sm">
-                <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">info</span>
-                Arraste os elementos para posicioná-los. Clique para selecionar e editar propriedades.
-            </div>
-        </div>
-        <!-- RIGHT SIDEBAR - PROPERTIES (moved here) -->
-        <div class="sidebar">
-            <!-- Properties Panel (when element selected) -->
-            <template x-if="selectedElement">
+            <!-- PROPERTIES: shown when element IS selected -->
+            <div x-show="selectedElement">
                 <div class="mb-4 p-3 bg-blue-900/30 rounded-lg border-2 border-blue-500">
                     <h5 class="text-slate-100 font-semibold mb-3 flex items-center gap-2">
                         <span class="material-symbols-outlined">tune</span>
@@ -665,15 +596,13 @@
                             <div class="mb-3">
                                 <label class="block text-slate-300 text-sm mb-2">Tags Disponíveis</label>
                                 <div class="flex flex-wrap gap-1">
-                                    <span class="template-tag" @click="insertTagToSelected('{NOME}')">{NOME}</span>
-                                    <span class="template-tag" @click="insertTagToSelected('{CPF}')">{CPF}</span>
-                                    <span class="template-tag" @click="insertTagToSelected('{EMAIL}')">{EMAIL}</span>
-                                    <span class="template-tag" @click="insertTagToSelected('{TIPO_INGRESSO}')">{TIPO_INGRESSO}</span>
-                                    <span class="template-tag" @click="insertTagToSelected('{EVENTO_NOME}')">{EVENTO_NOME}</span>
-                                    <span class="template-tag" @click="insertTagToSelected('{DATA_EVENTO}')">{DATA_EVENTO}</span>
-                                    <span class="template-tag" @click="insertTagToSelected('{DATA}')">{DATA}</span>
-                                    <span class="template-tag" @click="insertTagToSelected('{HORARIO}')">{HORARIO}</span>
-                                    <span class="template-tag" @click="insertTagToSelected('{DATA_HORA}')">{DATA_HORA}</span>
+                                    <span class="template-tag" @click="insertTagToSelected('{NOME}')">NOME</span>
+                                    <span class="template-tag" @click="insertTagToSelected('{CPF}')">CPF</span>
+                                    <span class="template-tag" @click="insertTagToSelected('{EMAIL}')">EMAIL</span>
+                                    <span class="template-tag" @click="insertTagToSelected('{TIPO_INGRESSO}')">TIPO</span>
+                                    <span class="template-tag" @click="insertTagToSelected('{EVENTO_NOME}')">EVENTO</span>
+                                    <span class="template-tag" @click="insertTagToSelected('{DATA}')">DATA</span>
+                                    <span class="template-tag" @click="insertTagToSelected('{HORARIO}')">HORÁRIO</span>
                                 </div>
                             </div>
                             
@@ -792,12 +721,74 @@
                         @click="deselectElement()"
                         class="w-full mt-3 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg"
                     >
-                        Fechar Propriedades
+                        Voltar
                     </button>
                 </div>
-            </template>
-
-            <hr x-show="selectedElement" class="border-slate-700 my-4">
+            </div><!-- end properties section -->
+        </div>
+        
+        <!-- CENTER CANVAS AREA -->
+        <div class="canvas-area">
+            <h5 class="text-slate-100 mb-4">Canvas do Ingresso</h5>
+            
+            <div class="canvas-wrapper">
+                <!-- Rulers -->
+                <div class="ruler ruler-horizontal">
+                    <template x-for="i in Math.ceil(canvas.width / 10)" :key="i">
+                        <span class="ruler-mark" :style="`width: ${mmToPx(10)}px; padding-left: 2px;`" x-text="`${i * 10}`"></span>
+                    </template>
+                </div>
+                
+                <div class="ruler ruler-vertical">
+                    <template x-for="i in Math.ceil(canvas.height / 10)" :key="i">
+                        <span class="ruler-mark" :style="`height: ${mmToPx(10)}px; padding-top: 2px;`" x-text="`${i * 10}`"></span>
+                    </template>
+                </div>
+                
+                <!-- Ticket Canvas -->
+                <div 
+                    id="ticketCanvas"
+                    class="ticket-canvas"
+                    :style="`width: ${mmToPx(canvas.width)}px; height: ${mmToPx(canvas.height)}px;`"
+                    @click.self="deselectElement()"
+                >
+                    <!-- Linhas guia de alinhamento -->
+                    <div 
+                        class="guide-line guide-left"
+                        :style="`left: ${mmToPx(canvas.padding)}px; top: 0; bottom: 0; width: 1px; background: rgba(59, 130, 246, 0.3); position: absolute; pointer-events: none; z-index: 0;`"
+                    ></div>
+                    
+                    <div 
+                        class="guide-line guide-center"
+                        :style="`left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(59, 130, 246, 0.3); position: absolute; pointer-events: none; transform: translateX(-50%); z-index: 0;`"
+                    ></div>
+                    
+                    <div 
+                        class="guide-line guide-right"
+                        :style="`right: ${mmToPx(canvas.padding)}px; top: 0; bottom: 0; width: 1px; background: rgba(59, 130, 246, 0.3); position: absolute; pointer-events: none; z-index: 0;`"
+                    ></div>
+                    
+                    <!-- Draggable Elements -->
+                    <template x-for="element in elements" :key="element.id">
+                        <div
+                            :id="element.id"
+                            class="draggable-element"
+                            :class="{ 
+                                'selected': selectedElement?.id === element.id,
+                                [`element-${element.type}`]: true
+                            }"
+                            :style="getElementStyle(element)"
+                            @click.stop="selectElement(element.id)"
+                            x-text="getElementDisplay(element)"
+                        ></div>
+                    </template>
+                </div>
+            </div>
+            
+            <div class="mt-3 text-slate-400 text-sm">
+                <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">info</span>
+                Arraste os elementos para posicioná-los. Clique para selecionar e editar propriedades.
+            </div>
         </div>
     </div>
     
@@ -1035,7 +1026,7 @@ function layoutEditor() {
             
             // Type-specific properties with default centralized configuration
             if (this.newElement.type === 'text') {
-                element.value = this.newElement.value && this.newElement.value.trim().length > 0 ? this.newElement.value : 'Texto';
+                element.value = 'Texto';
                 element.size = 12;
                 element.font = 'Arial';
                 element.align = 'left';
@@ -1044,11 +1035,11 @@ function layoutEditor() {
                 element.underline = false;
                 element.strikethrough = false;
             } else if (this.newElement.type === 'qrcode') {
-                element.value = this.newElement.value && this.newElement.value.trim().length > 0 ? this.newElement.value : '{qrcode_hash}';
+                element.value = '{qrcode_hash}';
                 element.size_mm = 30;
                 element.align = 'left';
             } else if (this.newElement.type === 'logo') {
-                element.value = this.newElement.value && this.newElement.value.trim().length > 0 ? this.newElement.value : 'LOGO';
+                element.value = 'LOGO';
                 element.size_mm = 30;
                 element.align = 'left';
             } else if (this.newElement.type === 'divider') {
@@ -1069,9 +1060,6 @@ function layoutEditor() {
             this.$nextTick(() => {
                 this.setupInteract();
             });
-
-            // Reset the new element form so it's ready for the next add
-            this.resetNewElementForm();
         },
         
         // Reset new element form to defaults
