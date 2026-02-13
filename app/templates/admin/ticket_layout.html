@@ -424,6 +424,9 @@
                                     <span class="template-tag" @click="insertTagToSelected('{TIPO_INGRESSO}')">{TIPO_INGRESSO}</span>
                                     <span class="template-tag" @click="insertTagToSelected('{EVENTO_NOME}')">{EVENTO_NOME}</span>
                                     <span class="template-tag" @click="insertTagToSelected('{DATA_EVENTO}')">{DATA_EVENTO}</span>
+                                    <span class="template-tag" @click="insertTagToSelected('{DATA}')">{DATA}</span>
+                                    <span class="template-tag" @click="insertTagToSelected('{HORARIO}')">{HORARIO}</span>
+                                    <span class="template-tag" @click="insertTagToSelected('{DATA_HORA}')">{DATA_HORA}</span>
                                 </div>
                             </div>
                             
@@ -1116,7 +1119,8 @@ function layoutEditor() {
             
             const element = this.elements.find(el => el.id === this.selectedElement.id);
             if (element) {
-                element.value = (element.value || '') + tag;
+                // Substitui o conteúdo pelo token selecionado (comportamento solicitado)
+                element.value = tag;
                 this.selectedElement = {...element}; // Trigger reactivity
                 this.saveState();
             }
@@ -1279,7 +1283,8 @@ function layoutEditor() {
         // Insert tag into text input
         insertTag(tag) {
             if (this.newElement.type === 'text') {
-                this.newElement.value += tag;
+                // Ao adicionar tag ao criar novo elemento, substituir o texto pelo token
+                this.newElement.value = tag;
             }
         },
         
