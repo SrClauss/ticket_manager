@@ -7,7 +7,8 @@
     /* Layout Grid - Properties on LEFT, Canvas on RIGHT */
     .layout-editor {
         display: grid;
-        grid-template-columns: 360px 1fr;
+        /* Properties panel moved to the RIGHT of the canvas */
+        grid-template-columns: 1fr 360px;
         gap: 1rem;
         margin-top: 1rem;
     }
@@ -19,6 +20,8 @@
         padding: 1.5rem;
         max-height: calc(100vh - 200px);
         overflow-y: auto;
+        /* force sidebar into second grid column (right) regardless of DOM order */
+        grid-column: 2;
     }
     
     /* Collapsible section */
@@ -42,6 +45,8 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        /* ensure canvas occupies first grid column */
+        grid-column: 1;
     }
     
     /* Canvas Container with rulers */
@@ -662,6 +667,25 @@
                     <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">info</span>
                     O elemento será adicionado com configurações padrão. Use o painel de Propriedades para personalizar.
                 </p>
+
+                <div class="mb-3" x-show="newElement.type === 'text'">
+                    <label class="block text-slate-300 text-sm mb-2">Tags Disponíveis (clique para pré-preencher)</label>
+                    <div class="flex flex-wrap gap-1">
+                        <span class="template-tag" @click="insertTag('{NOME}')">{NOME}</span>
+                        <span class="template-tag" @click="insertTag('{CPF}')">{CPF}</span>
+                        <span class="template-tag" @click="insertTag('{EMAIL}')">{EMAIL}</span>
+                        <span class="template-tag" @click="insertTag('{TIPO_INGRESSO}')">{TIPO_INGRESSO}</span>
+                        <span class="template-tag" @click="insertTag('{EVENTO_NOME}')">{EVENTO_NOME}</span>
+                        <span class="template-tag" @click="insertTag('{DATA_EVENTO}')">{DATA_EVENTO}</span>
+                        <span class="template-tag" @click="insertTag('{DATA}')">{DATA}</span>
+                        <span class="template-tag" @click="insertTag('{HORARIO}')">{HORARIO}</span>
+                        <span class="template-tag" @click="insertTag('{DATA_HORA}')">{DATA_HORA}</span>
+                    </div>
+                    <div class="mt-2">
+                        <label class="block text-slate-300 text-sm mb-1">Conteúdo inicial</label>
+                        <input type="text" x-model="newElement.value" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100" />
+                    </div>
+                </div>
                 
                 <button 
                     @click="addElement()"
