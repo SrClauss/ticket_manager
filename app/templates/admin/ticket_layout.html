@@ -1107,8 +1107,9 @@ function layoutEditor() {
         updateElementProperty(prop, value) {
             if (!this.selectedElement) return;
             
-            const element = this.elements.find(el => el.id === this.selectedElement.id);
-            if (element) {
+            const index = this.elements.findIndex(el => el.id === this.selectedElement.id);
+            if (index !== -1) {
+                const element = this.elements[index];
                 element[prop] = value;
                 
                 // Se alterou o alinhamento, atualizar também a posição X
@@ -1123,6 +1124,8 @@ function layoutEditor() {
                     }
                 }
                 
+                // Force reactivity by replacing the element in the array
+                this.elements[index] = {...element};
                 this.selectedElement = {...element}; // Trigger reactivity
                 this.saveState();
                 
