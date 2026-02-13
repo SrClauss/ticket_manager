@@ -10,6 +10,7 @@ from bson import ObjectId
 from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, MagicMock
 from types import SimpleNamespace
+from app.utils.tokens import generate_token
 
 
 @pytest.fixture(scope="session")
@@ -214,8 +215,8 @@ def sample_evento():
         "descricao": "Conferência anual de tecnologia",
         "data_evento": datetime(2024, 6, 15, 9, 0, 0, tzinfo=timezone.utc),
         "data_criacao": datetime.now(timezone.utc),
-        "token_bilheteria": "bilheteria_token_123",
-        "token_portaria": "portaria_token_456",
+        "token_bilheteria": generate_token(7),
+        "token_portaria": generate_token(7),
         "logo_url": None,
         "layout_ingresso": {
             "canvas": {"width": 80, "unit": "mm"},
