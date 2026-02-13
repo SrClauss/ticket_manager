@@ -1,11 +1,11 @@
 import secrets
 import string
 
-# Base62 alphabet (letters + digits)
-ALPHABET = string.ascii_letters + string.digits
+# Base36 alphabet (uppercase letters + digits) for cleaner tokens
+ALPHABET = string.ascii_uppercase + string.digits
 
 def generate_token(length: int = 7) -> str:
-    """Gera um token curto seguro usando letras e dígitos.
+    """Gera um token curto seguro usando letras maiúsculas e dígitos.
 
     Observação: tokens de 7 caracteres têm entropia limitada; use somente
     quando o escopo for controlado (apps privados, expiração, rate-limit).
