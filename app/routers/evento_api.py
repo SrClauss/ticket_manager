@@ -122,7 +122,7 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
         elif etype == "qrcode":
 
             qr_text = str(el.get("value", ""))
-            size_mm = float(el.get("size", 30))
+            size_mm = float(el.get("size_mm", 30))
             # reduce QR size by margin on both sides
             try:
                 adj_size_mm = max(1, size_mm - (el_margin_mm * 2))
@@ -147,6 +147,59 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
                 x = int(x_base)
             
             img.paste(qr, (x, int(y)))
+            
+        elif etype == "logo":
+            # Render logo placeholder or image
+            size_mm = float(el.get("size_mm", 30))
+            try:
+                adj_size_mm = max(1, size_mm - (el_margin_mm * 2))
+            except Exception:
+                adj_size_mm = size_mm
+            size_px = _mm_to_px(adj_size_mm, dpi_effective)
+            
+            # Get alignment
+            align = el.get("align", "left")
+            x_base = _mm_to_px(x_mm, dpi_effective) + margin_px
+            y = _mm_to_px(y_mm, dpi_effective) + margin_px
+            
+            # Apply anchor-based positioning
+            if align == "center":
+                x = int(x_base - (size_px / 2))
+            elif align == "right":
+                x = int(x_base - size_px)
+            else:  # left or default
+                x = int(x_base)
+            
+            # For now, render a gray placeholder box with "LOGO" text
+            logo_img = Image.new('RGB', (size_px, size_px), color='#e2e8f0')
+            logo_draw = ImageDraw.Draw(logo_img)
+            
+            # Draw border
+            logo_draw.rectangle([0, 0, size_px-1, size_px-1], outline='#94a3b8', width=2)
+            
+            # Draw "LOGO" text in center
+            logo_text = str(el.get("value", "LOGO"))
+            font_size = max(8, int(size_px * 0.15))
+            try:
+                logo_font = ImageFont.truetype("DejaVuSans.ttf", font_size)
+            except Exception:
+                try:
+                    logo_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
+                except Exception:
+                    logo_font = ImageFont.load_default()
+            
+            try:
+                bbox = logo_draw.textbbox((0, 0), logo_text, font=logo_font)
+                text_width = bbox[2] - bbox[0]
+                text_height = bbox[3] - bbox[1]
+            except:
+                text_width, text_height = logo_draw.textsize(logo_text, font=logo_font)
+            
+            text_x = (size_px - text_width) // 2
+            text_y = (size_px - text_height) // 2
+            logo_draw.text((text_x, text_y), logo_text, fill='#64748b', font=logo_font)
+            
+            img.paste(logo_img, (x, int(y)))
     
     return img
 
