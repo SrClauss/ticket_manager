@@ -32,9 +32,16 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin_key_change_in_production")
 security = HTTPBearer(auto_error=False)
 
 
-def generate_token() -> str:
-    """Gera um token único para acesso"""
-    return secrets.token_urlsafe(32)
+# Use token generator util for shorter tokens by default (7 chars)
+from app.utils.tokens import generate_token as _generate_short_token
+
+
+def generate_token(length: int = 7) -> str:
+    """Gera um token curto (por padrão 7 caracteres).
+
+    Atenção: tokens curtos têm entropia limitada. Use apenas em contextos controlados.
+    """
+    return _generate_short_token(length)
 
 
 def generate_qrcode_hash() -> str:
