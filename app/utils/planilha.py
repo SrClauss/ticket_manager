@@ -6,7 +6,7 @@ from openpyxl import load_workbook
 from email_validator import validate_email, EmailNotValidError
 from bson import ObjectId
 
-from app.utils.validations import validate_cpf
+from app.utils.validations import validate_cpf, normalize_participante_data
 
 
 async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db, import_id: str = None, validate_only: bool = False) -> Dict[str, Any]:
@@ -172,13 +172,20 @@ async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db,
                 participante_id = str(existing_part.get('_id'))
                 reused_participants += 1
             else:
+                # Extrair telefone e empresa do row, podem vir como Long do Excel
+                telefone_raw = row.get('Telefone', '') or row.get('telefone', '')
+                empresa_raw = row.get('Empresa', '') or row.get('empresa', '')
+                
                 part_doc = {
                     'nome': nome or '',
                     'email': email or '',
                     'cpf': cpf_digits or '',
-                    'telefone': row.get('Telefone', '') or row.get('telefone', '') or '' ,
-                    'empresa': row.get('Empresa', '') or ''
+                    'telefone': telefone_raw,
+                    'empresa': empresa_raw
                 }
+                # Normalizar dados antes de inserir (converte Long->str, ''->None, etc)
+                part_doc = normalize_participante_data(part_doc)
+                
                 res = await db.participantes.insert_one(part_doc)
                 participante_id = str(res.inserted_id)
                 created_participants += 1
@@ -215,6 +222,9 @@ async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db,
             except Exception:
                 # Se falhar (ex: coleção não existe), continua sem _id
                 pass
+
+            # Normalizar ingresso_doc antes de embedar (converter ObjectId->str, etc)
+            ingresso_doc = normalize_participante_data(ingresso_doc)
 
             # Em seguida push no participante (ingressos embutidos)
             try:

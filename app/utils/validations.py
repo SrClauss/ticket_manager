@@ -2,7 +2,63 @@ import re
 import unicodedata
 from fastapi import HTTPException, status
 from bson import ObjectId
+from bson.int64 import Int64
 from datetime import datetime, timezone
+from typing import Dict, Any, Optional
+
+
+def normalize_participante_data(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Normaliza dados de participante para garantir consistência entre upload de planilha e cadastro direto.
+    
+    - Converte campos opcionais vazios ('') para None
+    - Converte tipos BSON (Long, Int64) para string
+    - Converte ObjectId para string em campos _id e ingressos
+    - Remove espaços em branco extras de strings
+    
+    Args:
+        data: Dict com dados do participante
+        
+    Returns:
+        Dict normalizado
+    """
+    normalized = {}
+    
+    for key, value in data.items():
+        # Converter ObjectId para string
+        if isinstance(value, ObjectId):
+            normalized[key] = str(value)
+        # Converter BSON Long/Int64 para string (telefone vindo do Excel)
+        elif type(value).__name__ in ('Int64', 'Long') or isinstance(value, Int64):
+            normalized[key] = str(value)
+        # Converter strings vazias para None em campos opcionais
+        elif isinstance(value, str):
+            stripped = value.strip()
+            if key in ('telefone', 'empresa', 'nacionalidade') and stripped == '':
+                normalized[key] = None
+            else:
+                normalized[key] = stripped if stripped else value
+        # Processar arrays de ingressos recursivamente
+        elif isinstance(value, list) and key == 'ingressos':
+            normalized[key] = [
+                normalize_participante_data(item) if isinstance(item, dict) else
+                str(item) if isinstance(item, ObjectId) else
+                str(item) if type(item).__name__ in ('Int64', 'Long') or isinstance(item, Int64) else
+                item
+                for item in value
+            ]
+        # Processar dicts aninhados (como layout_ingresso)
+        elif isinstance(value, dict):
+            normalized[key] = normalize_participante_data(value)
+        else:
+            normalized[key] = value
+    
+    # Garantir que campos opcionais sejam None se não existirem
+    for optional_field in ('telefone', 'empresa', 'nacionalidade'):
+        if optional_field not in normalized:
+            normalized[optional_field] = None
+    
+    return normalized
 
 
 def validate_cpf(cpf: str) -> str:

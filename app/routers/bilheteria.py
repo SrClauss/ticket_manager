@@ -13,7 +13,7 @@ def get_database():
     return database.get_database()
 import logging
 from app.config.auth import verify_token_bilheteria, generate_qrcode_hash
-from app.utils.validations import validate_cpf, format_datetime_display
+from app.utils.validations import validate_cpf, format_datetime_display, normalize_participante_data
 from pydantic import BaseModel, ValidationError
 
 logger = logging.getLogger(__name__)
@@ -212,6 +212,9 @@ async def criar_participante(
         except Exception:
             # Let validation errors propagate via model validators where appropriate
             pass
+    
+    # Normalizar dados antes de inserir (converte ''->None, etc)
+    participante_dict = normalize_participante_data(participante_dict)
 
     # Verifica se já existe participante com este email
     existing = await db.participantes.find_one({"email": participante.email})
@@ -273,6 +276,9 @@ async def criar_participante(
                         ingresso_dict["_id"] = res.inserted_id
                     except Exception:
                         pass
+                    
+                    # Normalizar ingresso antes de embedar (converter ObjectId->str)
+                    ingresso_dict = normalize_participante_data(ingresso_dict)
 
                     # também armazena embutido no participante
                     try:
@@ -366,6 +372,9 @@ async def emitir_ingresso(
         ingresso_dict["_id"] = res.inserted_id
     except Exception:
         pass
+    
+    # Normalizar ingresso antes de embedar (converter ObjectId->str)
+    ingresso_dict = normalize_participante_data(ingresso_dict)
 
     # Também armazena o ingresso embutido dentro do participante (atomic push)
     try:
