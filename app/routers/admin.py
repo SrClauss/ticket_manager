@@ -888,6 +888,32 @@ async def gerar_planilha_modelo(evento_id: str):
         cell.alignment = center
         ws.column_dimensions[get_column_letter(col_idx)].width = 25
 
+    # Adiciona 100 linhas vazias com fórmula VLOOKUP pré-configurada na coluna "Tipo Ingresso Descricao"
+    # Isso permite que ao digitar o número do tipo, a descrição apareça automaticamente
+    header_map = {ws.cell(row=1, column=i).value: i for i in range(1, len(headers)+1)}
+    
+    if 'Tipo Ingresso Descricao' in header_map and 'Tipo Ingresso' in header_map:
+        tipo_col = get_column_letter(header_map['Tipo Ingresso'])
+        desc_col = header_map['Tipo Ingresso Descricao']
+        
+        # Adiciona 100 linhas com a fórmula VLOOKUP
+        for row_num in range(2, 102):  # Linhas 2 a 101
+            # Fórmula que busca na aba Legenda: se não encontrar, retorna vazio
+            formula = f'=IFERROR(VLOOKUP({tipo_col}{row_num},Legenda!$A:$B,2,FALSE),"")'
+            ws.cell(row=row_num, column=desc_col).value = formula
+            
+            # Adiciona borda cinza clara nas células vazias para facilitar visualização
+            for col_idx in range(1, len(headers)+1):
+                cell = ws.cell(row=row_num, column=col_idx)
+                from openpyxl.styles import Border, Side
+                thin_border = Border(
+                    left=Side(style='thin', color='E0E0E0'),
+                    right=Side(style='thin', color='E0E0E0'),
+                    top=Side(style='thin', color='E0E0E0'),
+                    bottom=Side(style='thin', color='E0E0E0')
+                )
+                cell.border = thin_border
+
     # Aba legenda com mapping numero -> descricao dos tipos de ingresso
     legend = wb.create_sheet("Legenda")
     legend.append(["Numero", "Descricao"]) 
@@ -914,13 +940,23 @@ async def gerar_planilha_modelo(evento_id: str):
     instr = wb.create_sheet("Instrucao")
     instr.append(["INSTRUÇÕES PARA PREENCHIMENTO DA PLANILHA"])
     instr.append([])
-    instr.append(["1. Preencha TODAS as colunas obrigatórias da aba 'Modelo'"])
-    instr.append(["2. A coluna 'Tipo Ingresso' deve conter o NÚMERO do tipo (veja aba 'Legenda')"])
-    instr.append(["3. A coluna 'Tipo Ingresso Descricao' será preenchida automaticamente"])
-    instr.append(["4. CPF deve estar no formato: 123.456.789-00"])
-    instr.append(["5. Após preencher, salve e faça upload na página de Configurações"])
+    instr.append(["COMO PREENCHER:"])
+    instr.append(["1. Vá para a aba 'Modelo' e preencha os dados"])
+    instr.append(["2. Preencha TODAS as colunas obrigatórias"])
+    instr.append(["3. Na coluna 'Tipo Ingresso', digite o NÚMERO do tipo (ex: 1, 2, 3...)"])
+    instr.append(["4. A coluna 'Tipo Ingresso Descricao' vai preencher AUTOMATICAMENTE!"])
+    instr.append(["5. CPF deve estar no formato: 123.456.789-00"])
     instr.append([])
-    instr.append(["Para ver os tipos de ingresso disponíveis, consulte a aba 'Legenda'"])
+    instr.append(["COMO SABER OS NÚMEROS DOS TIPOS:"])
+    instr.append(["• Consulte a aba 'Legenda' para ver todos os tipos disponíveis"])
+    instr.append(["• Cada tipo tem um número (1, 2, 3...) e sua descrição"])
+    instr.append([])
+    instr.append(["EXEMPLO:"])
+    instr.append(["• Se na Legenda o tipo 'VIP' é número 1"])
+    instr.append(["• Digite '1' na coluna 'Tipo Ingresso'"])
+    instr.append(["• Automaticamente aparecerá 'VIP' na coluna ao lado!"])
+    instr.append([])
+    instr.append(["Após preencher, salve e faça upload na página de Configurações"])
     
     # Ajusta largura das colunas de instrução
     instr.column_dimensions['A'].width = 80
