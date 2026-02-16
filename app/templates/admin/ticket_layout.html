@@ -575,6 +575,7 @@
                             type="number"
                             :value="selectedElement?.y || 0"
                             @input="updateElementProperty('y', parseFloat($event.target.value))"
+                            @blur="updatePreview()"
                             step="0.1"
                             class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100"
                         />
@@ -826,16 +827,6 @@
             <span x-text="previewLoading ? 'Carregando...' : 'Atualizar Preview'"></span>
         </button>
     </div>
-    
-    <!-- Confirm Position Button (shown when dragging) -->
-    <button 
-        x-show="showConfirmPosition"
-        @click="confirmPosition()"
-        class="confirm-position-btn px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-xl flex items-center gap-2"
-    >
-        <span class="material-symbols-outlined">check_circle</span>
-        Confirmar Posição
-    </button>
 
     <!-- Fixed Save Bar -->
     <div class="fixed-save-bar">
@@ -936,7 +927,6 @@ function layoutEditor() {
         showCanvasSettings: true,
         
         // Drag state
-        showConfirmPosition: false,
         draggedElementId: null,
         dragTransform: { x: 0, y: 0 },
         
@@ -1339,7 +1329,6 @@ function layoutEditor() {
                         listeners: {
                             start: (event) => {
                                 this.draggedElementId = element.id;
-                                this.showConfirmPosition = false;
                             },
                             move: (event) => {
                                 const target = event.target;
@@ -1355,7 +1344,8 @@ function layoutEditor() {
                                 this.dragTransform = { x: 0, y };
                             },
                             end: (event) => {
-                                this.showConfirmPosition = true;
+                                // Auto-confirmar posição ao soltar
+                                this.confirmPositionAfterDrag();
                             }
                         }
                     });
@@ -1365,8 +1355,8 @@ function layoutEditor() {
             });
         },
         
-        // Confirm position after drag
-        confirmPosition() {
+        // Confirm position after drag (called automatically on drag end)
+        confirmPositionAfterDrag() {
             if (!this.draggedElementId) return;
             
             const element = this.elements.find(el => el.id === this.draggedElementId);
@@ -1392,8 +1382,10 @@ function layoutEditor() {
             domElement.setAttribute('data-y', 0);
             
             this.draggedElementId = null;
-            this.showConfirmPosition = false;
             this.saveState();
+            
+            // Atualizar preview automaticamente
+            this.updatePreview();
             
             // Trigger re-render
             this.$nextTick(() => {
