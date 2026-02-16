@@ -3,6 +3,7 @@ from typing import List, Dict, Any
 from datetime import datetime, timezone
 from bson import ObjectId
 from bson.errors import InvalidId
+from bson.int64 import Int64
 from app.models.participante import Participante, ParticipanteCreate
 from app.models.ingresso_emitido import IngressoEmitido, IngressoEmitidoCreate
 import app.config.database as database
@@ -17,6 +18,32 @@ from pydantic import BaseModel, ValidationError
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+def normalize_bson_types(doc: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Normalize BSON types to Python native types for Pydantic compatibility.
+    Converts Int64/Long to string to prevent serialization failures.
+    """
+    if not doc:
+        return doc
+    
+    for key, value in doc.items():
+        if isinstance(value, Int64):
+            # Convert BSON Long/Int64 to string
+            doc[key] = str(value)
+        elif isinstance(value, dict):
+            # Recursively normalize nested documents
+            doc[key] = normalize_bson_types(value)
+        elif isinstance(value, list):
+            # Normalize items in arrays
+            doc[key] = [
+                normalize_bson_types(item) if isinstance(item, dict) else 
+                str(item) if isinstance(item, Int64) else item
+                for item in value
+            ]
+    
+    return doc
 
 
 class CompatResponse(dict):
@@ -180,12 +207,14 @@ async def criar_participante(
     if existing:
         # Retorna o participante existente
         existing["_id"] = str(existing["_id"])
+        existing = normalize_bson_types(existing)
         return Participante(**existing)
     
     result = await db.participantes.insert_one(participante_dict)
     
     created_participante = await db.participantes.find_one({"_id": result.inserted_id})
     created_participante["_id"] = str(created_participante["_id"])
+    created_participante = normalize_bson_types(created_participante)
 
     # Se veio um evento via token, tenta emitir ingresso padrão para o participante
     if evento_id:
@@ -443,6 +472,7 @@ async def get_participante(
         )
     
     participante["_id"] = str(participante["_id"])
+    participante = normalize_bson_types(participante)
     return Participante(**participante)
 
 
@@ -503,6 +533,8 @@ async def listar_participantes(
     async for participante in cursor:
         # Ensure _id is a string for the Pydantic model
         participante["_id"] = str(participante.get("_id"))
+        # Normalize BSON types (Long/Int64 -> str) to prevent serialization failures
+        participante = normalize_bson_types(participante)
         try:
             participantes.append(Participante(**participante))
         except ValidationError as e:
@@ -550,6 +582,7 @@ async def buscar_participantes(
     cursor = db.participantes.find(query).limit(20)
     async for participante in cursor:
         participante["_id"] = str(participante["_id"])
+        participante = normalize_bson_types(participante)
         participantes.append(Participante(**participante))
     
     return participantes
