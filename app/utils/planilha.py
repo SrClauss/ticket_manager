@@ -69,18 +69,10 @@ async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db,
             elif kn in ['email', 'e-mail']:
                 email = row[k]
             elif kn in ['cpf']:
-                # Excel pode interpretar CPF como número, causando problemas
-                # Normaliza para string e preenche com zeros à esquerda se necessário
+                # Excel pode interpretar CPF como número
                 raw_value = row[k]
                 if raw_value is not None:
-                    cpf_str = str(raw_value).strip()
-                    # Se não tem pontos/traços (apenas dígitos), é CPF como número
-                    if cpf_str.isdigit():
-                        # Garante 11 dígitos preenchendo com zeros à esquerda
-                        cpf_raw = cpf_str.zfill(11)
-                    else:
-                        # Tem formatação, mantém como está
-                        cpf_raw = cpf_str
+                    cpf_raw = str(raw_value).strip()
             elif kn in ['tipo ingresso', 'tipo_ingresso', 'tipo', 'tipoingresso']:
                 tipo_num = row[k]
         
