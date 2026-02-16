@@ -96,12 +96,14 @@ def _wrap_text(text: str, font: ImageFont.ImageFont, max_width_px: int, draw: Im
     return lines if lines else [text]
 
 
-def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Image:
+def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300, logo_path: Optional[str] = None, logo_blob: Optional[Dict[str, Any]] = None) -> Image.Image:
     """Render a layout (with already-embedded data) to an image.
     
     Args:
         layout: Layout dict with embedded data (no placeholders)
         dpi: Dots per inch for rendering
+        logo_path: Optional path to logo image file (relative to app/static/uploads/)
+        logo_blob: Optional logo blob dict with 'data' (base64), 'content_type', 'filename'
         
     Returns:
         PIL Image object
@@ -239,7 +241,7 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
             img.paste(qr, (x, int(y)))
             
         elif etype == "logo":
-            # Render logo placeholder or image
+            # Render logo image or placeholder
             size_mm = float(el.get("size_mm", 30))
             try:
                 adj_size_mm = max(1, size_mm - (el_margin_mm * 2))
@@ -260,34 +262,102 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
             else:  # left or default
                 x = int(x_base)
             
-            # For now, render a gray placeholder box with "LOGO" text
-            logo_img = Image.new('RGB', (size_px, size_px), color='#e2e8f0')
-            logo_draw = ImageDraw.Draw(logo_img)
+            # Try to load real logo image first
+            logo_img = None
             
-            # Draw border
-            logo_draw.rectangle([0, 0, size_px-1, size_px-1], outline='#94a3b8', width=2)
-            
-            # Draw "LOGO" text in center
-            logo_text = str(el.get("value", "LOGO"))
-            font_size = max(8, int(size_px * 0.15))
-            try:
-                logo_font = ImageFont.truetype("DejaVuSans.ttf", font_size)
-            except Exception:
+            # Priority 1: Try to load from blob (most reliable)
+            if logo_blob and isinstance(logo_blob, dict):
                 try:
-                    logo_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
+                    import base64
+                    from io import BytesIO
+                    logger.info("Attempting to load logo from blob (base64)")
+                    
+                    logo_data = base64.b64decode(logo_blob.get("data", ""))
+                    logger.info(f"Decoded logo blob, size: {len(logo_data)} bytes")
+                    
+                    logo_img = Image.open(BytesIO(logo_data)).convert('RGBA')
+                    logger.info(f"Logo image loaded from blob: {logo_img.size}, mode: {logo_img.mode}")
+                    
+                    # Resize maintaining aspect ratio
+                    logo_img.thumbnail((size_px, size_px), Image.Resampling.LANCZOS)
+                    # Create a white background image and paste logo centered
+                    bg = Image.new('RGB', (size_px, size_px), color='white')
+                    offset_x = (size_px - logo_img.width) // 2
+                    offset_y = (size_px - logo_img.height) // 2
+                    # Handle transparency by pasting RGBA onto RGB background
+                    if logo_img.mode == 'RGBA':
+                        bg.paste(logo_img, (offset_x, offset_y), logo_img)
+                    else:
+                        bg.paste(logo_img, (offset_x, offset_y))
+                    logo_img = bg
+                    logger.info("Logo loaded successfully from blob")
+                except Exception as e:
+                    logger.error(f"Failed to load logo from blob: {e}", exc_info=True)
+                    logo_img = None
+            
+            # Priority 2: Try to load from file path (fallback)
+            if logo_img is None and logo_path:
+                try:
+                    from pathlib import Path
+                    logo_file = Path("app/static/uploads") / logo_path
+                    logger.info(f"Attempting to load logo from file: {logo_file}")
+                    logger.info(f"Logo file exists: {logo_file.exists()}")
+                    logger.info(f"Absolute path: {logo_file.absolute()}")
+                    
+                    if logo_file.exists():
+                        logger.info(f"Loading logo image from {logo_file}")
+                        logo_img = Image.open(logo_file).convert('RGBA')
+                        # Resize maintaining aspect ratio
+                        logo_img.thumbnail((size_px, size_px), Image.Resampling.LANCZOS)
+                        # Create a white background image and paste logo centered
+                        bg = Image.new('RGB', (size_px, size_px), color='white')
+                        offset_x = (size_px - logo_img.width) // 2
+                        offset_y = (size_px - logo_img.height) // 2
+                        # Handle transparency by pasting RGBA onto RGB background
+                        if logo_img.mode == 'RGBA':
+                            bg.paste(logo_img, (offset_x, offset_y), logo_img)
+                        else:
+                            bg.paste(logo_img, (offset_x, offset_y))
+                        logo_img = bg
+                        logger.info("Logo loaded successfully from file")
+                    else:
+                        logger.warning(f"Logo file not found at: {logo_file}")
+                except Exception as e:
+                    logger.error(f"Failed to load logo from {logo_path}: {e}", exc_info=True)
+                    logo_img = None
+            
+            if logo_img is None and not logo_blob and not logo_path:
+                logger.info("No logo_path or logo_blob provided for rendering")
+            
+            # Fallback to placeholder if no logo available
+            if logo_img is None:
+                logo_img = Image.new('RGB', (size_px, size_px), color='#e2e8f0')
+                logo_draw = ImageDraw.Draw(logo_img)
+                
+                # Draw border
+                logo_draw.rectangle([0, 0, size_px-1, size_px-1], outline='#94a3b8', width=2)
+                
+                # Draw "LOGO" text in center
+                logo_text = str(el.get("value", "LOGO"))
+                font_size = max(8, int(size_px * 0.15))
+                try:
+                    logo_font = ImageFont.truetype("DejaVuSans.ttf", font_size)
                 except Exception:
-                    logo_font = ImageFont.load_default()
-            
-            try:
-                bbox = logo_draw.textbbox((0, 0), logo_text, font=logo_font)
-                text_width = bbox[2] - bbox[0]
-                text_height = bbox[3] - bbox[1]
-            except:
-                text_width, text_height = logo_draw.textsize(logo_text, font=logo_font)
-            
-            text_x = (size_px - text_width) // 2
-            text_y = (size_px - text_height) // 2
-            logo_draw.text((text_x, text_y), logo_text, fill='#64748b', font=logo_font)
+                    try:
+                        logo_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
+                    except Exception:
+                        logo_font = ImageFont.load_default()
+                
+                try:
+                    bbox = logo_draw.textbbox((0, 0), logo_text, font=logo_font)
+                    text_width = bbox[2] - bbox[0]
+                    text_height = bbox[3] - bbox[1]
+                except:
+                    text_width, text_height = logo_draw.textsize(logo_text, font=logo_font)
+                
+                text_x = (size_px - text_width) // 2
+                text_y = (size_px - text_height) // 2
+                logo_draw.text((text_x, text_y), logo_text, fill='#64748b', font=logo_font)
             
             img.paste(logo_img, (x, int(y)))
     
@@ -468,6 +538,11 @@ async def render_ingresso_jpg(evento_id: str, ingresso_id: str, dpi: int = 300, 
             detail="Ingresso não encontrado para este evento"
         )
     
+    # Get evento for logo_path
+    evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+    logo_path = evento.get("logo_path") if evento else None
+    logo_blob = evento.get("logo_blob") if evento else None
+    
     # Get or create embedded layout
     from_participante = participante is not None
     layout = await _get_or_create_embedded_layout(
@@ -475,7 +550,7 @@ async def render_ingresso_jpg(evento_id: str, ingresso_id: str, dpi: int = 300, 
     )
     
     # Render layout to image
-    img = _render_layout_to_image(layout, dpi)
+    img = _render_layout_to_image(layout, dpi, logo_path=logo_path, logo_blob=logo_blob)
     
     # Serialize to JPEG
     bio = BytesIO()
@@ -587,9 +662,15 @@ async def render_ingresso_from_payload(evento_id: str, ingresso_id: str, payload
                 "canvas": {"width": 80, "height": 120, "unit": "mm"}, 
                 "elements": []
             }
+    else:
+        # Get evento for logo_path
+        evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+    
+    logo_path = evento.get("logo_path") if evento else None
+    logo_blob = evento.get("logo_blob") if evento else None
     
     # Render layout to image
-    img = _render_layout_to_image(layout, dpi)
+    img = _render_layout_to_image(layout, dpi, logo_path=logo_path, logo_blob=logo_blob)
     
     # Serialize to JPEG
     bio = BytesIO()
@@ -641,11 +722,16 @@ async def render_ingresso_by_cpf(evento_id: str, payload: dict = None, dpi: int 
 
     ingresso = participante["ingressos"][0]
 
+    # Get evento for logo_path
+    evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+    logo_path = evento.get("logo_path") if evento else None
+    logo_blob = evento.get("logo_blob") if evento else None
+
     # Gera ou obtém layout embutido
     layout = await _get_or_create_embedded_layout(db, ingresso, evento_id, True, participante)
 
     # Renderiza imagem
-    img = _render_layout_to_image(layout, dpi)
+    img = _render_layout_to_image(layout, dpi, logo_path=logo_path, logo_blob=logo_blob)
     bio2 = BytesIO()
     img.save(bio2, format='JPEG', quality=85)
     bio2.seek(0)

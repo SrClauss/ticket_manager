@@ -493,9 +493,10 @@ async def admin_evento_upload_logo(request: Request, evento_id: str, logo: Uploa
         if len(contents) > 5 * 1024 * 1024:
             raise HTTPException(status_code=400, detail="Arquivo muito grande. Máximo: 5MB")
         
-        # Save file
+        # Save file to disk (for backward compatibility)
         import uuid
         from pathlib import Path
+        import base64
         
         ext = logo.filename.split(".")[-1] if "." in logo.filename else "png"
         filename = f"logo_{evento_id}_{uuid.uuid4().hex[:8]}.{ext}"
@@ -506,10 +507,21 @@ async def admin_evento_upload_logo(request: Request, evento_id: str, logo: Uploa
         with open(filepath, "wb") as f:
             f.write(contents)
         
-        # Update event
+        # Also save as base64 blob in database for reliability
+        logo_base64 = base64.b64encode(contents).decode('utf-8')
+        logo_blob = {
+            "data": logo_base64,
+            "content_type": logo.content_type,
+            "filename": logo.filename
+        }
+        
+        # Update event with both file path and blob
         await db.eventos.update_one(
             {"_id": ObjectId(evento_id)},
-            {"$set": {"logo_path": filename}}
+            {"$set": {
+                "logo_path": filename,
+                "logo_blob": logo_blob
+            }}
         )
         
         return RedirectResponse(
@@ -833,7 +845,9 @@ async def admin_evento_layout_preview(
         embedded_layout = embed_layout(layout, fake_participante, fake_tipo, evento, fake_ingresso)
         
         # Render to image
-        img = _render_layout_to_image(embedded_layout, dpi=300)
+        logo_path = evento.get("logo_path")
+        logo_blob = evento.get("logo_blob")
+        img = _render_layout_to_image(embedded_layout, dpi=300, logo_path=logo_path, logo_blob=logo_blob)
         
         # Return as JPEG
         bio = BytesIO()
