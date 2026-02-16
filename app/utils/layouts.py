@@ -24,12 +24,21 @@ def embed_layout(layout_template: Dict[str, Any], participante: Dict[str, Any], 
     tipo_desc = str(tipo.get("descricao", "") if tipo else "")
     evento_nome = str(evento.get("nome", "") if evento else "")
     data_evento_str = ""
+    data_str = ""
+    horario_str = ""
+    data_hora_str = ""
     de = evento.get("data_evento") if evento else None
     if de:
         if isinstance(de, datetime):
             data_evento_str = de.strftime("%d/%m/%Y %H:%M")
+            data_str = de.strftime("%d/%m/%Y")
+            horario_str = de.strftime("%H:%M")
+            data_hora_str = de.strftime("%d/%m/%Y %H:%M")
         else:
             data_evento_str = str(de)
+            data_str = str(de)
+            horario_str = ""
+            data_hora_str = str(de)
 
     def replace_vals(s: str) -> str:
         if not isinstance(s, str):
@@ -43,6 +52,9 @@ def embed_layout(layout_template: Dict[str, Any], participante: Dict[str, Any], 
         out = out.replace("{TIPO_INGRESSO}", tipo_desc)
         out = out.replace("{EVENTO_NOME}", evento_nome)
         out = out.replace("{DATA_EVENTO}", data_evento_str)
+        out = out.replace("{DATA}", data_str)
+        out = out.replace("{HORARIO}", horario_str)
+        out = out.replace("{DATA_HORA}", data_hora_str)
         return out
 
     elements = layout.get("elements", [])
