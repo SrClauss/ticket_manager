@@ -10,10 +10,12 @@ import app.config.database as database
 def get_database():
     """Runtime indirection to allow tests to monkeypatch `get_database` on this module."""
     return database.get_database()
+import logging
 from app.config.auth import verify_token_bilheteria, generate_qrcode_hash
 from app.utils.validations import validate_cpf, format_datetime_display
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -499,8 +501,14 @@ async def listar_participantes(
     participantes = []
     cursor = db.participantes.find(query).skip(skip).limit(per_page)
     async for participante in cursor:
-        participante["_id"] = str(participante["_id"])
-        participantes.append(Participante(**participante))
+        # Ensure _id is a string for the Pydantic model
+        participante["_id"] = str(participante.get("_id"))
+        try:
+            participantes.append(Participante(**participante))
+        except ValidationError as e:
+            # Skip malformed participant documents instead of raising 500
+            logger.warning("Skipping invalid participante document (id=%s): %s", participante.get("_id"), e)
+            continue
     
     return ParticipantesListResponse(
         participantes=participantes,

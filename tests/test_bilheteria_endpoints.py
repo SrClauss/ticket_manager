@@ -354,6 +354,37 @@ class TestListarParticipantesPaginado:
         assert result.per_page == 1  # Ajustado para mínimo
         assert len(result.participantes) == 1
 
+    @pytest.mark.asyncio
+    async def test_listar_participantes_skips_malformed_documents(self, fake_db, mock_get_database, sample_evento, mock_verify_bilheteria):
+        """Documentos de participante malformados (faltando campos obrigatórios) devem ser ignorados e não causar 500."""
+        from app.routers.bilheteria import listar_participantes
+
+        fake_db.eventos.docs.append(sample_evento)
+
+        # Participante válido
+        valid = {
+            "_id": ObjectId(),
+            "nome": "Válido",
+            "email": "valido@example.com",
+            "cpf": "52998224725"
+        }
+        # Participante inválido (falta 'email')
+        invalid = {
+            "_id": ObjectId(),
+            "nome": "Inválido",
+            "cpf": "52998224725"
+        }
+
+        fake_db.participantes.docs.append(valid)
+        fake_db.participantes.docs.append(invalid)
+
+        result = await listar_participantes(evento_id=str(sample_evento["_id"]))
+
+        # total_count comes from DB count (inclui o documento inválido), mas a lista retornada não deve conter o inválido
+        assert result.total_count == 2
+        assert len(result.participantes) == 1
+        assert result.participantes[0].nome == "Válido"
+
 
 class TestEmissaoBilheteria:
     """Testes para emissão de ingressos."""
