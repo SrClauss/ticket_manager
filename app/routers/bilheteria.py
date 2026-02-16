@@ -555,6 +555,15 @@ async def listar_participantes(
         participante["_id"] = str(participante.get("_id"))
         # Normalize BSON types (Long/Int64 -> str) to prevent serialization failures
         participante = normalize_bson_types(participante)
+        
+        # IMPORTANT: Filter ingressos to only include tickets for current event
+        # Business rule: A CPF can only have ONE ticket per event
+        if participante.get("ingressos"):
+            participante["ingressos"] = [
+                ing for ing in participante["ingressos"] 
+                if ing.get("evento_id") == evento_id
+            ]
+        
         try:
             participantes.append(Participante(**participante))
         except ValidationError as e:
