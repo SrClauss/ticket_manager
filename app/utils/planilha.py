@@ -51,14 +51,7 @@ async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db,
     line_no = 1
     for row in iter_rows():
         line_no += 1
-        total += 1
-        # After each row processed, update progress if import_id provided
-        if import_id:
-            try:
-                await db.planilha_importacoes.update_one({'_id': ObjectId(import_id)}, {'$set': {'progress': {'processed': total}}})
-            except Exception:
-                # ignore DB/update issues (e.g., fake DB in tests)
-                pass
+        
         # Normalize header keys to lowercase without spaces for lookup
         def g(key):
             return row.get(key) or row.get(key.title()) or row.get(key.capitalize()) or row.get(key.upper()) or row.get(key.lower())
@@ -76,9 +69,42 @@ async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db,
             elif kn in ['email', 'e-mail']:
                 email = row[k]
             elif kn in ['cpf']:
-                cpf_raw = str(row[k])
+                # Excel pode interpretar CPF como número, causando problemas
+                # Normaliza para string e preenche com zeros à esquerda se necessário
+                raw_value = row[k]
+                if raw_value is not None:
+                    cpf_str = str(raw_value).strip()
+                    # Se não tem pontos/traços (apenas dígitos), é CPF como número
+                    if cpf_str.isdigit():
+                        # Garante 11 dígitos preenchendo com zeros à esquerda
+                        cpf_raw = cpf_str.zfill(11)
+                    else:
+                        # Tem formatação, mantém como está
+                        cpf_raw = cpf_str
             elif kn in ['tipo ingresso', 'tipo_ingresso', 'tipo', 'tipoingresso']:
                 tipo_num = row[k]
+        
+        # Pula linhas completamente vazias (ignora fórmulas do Excel)
+        # Uma linha é considerada vazia se Nome, Email e CPF estão vazios ou são apenas espaços
+        is_empty_line = True
+        if nome and str(nome).strip():
+            is_empty_line = False
+        if email and str(email).strip():
+            is_empty_line = False
+        if cpf_raw and str(cpf_raw).strip() and not str(cpf_raw).startswith('='):
+            is_empty_line = False
+        
+        if is_empty_line:
+            continue  # Pula esta linha sem incrementar total ou gerar erros
+        
+        total += 1
+        # After each row processed, update progress if import_id provided
+        if import_id:
+            try:
+                await db.planilha_importacoes.update_one({'_id': ObjectId(import_id)}, {'$set': {'progress': {'processed': total}}})
+            except Exception:
+                # ignore DB/update issues (e.g., fake DB in tests)
+                pass
 
         row_errors = []
         # Required fields
