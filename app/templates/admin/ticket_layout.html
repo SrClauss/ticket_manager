@@ -1030,30 +1030,33 @@ function layoutEditor() {
             
             // Type-specific properties with default centralized configuration
             if (this.newElement.type === 'text') {
-                element.value = 'Texto';
-                element.size = 12;
-                element.font = 'Arial';
-                element.align = 'left';
-                element.bold = false;
-                element.italic = false;
-                element.underline = false;
-                element.strikethrough = false;
+                element.value = this.newElement.value || 'Texto';
+                element.size = this.newElement.size || 12;
+                element.font = this.newElement.font || 'Arial';
+                element.align = this.newElement.align || 'left';
+                element.bold = this.newElement.bold || false;
+                element.italic = this.newElement.italic || false;
+                element.underline = this.newElement.underline || false;
+                element.strikethrough = this.newElement.strikethrough || false;
             } else if (this.newElement.type === 'qrcode') {
                 element.value = '{qrcode_hash}';
-                element.size_mm = 30;
+                element.size_mm = this.newElement.size_mm || 30;
                 element.align = 'left';
             } else if (this.newElement.type === 'logo') {
                 element.value = 'LOGO';
-                element.size_mm = 30;
+                element.size_mm = this.newElement.size_mm || 30;
                 element.align = 'left';
             } else if (this.newElement.type === 'divider') {
-                element.direction = 'horizontal';
-                element.length_mm = 50;
-                element.thickness = 2;
+                element.direction = this.newElement.direction || 'horizontal';
+                element.length_mm = this.newElement.length_mm || 50;
+                element.thickness = this.newElement.thickness || 2;
             }
             
             this.elements.push(element);
             this.saveState();
+            
+            // Reset form after adding
+            this.resetNewElementForm();
             
             // Auto-select the new element so user can configure it
             this.$nextTick(() => {
