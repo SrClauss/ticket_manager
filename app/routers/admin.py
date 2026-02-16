@@ -852,19 +852,25 @@ async def gerar_planilha_modelo(evento_id: str):
     if not evento:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evento não encontrado")
 
-    # Cabeçalhos: obrigatórios + campos obrigatórios do evento
+    # Cabeçalhos: obrigatórios base (Nome, Email, CPF) + campos extras configurados + Tipo Ingresso
     obrigatorios = ["Nome", "Email", "CPF"]
     campos_extra = evento.get("campos_obrigatorios_planilha", []) or []
-    obrigatorios += [c for c in campos_extra if c not in obrigatorios]
-
-    opcionais = ["Empresa", "Telefone", "Nacionalidade", "Tipo Ingresso"]
+    
+    # Adiciona apenas os campos extras que foram marcados como obrigatórios
+    for campo in campos_extra:
+        if campo not in obrigatorios:
+            obrigatorios.append(campo)
+    
+    # Sempre adiciona Tipo Ingresso (necessário para o sistema)
+    if "Tipo Ingresso" not in obrigatorios:
+        obrigatorios.append("Tipo Ingresso")
 
     wb = Workbook()
     ws = wb.active
     ws.title = "Modelo"
 
     # Monta headers e adiciona coluna de descricao do tipo de ingresso para facilitar o preenchimento
-    headers = obrigatorios + opcionais
+    headers = obrigatorios.copy()
     if "Tipo Ingresso" in headers:
         idx = headers.index("Tipo Ingresso")
         headers.insert(idx + 1, "Tipo Ingresso Descricao")
@@ -882,28 +888,20 @@ async def gerar_planilha_modelo(evento_id: str):
         cell.alignment = center
         ws.column_dimensions[get_column_letter(col_idx)].width = 25
 
-    # Linha de exemplo (vazia exceto CPF formatado e exemplo de tipo)
-    example = []
-    for h in headers:
-        if h == "CPF":
-            example.append("123.456.789-09")
-        elif h == "Tipo Ingresso":
-            example.append(1)
-        else:
-            example.append("")
-    ws.append(example)
-
-    # Adiciona fórmula VLOOKUP para a coluna 'Tipo Ingresso Descricao' na linha de exemplo
-    header_map = {ws.cell(row=1, column=i).value: i for i in range(1, len(headers)+1)}
-    if 'Tipo Ingresso Descricao' in header_map and 'Tipo Ingresso' in header_map:
-        tipo_col = get_column_letter(header_map['Tipo Ingresso'])
-        desc_col = header_map['Tipo Ingresso Descricao']
-        # insere fórmula na célula (linha 2)
-        ws.cell(row=2, column=desc_col).value = f'=IFERROR(VLOOKUP({tipo_col}2,Legenda!$A:$B,2,FALSE), "")'
-
     # Aba legenda com mapping numero -> descricao dos tipos de ingresso
     legend = wb.create_sheet("Legenda")
     legend.append(["Numero", "Descricao"]) 
+    
+    # Aplica estilo no cabeçalho da legenda
+    for col_idx in [1, 2]:
+        cell = legend.cell(row=1, column=col_idx)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = center
+    
+    legend.column_dimensions['A'].width = 15
+    legend.column_dimensions['B'].width = 40
+    
     try:
         evento_doc = await db.eventos.find_one({"_id": ObjectId(evento_id)})
     except Exception:
@@ -912,10 +910,20 @@ async def gerar_planilha_modelo(evento_id: str):
     for tipo in tipos_for_legend:
         legend.append([tipo.get("numero"), tipo.get("descricao")])
 
-    # Instruções simples
+    # Instruções detalhadas
     instr = wb.create_sheet("Instrucao")
-    instr.append(["Instrucoes"])
-    instr.append(["Preencha as colunas obrigatorias. Tipo Ingresso deve ser o numero do tipo. Veja a aba 'Legenda' para referencias."])
+    instr.append(["INSTRUÇÕES PARA PREENCHIMENTO DA PLANILHA"])
+    instr.append([])
+    instr.append(["1. Preencha TODAS as colunas obrigatórias da aba 'Modelo'"])
+    instr.append(["2. A coluna 'Tipo Ingresso' deve conter o NÚMERO do tipo (veja aba 'Legenda')"])
+    instr.append(["3. A coluna 'Tipo Ingresso Descricao' será preenchida automaticamente"])
+    instr.append(["4. CPF deve estar no formato: 123.456.789-00"])
+    instr.append(["5. Após preencher, salve e faça upload na página de Configurações"])
+    instr.append([])
+    instr.append(["Para ver os tipos de ingresso disponíveis, consulte a aba 'Legenda'"])
+    
+    # Ajusta largura das colunas de instrução
+    instr.column_dimensions['A'].width = 80
 
     output = BytesIO()
     wb.save(output)
