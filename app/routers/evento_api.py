@@ -36,6 +36,66 @@ def _mm_to_px(val_mm: float, dpi: int) -> int:
     return int(round(float(val_mm) * px_per_mm))
 
 
+def _wrap_text(text: str, font: ImageFont.ImageFont, max_width_px: int, draw: ImageDraw.ImageDraw) -> list:
+    """Wrap text into multiple lines that fit within max_width_px.
+    
+    Args:
+        text: Text to wrap
+        font: Font to use for measuring
+        max_width_px: Maximum width in pixels
+        draw: ImageDraw object for text measurement
+        
+    Returns:
+        List of text lines that fit within max_width_px
+    """
+    if not text or max_width_px <= 0:
+        return [text] if text else []
+    
+    # Check if single line fits
+    try:
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = bbox[2] - bbox[0]
+    except:
+        text_width = draw.textsize(text, font=font)[0]
+    
+    if text_width <= max_width_px:
+        return [text]
+    
+    # Need to wrap - split by words
+    words = text.split()
+    if not words:
+        return [text]
+    
+    lines = []
+    current_line = []
+    
+    for word in words:
+        # Try adding word to current line
+        test_line = ' '.join(current_line + [word])
+        try:
+            bbox = draw.textbbox((0, 0), test_line, font=font)
+            line_width = bbox[2] - bbox[0]
+        except:
+            line_width = draw.textsize(test_line, font=font)[0]
+        
+        if line_width <= max_width_px:
+            current_line.append(word)
+        else:
+            # Line would be too long
+            if current_line:
+                lines.append(' '.join(current_line))
+                current_line = [word]
+            else:
+                # Single word is too long, add it anyway
+                lines.append(word)
+    
+    # Add remaining words
+    if current_line:
+        lines.append(' '.join(current_line))
+    
+    return lines if lines else [text]
+
+
 def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Image:
     """Render a layout (with already-embedded data) to an image.
     
@@ -99,25 +159,55 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300) -> Image.Ima
             # Get alignment and calculate anchor-based position
             align = el.get("align", "left")
             x_base = _mm_to_px(x_mm, dpi_effective) + margin_px
-            y = _mm_to_px(y_mm, dpi_effective) + margin_px
+            y_start = _mm_to_px(y_mm, dpi_effective) + margin_px
             
-            # Calculate text width for alignment
-            try:
-                bbox = draw.textbbox((0, 0), text, font=font)
-                text_width = bbox[2] - bbox[0]
-            except:
-                # Fallback for older Pillow versions
-                text_width = draw.textsize(text, font=font)[0]
+            # Calculate maximum text width based on canvas width, padding, and element position
+            canvas_padding_px = _mm_to_px(canvas_padding_mm, dpi_effective) if canvas_padding_mm else 0
             
-            # Apply anchor-based positioning
+            # Calculate max width based on alignment
             if align == "center":
-                x = int(x_base - (text_width / 2))
+                # For center alignment, max width is twice the distance to nearest edge
+                max_width_px = min(x_base - canvas_padding_px, img_width_px - x_base - canvas_padding_px) * 2
             elif align == "right":
-                x = int(x_base - text_width)
+                # For right alignment, max width is from left edge to x position
+                max_width_px = x_base - canvas_padding_px
             else:  # left or default
-                x = int(x_base)
+                # For left alignment, max width is from x position to right edge
+                max_width_px = img_width_px - x_base - canvas_padding_px
             
-            draw.text((x, int(y)), text, fill='black', font=font)
+            # Ensure reasonable minimum
+            max_width_px = max(50, max_width_px)
+            
+            # Wrap text into multiple lines
+            lines = _wrap_text(text, font, max_width_px, draw)
+            
+            # Calculate line height (font size + 20% spacing)
+            try:
+                bbox = draw.textbbox((0, 0), "Ay", font=font)
+                line_height = int((bbox[3] - bbox[1]) * 1.2)
+            except:
+                line_height = int(font_px * 1.2)
+            
+            # Draw each line
+            current_y = y_start
+            for line in lines:
+                # Calculate text width for alignment
+                try:
+                    bbox = draw.textbbox((0, 0), line, font=font)
+                    text_width = bbox[2] - bbox[0]
+                except:
+                    text_width = draw.textsize(line, font=font)[0]
+                
+                # Apply anchor-based positioning
+                if align == "center":
+                    x = int(x_base - (text_width / 2))
+                elif align == "right":
+                    x = int(x_base - text_width)
+                else:  # left or default
+                    x = int(x_base)
+                
+                draw.text((x, int(current_y)), line, fill='black', font=font)
+                current_y += line_height
             
         elif etype == "qrcode":
 
