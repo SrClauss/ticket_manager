@@ -1,5 +1,10 @@
 {% extends 'admin/base.html' %}
 {% block content %}
+
+<!-- Toast notification -->
+<div id="toast" style="display:none; position:fixed; top:20px; right:20px; z-index:9999; padding:12px 20px; background:#1e293b; color:#e2e8f0; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.3); border-left:4px solid #3b82f6;">
+</div>
+
 <header class="p-6 md:px-12 pt-8">
   <div class="mb-4">
     <a href="#" onclick="history.back(); return false;" class="inline-flex items-center gap-2 px-3 py-1 bg-slate-700 text-slate-100 rounded-md">← Voltar</a>
@@ -146,22 +151,69 @@
 </main>
 
 <script>
-function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',4000); }
-function getCookie(name){ const v=`; ${document.cookie}`; const p=v.split(`; ${name}=`); if(p.length===2) return p.pop().split(';').shift(); }
+function toast(msg){ 
+  const t = document.getElementById('toast'); 
+  if (!t) {
+    console.error('Toast element not found');
+    return;
+  }
+  t.textContent = msg; 
+  t.style.display = 'block'; 
+  setTimeout(() => t.style.display = 'none', 4000); 
+}
+
+function getCookie(name){ 
+  const v = `; ${document.cookie}`; 
+  const p = v.split(`; ${name}=`); 
+  if (p.length === 2) return p.pop().split(';').shift(); 
+}
 
 // Download model via fetch to avoid redirect error pages
 document.getElementById('downloadModelBtn').addEventListener('click', async function(){
   try{
-    const resp = await fetch('/api/admin/eventos/{{ evento.id }}/planilha-modelo', { method:'GET' });
-    if(!resp.ok){ toast('Erro ao gerar modelo.'); return; }
+    // Get JWT token from cookie
+    const token = getCookie('admin_jwt');
+    const headers = {
+      'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    };
+    
+    // Add Authorization header if token exists
+    if (token) {
+      headers['Authorization'] = 'Bearer ' + token;
+    }
+    
+    const resp = await fetch('/api/admin/eventos/{{ evento.id }}/planilha-modelo', { 
+      method: 'GET',
+      credentials: 'same-origin',  // Include cookies for authentication
+      headers: headers
+    });
+    
+    if (!resp.ok) { 
+      const errorText = await resp.text();
+      console.error('Error response:', errorText);
+      toast('Erro ao gerar modelo: ' + resp.status); 
+      return; 
+    }
+    
     const blob = await resp.blob();
     const cd = resp.headers.get('Content-Disposition') || '';
     let filename = 'modelo_{{ evento.id }}.xlsx';
     const m = cd.match(/filename="?([^\";]+)"?/);
-    if(m) filename = m[1];
-    const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    if (m) filename = m[1];
+    
+    const url = URL.createObjectURL(blob); 
+    const a = document.createElement('a'); 
+    a.href = url; 
+    a.download = filename; 
+    document.body.appendChild(a); 
+    a.click(); 
+    a.remove(); 
+    URL.revokeObjectURL(url);
     toast('Download iniciado');
-  }catch(e){ console.error(e); toast('Erro de rede ao baixar modelo'); }
+  } catch(e) { 
+    console.error(e); 
+    toast('Erro de rede ao baixar modelo'); 
+  }
 });
 
 // regenerate token via simple POST to inscrições endpoint: submit form with regenerate
@@ -171,25 +223,116 @@ document.getElementById('regenerateTokenBtn').addEventListener('click', function
 
 // Upload handling (reuse existing endpoint)
 async function handleUpload(){
-  const fileInput=document.getElementById('planilhaFile'); if(!fileInput.files.length){ toast('Selecione um arquivo'); return; }
-  const file=fileInput.files[0]; const form=new FormData(); form.append('file', file);
-  const token=getCookie('admin_jwt'); const headers={}; if(token) headers['Authorization']='Bearer '+token;
-  const resp = await fetch(`/api/admin/eventos/{{ evento.id }}/planilha-upload`, { method:'POST', body: form, headers });
-  if(!resp.ok){ const txt=await resp.text(); toast('Erro ao enviar: '+ (txt || resp.status)); return; }
-  const data = await resp.json(); const importId = data.import_id; if(!importId){ toast('Upload enviado'); setTimeout(()=>location.reload(),1200); return; }
+  const fileInput = document.getElementById('planilhaFile'); 
+  if (!fileInput.files.length) { 
+    toast('Selecione um arquivo'); 
+    return; 
+  }
+  
+  const file = fileInput.files[0]; 
+  const form = new FormData(); 
+  form.append('file', file);
+  
+  const token = getCookie('admin_jwt'); 
+  const headers = {}; 
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  
+  const resp = await fetch(`/api/admin/eventos/{{ evento.id }}/planilha-upload`, { 
+    method: 'POST', 
+    body: form, 
+    headers,
+    credentials: 'same-origin'
+  });
+  
+  if (!resp.ok) { 
+    const txt = await resp.text(); 
+    toast('Erro ao enviar: ' + (txt || resp.status)); 
+    return; 
+  }
+  
+  const data = await resp.json(); 
+  const importId = data.import_id; 
+  
+  if (!importId) { 
+    toast('Upload enviado'); 
+    setTimeout(() => location.reload(), 1200); 
+    return; 
+  }
+  
   toast('Processando...');
+  
   // poll
   const pollUrl = `/api/admin/eventos/{{ evento.id }}/planilha-importacao/${importId}`;
-  const progressFill = document.getElementById('progressFill'); const progressText = document.getElementById('progressText');
-  const iv = setInterval(async ()=>{
-    try{ const r=await fetch(pollUrl); if(!r.ok) return; const s=await r.json(); const processed=(s.progress && s.progress.processed)||0; const total=(s.progress && s.progress.total)||null; const pct = total? Math.round((processed/total)*100): (processed%100); progressFill.style.width=pct+'%'; progressText.textContent=`PROCESSANDO ${pct}%`; if(s.status && s.status!=='processing'){ clearInterval(iv); toast('Processamento finalizado: '+s.status); setTimeout(()=>location.reload(),900); } }catch(e){ console.error(e); }
-  },800);
+  const progressFill = document.getElementById('progressFill'); 
+  const progressText = document.getElementById('progressText');
+  
+  const pollHeaders = {};
+  if (token) pollHeaders['Authorization'] = 'Bearer ' + token;
+  
+  const iv = setInterval(async () => {
+    try { 
+      const r = await fetch(pollUrl, { 
+        credentials: 'same-origin',
+        headers: pollHeaders
+      }); 
+      if (!r.ok) return; 
+      
+      const s = await r.json(); 
+      const processed = (s.progress && s.progress.processed) || 0; 
+      const total = (s.progress && s.progress.total) || null; 
+      const pct = total ? Math.round((processed / total) * 100) : (processed % 100); 
+      
+      progressFill.style.width = pct + '%'; 
+      progressText.textContent = `PROCESSANDO ${pct}%`; 
+      
+      if (s.status && s.status !== 'processing') { 
+        clearInterval(iv); 
+        toast('Processamento finalizado: ' + s.status); 
+        setTimeout(() => location.reload(), 900); 
+      } 
+    } catch(e) { 
+      console.error(e); 
+    }
+  }, 800);
 }
 
 document.getElementById('uploadBtn').addEventListener('click', handleUpload);
 
 // Download report
-async function downloadReport(importId){ try{ const r = await fetch(`/api/admin/eventos/{{ evento.id }}/planilha-importacao/${importId}`); if(!r.ok){ toast('Erro ao obter relatório'); return; } const data=await r.json(); const blob=new Blob([JSON.stringify(data.relatorio||data, null,2)], {type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`relatorio_${importId}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('Download iniciado'); }catch(e){ console.error(e); toast('Erro ao baixar relatório'); } }
+async function downloadReport(importId) { 
+  try { 
+    const token = getCookie('admin_jwt');
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = 'Bearer ' + token;
+    }
+    
+    const r = await fetch(`/api/admin/eventos/{{ evento.id }}/planilha-importacao/${importId}`, {
+      credentials: 'same-origin',
+      headers: headers
+    }); 
+    
+    if (!r.ok) { 
+      toast('Erro ao obter relatório'); 
+      return; 
+    } 
+    
+    const data = await r.json(); 
+    const blob = new Blob([JSON.stringify(data.relatorio || data, null, 2)], {type: 'application/json'}); 
+    const url = URL.createObjectURL(blob); 
+    const a = document.createElement('a'); 
+    a.href = url; 
+    a.download = `relatorio_${importId}.json`; 
+    document.body.appendChild(a); 
+    a.click(); 
+    a.remove(); 
+    URL.revokeObjectURL(url); 
+    toast('Download iniciado'); 
+  } catch(e) { 
+    console.error(e); 
+    toast('Erro ao baixar relatório'); 
+  } 
+}
 
 </script>
 
