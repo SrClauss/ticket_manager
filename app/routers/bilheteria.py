@@ -29,9 +29,15 @@ def normalize_bson_types(doc: Dict[str, Any]) -> Dict[str, Any]:
         return doc
     
     for key, value in doc.items():
-        if isinstance(value, Int64):
+        # Check for BSON Long/Int64 by type name (more robust than isinstance)
+        value_type = type(value).__name__
+        if value_type in ('Int64', 'Long') or isinstance(value, Int64):
             # Convert BSON Long/Int64 to string
             doc[key] = str(value)
+            logger.debug(f"Converted {key}={value} from {value_type} to string")
+        elif value == '':
+            # Convert empty strings to None for Optional fields
+            doc[key] = None
         elif isinstance(value, dict):
             # Recursively normalize nested documents
             doc[key] = normalize_bson_types(value)
@@ -39,7 +45,9 @@ def normalize_bson_types(doc: Dict[str, Any]) -> Dict[str, Any]:
             # Normalize items in arrays
             doc[key] = [
                 normalize_bson_types(item) if isinstance(item, dict) else 
-                str(item) if isinstance(item, Int64) else item
+                str(item) if type(item).__name__ in ('Int64', 'Long') or isinstance(item, Int64) else 
+                None if item == '' else
+                item
                 for item in value
             ]
     
