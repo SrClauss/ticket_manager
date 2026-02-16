@@ -759,9 +759,13 @@ async def admin_evento_planilhas_inscricoes(request: Request, evento_id: str):
         return RedirectResponse(url=f"/admin/eventos/{evento_id}?insc_error=1", status_code=status.HTTP_303_SEE_OTHER)
 
     updates = {"aceita_inscricoes": aceita}
+    # If regenerate requested, refresh all public access tokens (inscrição, bilheteria, portaria)
     if regenerate or (aceita and not evento.get("token_inscricao")):
-        token = generate_token(7)
-        updates["token_inscricao"] = token
+        # always regenerate token_inscricao when requested
+        updates["token_inscricao"] = generate_token(7)
+        # also regenerate bilheteria/portaria tokens to match user expectation
+        updates["token_bilheteria"] = generate_token(7)
+        updates["token_portaria"] = generate_token(7)
 
     await db.eventos.update_one({"_id": object_id}, {"$set": updates})
 

@@ -84,6 +84,28 @@ def test_evento_detalhes_ui_and_snapshot(monkeypatch, tmp_path):
     assert resp3.status_code == 200
     assert 'Não foi possível ativar inscrições públicas' in resp3.text
 
+
+def test_regenerate_tokens_persists(monkeypatch):
+    """Clicar em 'Gerar/Regenerar token' deve persistir novos tokens de bilheteria e portaria."""
+    evento, ilhas, tipos = make_fake_event()
+    old_bil = evento['token_bilheteria']
+    old_por = evento['token_portaria']
+
+    fake_db = FakeDB(evento, ilhas, tipos)
+    monkeypatch.setattr(admin_web, 'check_admin_session', lambda request: None)
+    monkeypatch.setattr(admin_web, 'get_database', lambda: fake_db)
+
+    client = TestClient(app)
+    resp = client.post(f"/admin/eventos/{str(evento['_id'])}/planilhas/inscricoes", data={'regenerate': '1'})
+    assert resp.status_code == 200 or resp.status_code == 303
+
+    # Ensure tokens were updated in the fake DB
+    updated = fake_db.eventos.docs[0]
+    assert updated['token_bilheteria'] != old_bil
+    assert updated['token_portaria'] != old_por
+    assert 'token_inscricao' in updated
+    assert len(updated['token_inscricao']) == 7
+
     # Basic presence checks
     assert 'Token Bilheteria' in html
     assert 'Token Portaria' in html

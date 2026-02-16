@@ -41,7 +41,7 @@ def generate_token(length: int = 7) -> str:
 
     Atenção: tokens curtos têm entropia limitada. Use apenas em contextos controlados.
     """
-    return _generate_short_token(length)
+    return _generate_short_token(length).upper()
 
 
 def generate_qrcode_hash() -> str:
