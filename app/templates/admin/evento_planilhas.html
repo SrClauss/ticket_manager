@@ -4,15 +4,39 @@
   <div class="mb-4">
     <a href="#" onclick="history.back(); return false;" class="inline-flex items-center gap-2 px-3 py-1 bg-slate-700 text-slate-100 rounded-md">← Voltar</a>
   </div>
-  <h1 class="text-3xl font-light text-slate-100">Planilhas – {{ evento.nome }}</h1>
-  <p class="text-sm text-slate-400 mt-2">Campos, modelo, upload e histórico.</p>
+  <h1 class="text-3xl font-light text-slate-100">⚙️ Configurações – {{ evento.nome }}</h1>
+  <p class="text-sm text-slate-400 mt-2">Logo do projeto, campos obrigatórios, modelo de planilha e histórico.</p>
+  
+  {% if logo_saved %}
+  <div class="mt-3 p-3 rounded-md bg-emerald-800 text-emerald-100">✅ Logo salvo com sucesso!</div>
+  {% endif %}
 </header>
 
 <main class="px-4 md:px-12 pb-24">
   <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-    <!-- Settings -->
+    <!-- Logo Section -->
     <section class="xl:col-span-1 md-card p-4">
-      <h2 class="text-lg font-semibold text-slate-100 mb-2">Campos e Inscrições</h2>
+      <h2 class="text-lg font-semibold text-slate-100 mb-2">Logo do Projeto</h2>
+      <p class="text-sm text-slate-400 mb-4">Envie uma imagem para usar como logo nos ingressos e documentos.</p>
+      <form id="logoForm" method="post" action="/admin/eventos/{{ evento.id }}/logo" enctype="multipart/form-data" class="space-y-3">
+        {% if evento.logo_path %}
+        <div class="mb-3">
+          <div class="text-xs text-slate-400 uppercase font-semibold mb-2">Logo Atual</div>
+          <img src="/static/uploads/{{ evento.logo_path }}" alt="Logo" class="max-w-full max-h-32 object-contain bg-white p-2 rounded-lg" />
+        </div>
+        {% endif %}
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">Selecionar nova imagem</label>
+          <input type="file" name="logo" accept="image/*" class="w-full text-sm text-slate-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-slate-700 file:text-slate-100 hover:file:bg-slate-600" />
+          <p class="text-xs text-slate-400 mt-1">Formatos: PNG, JPG, JPEG. Tamanho máximo: 5MB</p>
+        </div>
+        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg">💾 Salvar Logo</button>
+      </form>
+    </section>
+
+    <!-- Fields and Inscriptions -->
+    <section class="xl:col-span-1 md-card p-4">
+      <h2 class="text-lg font-semibold text-slate-100 mb-2">Campos de Planilha e Inscrições</h2>
       <p class="text-sm text-slate-400 mb-4">Defina os campos obrigatórios e controle inscrições públicas.</p>
       <form id="settingsForm" method="post" action="/admin/eventos/{{ evento.id }}/planilhas/campos" class="space-y-3"> 
         {% if padrao_error %}

@@ -463,9 +463,61 @@ async def admin_evento_planilhas(request: Request, evento_id: str):
                 "importacoes": importacoes,
                 "tipos_ingresso": tipos_ingresso,
                 "saved": request.query_params.get("saved") == "1",
-                "padrao_error": request.query_params.get("padrao_error") == "1"
+                "padrao_error": request.query_params.get("padrao_error") == "1",
+                "logo_saved": request.query_params.get("logo_saved") == "1"
             }
         )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/eventos/{evento_id}/logo")
+async def admin_evento_upload_logo(request: Request, evento_id: str, logo: UploadFile = File(...)):
+    """Upload logo for event"""
+    redirect = check_admin_session(request)
+    if redirect:
+        return redirect
+    
+    db = get_database()
+    try:
+        evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+        if not evento:
+            raise HTTPException(status_code=404, detail="Evento não encontrado")
+        
+        # Validate file type
+        if logo.content_type not in ["image/png", "image/jpeg", "image/jpg"]:
+            raise HTTPException(status_code=400, detail="Formato de imagem inválido. Use PNG ou JPEG.")
+        
+        # Read file and check size (5MB max)
+        contents = await logo.read()
+        if len(contents) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="Arquivo muito grande. Máximo: 5MB")
+        
+        # Save file
+        import uuid
+        from pathlib import Path
+        
+        ext = logo.filename.split(".")[-1] if "." in logo.filename else "png"
+        filename = f"logo_{evento_id}_{uuid.uuid4().hex[:8]}.{ext}"
+        upload_dir = Path("app/static/uploads")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        
+        filepath = upload_dir / filename
+        with open(filepath, "wb") as f:
+            f.write(contents)
+        
+        # Update event
+        await db.eventos.update_one(
+            {"_id": ObjectId(evento_id)},
+            {"$set": {"logo_path": filename}}
+        )
+        
+        return RedirectResponse(
+            url=f"/admin/eventos/{evento_id}/planilhas?logo_saved=1",
+            status_code=status.HTTP_303_SEE_OTHER
+        )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
