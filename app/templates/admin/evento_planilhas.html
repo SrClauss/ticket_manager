@@ -216,9 +216,19 @@ document.getElementById('downloadModelBtn').addEventListener('click', async func
   }
 });
 
-// regenerate token via simple POST to inscrições endpoint: submit form with regenerate
+// Regenerate token: POST to the /inscricoes endpoint so backend will persist the new token
+// Creates a transient form and submits it to avoid changing the visible settings form behavior.
 document.getElementById('regenerateTokenBtn').addEventListener('click', function(){
-  const form = document.getElementById('settingsForm'); const input = document.createElement('input'); input.type='hidden'; input.name='regenerate'; input.value='1'; form.appendChild(input); form.submit();
+  const f = document.createElement('form');
+  f.method = 'post';
+  f.action = `/admin/eventos/{{ evento.id }}/planilhas/inscricoes`;
+  const input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'regenerate';
+  input.value = '1';
+  f.appendChild(input);
+  document.body.appendChild(f);
+  f.submit();
 });
 
 // Upload handling (reuse existing endpoint)
