@@ -735,18 +735,33 @@ async def reimprimir_ingresso(
 
     # Se não encontrou embutido, fallback para coleção antiga
     if not ingresso:
+        # Try to find by ObjectId in the legacy collection first
         try:
             ingresso = await db.ingressos_emitidos.find_one({"_id": ObjectId(ingresso_id), "evento_id": evento_id})
             if not ingresso:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Ingresso não encontrado para este evento"
-                )
+                # If not found by ObjectId, fall through to try qrcode_hash lookup
+                ingresso = None
         except InvalidId:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="ID de ingresso inválido"
+            # ingresso_id is not a valid ObjectId -> try lookup by qrcode_hash instead of returning 400
+            ingresso = None
+
+        # If still not found, attempt to resolve by qrcode_hash (support QR contents)
+        if not ingresso:
+            # look for embedded ingresso in participantes by qrcode_hash
+            participante_q = await db.participantes.find_one(
+                {"ingressos.qrcode_hash": ingresso_id},
+                {"ingressos": {"$elemMatch": {"qrcode_hash": ingresso_id}}}
             )
+            if participante_q and participante_q.get("ingressos"):
+                ingresso = participante_q["ingressos"][0]
+            else:
+                # fallback to ingressos_emitidos collection by qrcode_hash
+                ingresso = await db.ingressos_emitidos.find_one({"qrcode_hash": ingresso_id, "evento_id": evento_id})
+                if not ingresso:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Ingresso não encontrado para este evento"
+                    )
     
     # Busca dados relacionados
     # participante pode já estar disponível quando o ingresso é embutido

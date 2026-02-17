@@ -547,6 +547,21 @@ class TestReimpressaoBilheteria:
             )
         assert exc_info.value.status_code in [403, 404]
 
+    @pytest.mark.asyncio
+    async def test_reimprimir_ingresso_by_qrcode_hash(self, fake_db, mock_get_database, sample_evento, sample_ingresso, mock_verify_bilheteria):
+        """Permite reimpressão usando qrcode_hash (valor do QR)."""
+        fake_db.eventos.docs.append(sample_evento)
+        # ensure sample_ingresso has qrcode_hash set and is linked to evento
+        sample_ingresso_copy = dict(sample_ingresso)
+        sample_ingresso_copy["evento_id"] = sample_evento["_id"]
+        fake_db.ingressos_emitidos.docs.append(sample_ingresso_copy)
+
+        # call reimprimir using qrcode_hash instead of ObjectId
+        result = await bilheteria.reimprimir_ingresso(
+            sample_ingresso_copy["qrcode_hash"],
+            evento_id=str(sample_evento["_id"])
+        )
+        assert "layout_preenchido" in result or "qrcode_hash" in result
 
 class TestQRCodeGeneration:
     """Testes para geração de QR codes."""
