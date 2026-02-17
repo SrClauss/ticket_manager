@@ -454,10 +454,19 @@ async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Op
     
     # If not found by ObjectId or ingresso_id is not a valid ObjectId, try by qrcode_hash
     print(f"[DEBUG] Searching by qrcode_hash in participantes.ingressos")
+    
+    # First check if any participante has this qrcode_hash
+    count = await db.participantes.count_documents({"ingressos.qrcode_hash": ingresso_id})
+    print(f"[DEBUG] Found {count} participantes with this qrcode_hash")
+    
     participante = await db.participantes.find_one(
         {"ingressos.qrcode_hash": ingresso_id}, 
         {"ingressos": {"$elemMatch": {"qrcode_hash": ingresso_id}}, "nome": 1, "email": 1, "cpf": 1}
     )
+    
+    print(f"[DEBUG] Participante result: {participante is not None}")
+    if participante:
+        print(f"[DEBUG] Participante has ingressos: {participante.get('ingressos') is not None}")
     
     if participante and participante.get("ingressos"):
         print(f"[DEBUG] Found ingresso embedded in participante by qrcode_hash")
