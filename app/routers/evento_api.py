@@ -428,48 +428,64 @@ async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Op
     Returns:
         Tuple of (ingresso_dict or None, participante_dict or None)
     """
+    logger.info(f"_fetch_ingresso_data called with evento_id={evento_id}, ingresso_id={ingresso_id}")
+    
     # Try to find ingresso embedded in participante first
     try:
         oid = ObjectId(ingresso_id)
         use_oid = True
-    except Exception:
+        logger.info(f"ingresso_id is valid ObjectId: {oid}")
+    except Exception as e:
         oid = ingresso_id
         use_oid = False
+        logger.info(f"ingresso_id is not ObjectId (will use as qrcode_hash): {e}")
     
     # Try by ObjectId first if valid
     if use_oid:
+        logger.info(f"Searching by ObjectId in participantes.ingressos")
         participante = await db.participantes.find_one(
             {"ingressos._id": oid}, 
             {"ingressos": {"$elemMatch": {"_id": oid}}, "nome": 1, "email": 1, "cpf": 1}
         )
         
         if participante and participante.get("ingressos"):
+            logger.info(f"Found ingresso embedded in participante by ObjectId")
             return participante["ingressos"][0], participante
     
     # If not found by ObjectId or ingresso_id is not a valid ObjectId, try by qrcode_hash
+    logger.info(f"Searching by qrcode_hash in participantes.ingressos")
     participante = await db.participantes.find_one(
         {"ingressos.qrcode_hash": ingresso_id}, 
         {"ingressos": {"$elemMatch": {"qrcode_hash": ingresso_id}}, "nome": 1, "email": 1, "cpf": 1}
     )
     
     if participante and participante.get("ingressos"):
+        logger.info(f"Found ingresso embedded in participante by qrcode_hash")
         return participante["ingressos"][0], participante
     
     # Fallback to standalone collection by ObjectId
     if use_oid:
+        logger.info(f"Fallback: searching by ObjectId in ingressos_emitidos")
         try:
             ingresso = await db.ingressos_emitidos.find_one(
                 {"_id": oid, "evento_id": evento_id}
             )
             if ingresso:
+                logger.info(f"Found ingresso in ingressos_emitidos by ObjectId")
                 return ingresso, None
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Error querying ingressos_emitidos by ObjectId: {e}")
     
     # Fallback to standalone collection by qrcode_hash
+    logger.info(f"Fallback: searching by qrcode_hash in ingressos_emitidos")
     ingresso = await db.ingressos_emitidos.find_one(
         {"qrcode_hash": ingresso_id, "evento_id": evento_id}
     )
+    
+    if ingresso:
+        logger.info(f"Found ingresso in ingressos_emitidos by qrcode_hash")
+    else:
+        logger.warning(f"Ingresso not found anywhere for ingresso_id={ingresso_id}, evento_id={evento_id}")
     
     return ingresso, None
 
