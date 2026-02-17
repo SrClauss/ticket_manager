@@ -126,6 +126,16 @@ class IngressoDetalhes(BaseModel):
     permissoes: list  # Lista de IDs de ilhas permitidas
 
 
+class IngressoDetalhesCompleto(BaseModel):
+    """Detalhes completos de um ingresso com participante e evento"""
+    ingresso: dict
+    participante: dict
+    evento: dict
+    tipo_ingresso: dict
+    valido: bool
+    status: str
+
+
 class EventoInfoPortaria(BaseModel):
     """Informações do evento para o módulo portaria"""
     evento_id: str
@@ -233,6 +243,107 @@ async def get_ingresso_by_qrcode(
         data_emissao=ingresso.get("data_emissao"),
         permissoes=tipo_ingresso.get("permissoes", [])
     )
+
+
+@router.get("/ingresso-completo/{qrcode_hash}")
+async def get_ingresso_completo_by_qrcode(
+    qrcode_hash: str,
+    evento_id: str = Depends(verify_token_portaria)
+):
+    """
+    Obtém detalhes COMPLETOS de um ingresso pelo QR code hash
+    Retorna ingresso, participante, evento e tipo_ingresso em uma única chamada
+    Incluíndo validação de status
+    """
+    db = get_database()
+    
+    # Busca ingresso e participante
+    participante = await db.participantes.find_one(
+        {"ingressos.qrcode_hash": qrcode_hash},
+        {"ingressos": {"$elemMatch": {"qrcode_hash": qrcode_hash}}, "nome": 1, "email": 1, "telefone": 1, "cpf": 1}
+    )
+
+    ingresso = None
+    if participante and participante.get("ingressos"):
+        ingresso = participante["ingressos"][0]
+    else:
+        # Fallback para coleção antiga `ingressos_emitidos`
+        ingresso = await db.ingressos_emitidos.find_one({"qrcode_hash": qrcode_hash})
+        if not ingresso:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Ingresso não encontrado"
+            )
+        try:
+            participante = await db.participantes.find_one({"_id": ObjectId(ingresso["participante_id"])})
+        except Exception:
+            participante = await db.participantes.find_one({"_id": ingresso.get("participante_id")})
+
+    if not ingresso:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ingresso não encontrado"
+        )
+
+    # Verifica se o ingresso pertence ao evento do token
+    if ingresso.get("evento_id") != evento_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ingresso não pertence a este evento"
+        )
+
+    # Busca evento
+    evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+    if not evento:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Evento não encontrado"
+        )
+
+    # Busca tipo de ingresso no evento (embutido) ou fallback para coleção
+    tipo_ingresso = None
+    if evento:
+        for t in evento.get("tipos_ingresso", []):
+            if str(t.get("_id") or t.get("id")) == str(ingresso.get("tipo_ingresso_id")) or str(t.get("numero")) == str(ingresso.get("tipo_ingresso_id")):
+                tipo_ingresso = t
+                break
+
+    if not tipo_ingresso:
+        try:
+            tipo_ingresso = await db.tipos_ingresso.find_one({"_id": ObjectId(ingresso.get("tipo_ingresso_id"))})
+        except Exception:
+            tipo_ingresso = await db.tipos_ingresso.find_one({"_id": ingresso.get("tipo_ingresso_id")})
+
+    if not tipo_ingresso:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tipo de ingresso não encontrado"
+        )
+
+    # Determina se o ingresso é válido
+    status_ingresso = ingresso.get("status", "").lower()
+    valido = status_ingresso in ["ativo", "active", "checked_in"]
+
+    # Normaliza ObjectIds para strings
+    def normalize_obj(obj):
+        if isinstance(obj, dict):
+            return {k: (str(v) if isinstance(v, ObjectId) else normalize_obj(v)) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [normalize_obj(item) for item in obj]
+        elif isinstance(obj, ObjectId):
+            return str(obj)
+        else:
+            return obj
+
+    return {
+        "ingresso": normalize_obj(ingresso),
+        "participante": normalize_obj(participante),
+        "evento": normalize_obj(evento),
+        "tipo_ingresso": normalize_obj(tipo_ingresso),
+        "valido": valido,
+        "status": ingresso.get("status", "desconhecido"),
+        "qrcode_hash": qrcode_hash
+    }
 
 
 @router.post("/validar", response_model=ValidacaoResponse)
