@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi.responses import Response
 from typing import List, Dict, Any
 from datetime import datetime, timezone
+from io import BytesIO
 from bson import ObjectId
 from bson.errors import InvalidId
 from bson.int64 import Int64
@@ -859,4 +861,63 @@ async def busca_credenciamento(query: str = None, evento_id: str = None):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Informe pelo menos um filtro (nome ou email)")
     if "@" in query:
         return await buscar_credenciamento(nome=None, email=query, evento_id=evento_id)
+
+
+@router.get("/render/{qrcode_hash}")
+async def render_ingresso_by_qrcode(
+    qrcode_hash: str,
+    evento_id: str,
+    token: str = Depends(verify_token_bilheteria),
+    dpi: int = 300
+):
+    """
+    Renderiza ingresso como JPG usando qrcode_hash.
+    Endpoint alternativo que funciona com hash ao invés de ObjectId.
+    """
+    db = get_database()
+    
+    # Busca ingresso pelo qrcode_hash (embedded ou standalone)
+    participante = await db.participantes.find_one(
+        {"ingressos.qrcode_hash": qrcode_hash},
+        {"ingressos": {"$elemMatch": {"qrcode_hash": qrcode_hash}}, "nome": 1, "email": 1, "cpf": 1}
+    )
+    
+    ingresso = None
+    if participante and participante.get("ingressos"):
+        ingresso = participante["ingressos"][0]
+    else:
+        # Fallback para ingressos_emitidos
+        ingresso = await db.ingressos_emitidos.find_one(
+            {"qrcode_hash": qrcode_hash, "evento_id": evento_id}
+        )
+    
+    if not ingresso:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ingresso não encontrado"
+        )
+    
+    # Busca evento para logo_path/logo_blob
+    evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+    logo_path = evento.get("logo_path") if evento else None
+    logo_blob = evento.get("logo_blob") if evento else None
+    
+    # Importa funções de renderização
+    from app.routers.evento_api import _get_or_create_embedded_layout, _render_layout_to_image
+    
+    # Get or create layout
+    from_participante = participante is not None
+    layout = await _get_or_create_embedded_layout(
+        db, ingresso, evento_id, from_participante, participante
+    )
+    
+    # Render to image
+    img = _render_layout_to_image(layout, dpi, logo_path=logo_path, logo_blob=logo_blob)
+    
+    # Serialize to JPEG
+    bio = BytesIO()
+    img.save(bio, format='JPEG', quality=85)
+    bio.seek(0)
+    
+    return Response(content=bio.read(), media_type="image/jpeg")
     return await buscar_credenciamento(nome=query, email=None, evento_id=evento_id)
