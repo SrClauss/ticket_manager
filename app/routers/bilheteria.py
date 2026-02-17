@@ -726,6 +726,7 @@ async def reimprimir_ingresso(
     
     # Tenta localizar ingresso embutido dentro de participantes pelo _id
     ingresso = None
+    participante = None  # Initialize to avoid UnboundLocalError
     try:
         participante = await db.participantes.find_one({"ingressos._id": ObjectId(ingresso_id)}, {"ingressos": {"$elemMatch": {"_id": ObjectId(ingresso_id)}}})
         if participante and participante.get("ingressos"):
