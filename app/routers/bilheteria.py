@@ -623,6 +623,63 @@ async def buscar_participantes(
 buscar_participantes_route = buscar_participantes
 
 
+@router.get("/ingresso-por-cpf")
+async def buscar_ingresso_por_cpf(
+    cpf: str,
+    evento_id: str = Depends(verify_token_bilheteria)
+):
+    """
+    Busca o ingresso de um participante por CPF, retornando apenas o ingresso do evento atual.
+    Retorna 404 se não encontrar participante ou ingresso para este evento.
+    """
+    db = get_database()
+    
+    # Normalize CPF
+    try:
+        from app.utils.validations import validate_cpf
+        cpf_clean = validate_cpf(cpf)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"CPF inválido: {str(e)}"
+        )
+    
+    # Busca participante por CPF
+    participante = await db.participantes.find_one({"cpf": cpf_clean})
+    if not participante:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Participante não encontrado"
+        )
+    
+    participante_id = str(participante["_id"])
+    
+    # Busca ingresso do participante para este evento
+    ingresso = await db.ingressos_emitidos.find_one({
+        "participante_id": participante_id,
+        "evento_id": evento_id
+    })
+    
+    if not ingresso:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ingresso não encontrado para este evento"
+        )
+    
+    # Normalize response
+    ingresso["_id"] = str(ingresso["_id"])
+    ingresso = normalize_bson_types(ingresso)
+    
+    # Add participante info
+    participante["_id"] = participante_id
+    participante = normalize_bson_types(participante)
+    
+    return {
+        "ingresso": ingresso,
+        "participante": participante
+    }
+
+
 @router.get("/busca-credenciamento", response_model=List[Dict[str, Any]])
 async def buscar_credenciamento(
     nome: str = None,
