@@ -346,6 +346,114 @@ async def get_ingresso_completo_by_qrcode(
     }
 
 
+@router.get("/ingresso-por-cpf")
+async def get_ingresso_completo_por_cpf(
+    cpf: str,
+    evento_id: str = Depends(verify_token_portaria)
+):
+    """
+    Obtém detalhes COMPLETOS de um ingresso pelo CPF do participante
+    Retorna ingresso, participante, evento e tipo_ingresso em uma única chamada
+    Útil para o módulo de portaria validar entrada por CPF
+    """
+    db = get_database()
+    
+    # Normaliza CPF
+    try:
+        from app.utils.validations import validate_cpf
+        cpf_clean = validate_cpf(cpf)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"CPF inválido: {str(e)}"
+        )
+    
+    # Busca participante por CPF
+    participante = await db.participantes.find_one({"cpf": cpf_clean})
+    if not participante:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Participante não encontrado"
+        )
+    
+    # Busca ingresso do participante para este evento
+    ingresso = None
+    if participante.get("ingressos"):
+        for ing in participante["ingressos"]:
+            if ing.get("evento_id") == evento_id:
+                ingresso = ing
+                break
+    
+    if not ingresso:
+        # Fallback para coleção antiga
+        participante_id = str(participante["_id"])
+        ingresso = await db.ingressos_emitidos.find_one({
+            "participante_id": participante_id,
+            "evento_id": evento_id
+        })
+    
+    if not ingresso:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ingresso não encontrado para este evento"
+        )
+    
+    # Busca evento
+    evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+    if not evento:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Evento não encontrado"
+        )
+    
+    # Busca tipo de ingresso no evento (embutido) ou fallback para coleção
+    tipo_ingresso = None
+    if evento:
+        for t in evento.get("tipos_ingresso", []):
+            if str(t.get("_id") or t.get("id")) == str(ingresso.get("tipo_ingresso_id")) or str(t.get("numero")) == str(ingresso.get("tipo_ingresso_id")):
+                tipo_ingresso = t
+                break
+    
+    if not tipo_ingresso:
+        try:
+            tipo_ingresso = await db.tipos_ingresso.find_one({"_id": ObjectId(ingresso.get("tipo_ingresso_id"))})
+        except Exception:
+            tipo_ingresso = await db.tipos_ingresso.find_one({"_id": ingresso.get("tipo_ingresso_id")})
+    
+    if not tipo_ingresso:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tipo de ingresso não encontrado"
+        )
+    
+    # Determina se o ingresso é válido
+    status_ingresso = ingresso.get("status", "").lower()
+    valido = status_ingresso in ["ativo", "active", "checked_in"]
+    
+    # Normaliza ObjectIds para strings
+    def normalize_obj(obj):
+        if isinstance(obj, dict):
+            return {k: (str(v) if isinstance(v, ObjectId) else normalize_obj(v)) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [normalize_obj(item) for item in obj]
+        elif isinstance(obj, ObjectId):
+            return str(obj)
+        else:
+            return obj
+    
+    qrcode_hash = ingresso.get("qrcode_hash", "")
+    
+    return {
+        "ingresso": normalize_obj(ingresso),
+        "participante": normalize_obj(participante),
+        "evento": normalize_obj(evento),
+        "tipo_ingresso": normalize_obj(tipo_ingresso),
+        "valido": valido,
+        "status": ingresso.get("status", "desconhecido"),
+        "qrcode_hash": qrcode_hash
+    }
+
+
 @router.post("/validar", response_model=ValidacaoResponse)
 async def validar_acesso(
     validacao: ValidacaoRequest,
