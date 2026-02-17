@@ -423,7 +423,7 @@ async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Op
     Args:
         db: MongoDB database instance (AsyncIOMotorDatabase)
         evento_id: ID of the event
-        ingresso_id: ID of the ingresso
+        ingresso_id: ID of the ingresso (can be ObjectId or qrcode_hash)
         
     Returns:
         Tuple of (ingresso_dict or None, participante_dict or None)
@@ -431,26 +431,45 @@ async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Op
     # Try to find ingresso embedded in participante first
     try:
         oid = ObjectId(ingresso_id)
+        use_oid = True
     except Exception:
         oid = ingresso_id
+        use_oid = False
+    
+    # Try by ObjectId first if valid
+    if use_oid:
+        participante = await db.participantes.find_one(
+            {"ingressos._id": oid}, 
+            {"ingressos": {"$elemMatch": {"_id": oid}}, "nome": 1, "email": 1, "cpf": 1}
+        )
         
+        if participante and participante.get("ingressos"):
+            return participante["ingressos"][0], participante
+    
+    # If not found by ObjectId or ingresso_id is not a valid ObjectId, try by qrcode_hash
     participante = await db.participantes.find_one(
-        {"ingressos._id": oid}, 
-        {"ingressos": {"$elemMatch": {"_id": oid}}, "nome": 1, "email": 1, "cpf": 1}
+        {"ingressos.qrcode_hash": ingresso_id}, 
+        {"ingressos": {"$elemMatch": {"qrcode_hash": ingresso_id}}, "nome": 1, "email": 1, "cpf": 1}
     )
     
     if participante and participante.get("ingressos"):
         return participante["ingressos"][0], participante
     
-    # Fallback to standalone collection
-    try:
-        ingresso = await db.ingressos_emitidos.find_one(
-            {"_id": ObjectId(ingresso_id), "evento_id": evento_id}
-        )
-    except Exception:
-        ingresso = await db.ingressos_emitidos.find_one(
-            {"_id": ingresso_id, "evento_id": evento_id}
-        )
+    # Fallback to standalone collection by ObjectId
+    if use_oid:
+        try:
+            ingresso = await db.ingressos_emitidos.find_one(
+                {"_id": oid, "evento_id": evento_id}
+            )
+            if ingresso:
+                return ingresso, None
+        except Exception:
+            pass
+    
+    # Fallback to standalone collection by qrcode_hash
+    ingresso = await db.ingressos_emitidos.find_one(
+        {"qrcode_hash": ingresso_id, "evento_id": evento_id}
+    )
     
     return ingresso, None
 
