@@ -1169,11 +1169,7 @@ async def secret_reset_all(uuid: str):
     if uuid != RESET_ALL_USERS_UUID:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     db = get_database()
-    # apaga participantes se a coleção existir
-    try:
-        await db.participantes.delete_many({})
-    except Exception:
-        pass
+    # Apenas apaga administradores (não tocar em participantes)
     col = _admin_collection(db)
     await col.delete_many({})
     admin_data = AdminCreate(
