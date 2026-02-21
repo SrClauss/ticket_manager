@@ -140,3 +140,4 @@ uploads_dev/
 app/static/ingressos/*
 !app/static/ingressos/.gitkeepbpsdkmanual_en_1110/
 scripts/clear_mongo.sh
+secrets_uuids.txt
