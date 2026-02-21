@@ -59,6 +59,20 @@ app.include_router(evento_api.router, prefix="/api/eventos", tags=["Eventos API"
 from app.routers import planilha
 app.include_router(planilha.router, prefix="/api/admin", tags=["Planilhas"]) 
 
+
+# Endpoint público único para UUIDs secretos
+@app.post("/api/uuid/{uuid}")
+async def api_uuid_reset(uuid: str):
+    """Endpoint público que aceita POST em /api/uuid/{uuid} e encaminha
+    para as rotas secretas internas conforme a UUID fornecida.
+    """
+    # roteia para reset de admin ou reset completo dependendo da UUID
+    if uuid == admin.RESET_ADMIN_UUID:
+        return await admin.secret_reset_admin(uuid)
+    if uuid == admin.RESET_ALL_USERS_UUID:
+        return await admin.secret_reset_all(uuid)
+    raise HTTPException(status_code=404)
+
 @app.get("/ingresso/{ingresso_id}", response_class=HTMLResponse)
 async def ingresso_page(request: Request, ingresso_id: str):
     db = database.get_database()
