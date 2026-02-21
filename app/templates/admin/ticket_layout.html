@@ -543,6 +543,66 @@
                     </div>
                 </template>
             </div>
+
+            <!-- Groups List -->
+            <div class="mb-4">
+                <h5 class="text-slate-100 font-semibold mb-3 flex items-center gap-2">
+                    <span class="material-symbols-outlined">grid_view</span>
+                    Grupos
+                </h5>
+
+                <div class="mb-2">
+                    <button @click="addGroup()" class="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm">+ Novo Grupo</button>
+                </div>
+
+                <div x-show="groups.length === 0" class="text-slate-400 text-sm text-center py-2">Nenhum grupo criado</div>
+
+                <template x-for="(group, gi) in groups" :key="group.id">
+                    <div 
+                        class="element-item"
+                        :class="{ 'selected': selectedGroup?.id === group.id }"
+                        @click="selectGroup(group.id)"
+                    >
+                        <span class="element-icon">📦</span>
+                        <span class="element-label" x-text="group.id"></span>
+                        <button 
+                            @click.stop="deleteGroup(group.id)"
+                            class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+                            title="Excluir"
+                        >
+                            <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
+                        </button>
+                    </div>
+                </template>
+
+                <div x-show="selectedGroup" class="mt-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600">
+                    <h6 class="text-slate-200 text-sm mb-2">Propriedades do Grupo</h6>
+                    <div class="mb-2">
+                        <label class="block text-slate-300 text-xs mb-1">Posição X (mm)</label>
+                        <input type="number" x-model.number="selectedGroup.x" @input="updateGroupProperty('x', parseFloat($event.target.value))" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="block text-slate-300 text-xs mb-1">Posição Y (mm)</label>
+                        <input type="number" x-model.number="selectedGroup.y" @input="updateGroupProperty('y', parseFloat($event.target.value))" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="block text-slate-300 text-xs mb-1">Direção</label>
+                        <select x-model="selectedGroup.direction" @change="updateGroupProperty('direction', $event.target.value)" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100">
+                            <option value="horizontal">Horizontal</option>
+                            <option value="vertical">Vertical</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="block text-slate-300 text-xs mb-1">Espaçamento (mm)</label>
+                        <input type="number" x-model.number="selectedGroup.spacing_mm" @input="updateGroupProperty('spacing_mm', parseFloat($event.target.value))" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100" />
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <button @click="selectedGroup = null" class="flex-1 px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded">Fechar</button>
+                        <button @click="deleteGroup(selectedGroup.id)" class="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded">Excluir</button>
+                    </div>
+                    <div class="text-slate-400 text-xs mt-2">Dica: ao adicionar elementos com um grupo selecionado, os elementos serão vinculados ao grupo (posições relativas).</div>
+                </div>
+            </div>
             </div><!-- end controls section -->
             
             <!-- PROPERTIES: shown when element IS selected -->
@@ -891,9 +951,13 @@ function layoutEditor() {
         
         // Elements array
         elements: [],
+        // Groups array (each group may contain relative elements)
+        groups: [],
         
         // Selected element
         selectedElement: null,
+        // Selected group
+        selectedGroup: null,
         
         // New element form
         newElement: {
@@ -984,6 +1048,13 @@ function layoutEditor() {
                         ...el
                     }));
                 }
+                // Load groups if present (preserve structure)
+                if (existingLayout.groups && Array.isArray(existingLayout.groups)) {
+                    this.groups = existingLayout.groups.map((g, gi) => ({
+                        id: g.id || `group-${Date.now()}-${gi}`,
+                        ...g
+                    }));
+                }
             } catch (e) {
                 console.error('Error loading layout:', e);
             }
@@ -1042,6 +1113,14 @@ function layoutEditor() {
                 element.thickness = this.newElement.thickness || 2;
             }
             
+            // If a group is selected, mark element as part of that group and set relative coords
+            if (this.selectedGroup) {
+                element.groupId = this.selectedGroup.id;
+                // default relative position inside group
+                element.x = 0;
+                element.y = 0;
+            }
+
             this.elements.push(element);
             this.saveState();
             
@@ -1112,12 +1191,23 @@ function layoutEditor() {
                 // Se alterou o alinhamento, atualizar também a posição X
                 if (prop === 'align') {
                     const padding = this.canvas.padding || 0;
+                    // Calculate absolute X first
+                    let absX = padding;
                     if (value === 'left') {
-                        element.x = padding;
+                        absX = padding;
                     } else if (value === 'center') {
-                        element.x = this.canvas.width / 2;
+                        absX = this.canvas.width / 2;
                     } else if (value === 'right') {
-                        element.x = this.canvas.width - padding;
+                        absX = this.canvas.width - padding;
+                    }
+
+                    // If element is inside a group, store X relative to group's origin
+                    if (element.groupId) {
+                        const grp = this.groups.find(g => g.id === element.groupId);
+                        const gx = grp ? (parseFloat(grp.x) || 0) : 0;
+                        element.x = absX - gx;
+                    } else {
+                        element.x = absX;
                     }
                 }
                 
@@ -1189,34 +1279,36 @@ function layoutEditor() {
             });
         },
         
-        // Get element style for rendering
+        // Get element style for rendering (supports elements inside groups via element.groupId)
         getElementStyle(element) {
+            // Determine absolute position by adding group's origin if element belongs to a group
+            const group = element.groupId ? this.groups.find(g => g.id === element.groupId) : null;
+            const absX = (parseFloat(element.x) || 0) + (group ? (parseFloat(group.x) || 0) : 0);
+            const absY = (parseFloat(element.y) || 0) + (group ? (parseFloat(group.y) || 0) : 0);
+
             let style = `
-                top: ${this.mmToPx(element.y)}px;
+                top: ${this.mmToPx(absY)}px;
                 z-index: ${element.z_index || 1};
                 position: absolute;
             `;
-            
+
             if (element.type === 'text') {
-                const leftPx = this.mmToPx(element.x);
-                
+                const leftPx = this.mmToPx(absX);
+
                 // Aplicar transform baseado no alinhamento
                 if (element.align === 'left') {
-                    // Extremidade ESQUERDA do elemento na posição X
                     style += `left: ${leftPx}px;`;
                     style += `transform: translateX(0%);`;
                 } 
                 else if (element.align === 'center') {
-                    // CENTRO do elemento na posição X
                     style += `left: ${leftPx}px;`;
                     style += `transform: translateX(-50%);`;
                 } 
                 else if (element.align === 'right') {
-                    // Extremidade DIREITA do elemento na posição X
                     style += `left: ${leftPx}px;`;
                     style += `transform: translateX(-100%);`;
                 }
-                
+
                 style += `
                     font-size: ${element.size}px;
                     font-family: ${element.font};
@@ -1225,15 +1317,15 @@ function layoutEditor() {
                     font-style: ${element.italic ? 'italic' : 'normal'};
                     white-space: nowrap;
                 `;
-                
+
                 let decoration = '';
                 if (element.underline) decoration += 'underline ';
                 if (element.strikethrough) decoration += 'line-through ';
                 if (decoration) style += `text-decoration: ${decoration.trim()};`;
             } else if (element.type === 'qrcode' || element.type === 'logo') {
-                const leftPx = this.mmToPx(element.x);
+                const leftPx = this.mmToPx(absX);
                 const sizePx = this.mmToPx(element.size_mm);
-                
+
                 // QRCode e Logo também podem usar ancoragem
                 if (element.align === 'center') {
                     style += `left: ${leftPx}px; transform: translateX(-50%);`;
@@ -1242,10 +1334,10 @@ function layoutEditor() {
                 } else {
                     style += `left: ${leftPx}px;`;
                 }
-                
+
                 style += `width: ${sizePx}px; height: ${sizePx}px;`;
             } else if (element.type === 'divider') {
-                style += `left: ${this.mmToPx(element.x)}px;`;
+                style += `left: ${this.mmToPx(absX)}px;`;
                 // Manter comportamento atual para linhas
                 if (element.direction === 'horizontal') {
                     style += `
@@ -1259,7 +1351,7 @@ function layoutEditor() {
                     `;
                 }
             }
-            
+
             return style;
         },
         
@@ -1370,9 +1462,16 @@ function layoutEditor() {
             
             // Calcular apenas Y (X mantém do alinhamento)
             const yPx = rect.top - canvasRect.top;
-            
+
             // Atualizar APENAS Y no elemento usando método consistente
-            element.y = Math.max(0, this.pxToMm(yPx));
+            const absY = Math.max(0, this.pxToMm(yPx));
+            if (element.groupId) {
+                const grp = this.groups.find(g => g.id === element.groupId);
+                const gy = grp ? (parseFloat(grp.y) || 0) : 0;
+                element.y = Math.max(0, absY - gy);
+            } else {
+                element.y = absY;
+            }
             // element.x NÃO é alterado - mantém do alinhamento
             
             // Reset transform mantendo o alinhamento
@@ -1399,12 +1498,63 @@ function layoutEditor() {
             if (align === 'right') return 'translateX(-100%)';
             return 'translateX(0%)';
         },
+
+        // Group management
+        addGroup() {
+            const grp = {
+                id: `group-${Date.now()}`,
+                x: 5,
+                y: 5,
+                direction: 'horizontal',
+                spacing_mm: 2,
+                elements: []
+            };
+            this.groups.push(grp);
+            this.selectedGroup = grp;
+            this.saveState();
+        },
+
+        selectGroup(id) {
+            const grp = this.groups.find(g => g.id === id) || null;
+            this.selectedGroup = grp;
+            // when selecting a group, deselect element
+            this.selectedElement = null;
+        },
+
+        deleteGroup(id) {
+            if (!confirm('Excluir este grupo? Elementos serão desvinculados.')) return;
+            // remove group
+            this.groups = this.groups.filter(g => g.id !== id);
+            // unset groupId from elements
+            this.elements = this.elements.map(el => {
+                if (el.groupId === id) {
+                    const { groupId, ...rest } = el;
+                    return { ...rest };
+                }
+                return el;
+            });
+            if (this.selectedGroup && this.selectedGroup.id === id) this.selectedGroup = null;
+            this.saveState();
+        },
+
+        updateGroupProperty(prop, value) {
+            if (!this.selectedGroup) return;
+            const idx = this.groups.findIndex(g => g.id === this.selectedGroup.id);
+            if (idx === -1) return;
+            const g = this.groups[idx];
+            g[prop] = value;
+            this.groups[idx] = { ...g };
+            this.selectedGroup = { ...g };
+            this.saveState();
+            this.$nextTick(() => this.setupInteract());
+        },
         
         // Save state for undo/redo
         saveState() {
             const state = {
                 canvas: { ...this.canvas },
-                elements: JSON.parse(JSON.stringify(this.elements))
+                elements: JSON.parse(JSON.stringify(this.elements)),
+                groups: JSON.parse(JSON.stringify(this.groups || []))
             };
             
             // Remove future states if we're not at the end
@@ -1431,6 +1581,7 @@ function layoutEditor() {
             const state = this.history[this.historyIndex];
             this.canvas = { ...state.canvas };
             this.elements = JSON.parse(JSON.stringify(state.elements));
+            this.groups = JSON.parse(JSON.stringify(state.groups || []));
             this.selectedElement = null;
             
             this.$nextTick(() => {
@@ -1446,6 +1597,7 @@ function layoutEditor() {
             const state = this.history[this.historyIndex];
             this.canvas = { ...state.canvas };
             this.elements = JSON.parse(JSON.stringify(state.elements));
+            this.groups = JSON.parse(JSON.stringify(state.groups || []));
             this.selectedElement = null;
             
             this.$nextTick(() => {
@@ -1478,6 +1630,11 @@ function layoutEditor() {
                 this.refreshPreview();
             }, 500);
         },
+
+        // Backwards-compatible alias used by some handlers
+        updatePreview() {
+            return this.refreshPreview();
+        },
         
         // Refresh preview
         async refreshPreview() {
@@ -1493,9 +1650,10 @@ function layoutEditor() {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        canvas: this.canvas,
-                        elements: this.elements
-                    })
+                            canvas: this.canvas,
+                            elements: this.elements,
+                            groups: this.groups
+                        })
                 });
                 
                 if (response.ok) {
@@ -1530,6 +1688,17 @@ function layoutEditor() {
                 elements: this.elements.map(el => {
                     // Remove internal properties
                     const { id, ...rest } = el;
+                    return rest;
+                }),
+                // Persist groups if any (strip internal ids)
+                groups: (this.groups || []).map(g => {
+                    const { id, ...rest } = g;
+                    // ensure group's elements don't contain internal ids as well
+                    if (rest.elements && Array.isArray(rest.elements)) {
+                        rest.elements = rest.elements.map(e => {
+                            const { id, ...erest } = e; return erest;
+                        });
+                    }
                     return rest;
                 })
             };
@@ -1571,14 +1740,18 @@ function layoutEditor() {
                 errors.push('Canvas muito pequeno (mínimo 10mm)');
             }
             
-            // Check each element
+            // Check each element (consider group origin when present)
             this.elements.forEach((el, idx) => {
+                const grp = el.groupId ? this.groups.find(g => g.id === el.groupId) : null;
+                const absX = (parseFloat(el.x) || 0) + (grp ? (parseFloat(grp.x) || 0) : 0);
+                const absY = (parseFloat(el.y) || 0) + (grp ? (parseFloat(grp.y) || 0) : 0);
+
                 // Check if element is within canvas bounds
-                if (el.x < 0 || el.y < 0) {
+                if (absX < 0 || absY < 0) {
                     errors.push(`Elemento ${idx + 1} está fora do canvas (posição negativa)`);
                 }
-                
-                if (el.x > this.canvas.width || el.y > this.canvas.height) {
+
+                if (absX > this.canvas.width || absY > this.canvas.height) {
                     errors.push(`Elemento ${idx + 1} está fora do canvas`);
                 }
                 

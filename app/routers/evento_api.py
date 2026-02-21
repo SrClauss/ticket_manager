@@ -126,6 +126,67 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300, logo_path: O
     draw = ImageDraw.Draw(img)
 
     elements = layout.get("elements", [])
+    # Support frontend `groups` model: convert elements that reference `groupId` into absolute coords
+    try:
+        groups = layout.get("groups") or []
+        groups_map = {g.get("id"): g for g in groups if g.get("id")}
+        # If groups define nested elements, compile them too
+        for g in groups:
+            nested = g.get("elements") or []
+            for el in nested:
+                # copy nested element and offset by group origin
+                try:
+                    el_copy = el.copy()
+                except Exception:
+                    import copy as _copy
+                    el_copy = _copy.deepcopy(el)
+                try:
+                    gx = float(g.get("x", 0) or 0)
+                except Exception:
+                    gx = 0
+                try:
+                    gy = float(g.get("y", 0) or 0)
+                except Exception:
+                    gy = 0
+                try:
+                    rel_x = float(el_copy.get("x", 0) or 0)
+                except Exception:
+                    rel_x = 0
+                try:
+                    rel_y = float(el_copy.get("y", 0) or 0)
+                except Exception:
+                    rel_y = 0
+                el_copy["x"] = gx + rel_x
+                el_copy["y"] = gy + rel_y
+                elements.append(el_copy)
+
+        # Convert elements that reference groupId
+        if groups_map:
+            for el in elements:
+                gid = el.get("groupId")
+                if gid and gid in groups_map:
+                    g = groups_map[gid]
+                    try:
+                        gx = float(g.get("x", 0) or 0)
+                    except Exception:
+                        gx = 0
+                    try:
+                        gy = float(g.get("y", 0) or 0)
+                    except Exception:
+                        gy = 0
+                    try:
+                        rel_x = float(el.get("x", 0) or 0)
+                    except Exception:
+                        rel_x = 0
+                    try:
+                        rel_y = float(el.get("y", 0) or 0)
+                    except Exception:
+                        rel_y = 0
+                    el["x"] = gx + rel_x
+                    el["y"] = gy + rel_y
+    except Exception:
+        # non-fatal; proceed with original elements
+        pass
     # honor optional canvas padding and border
     canvas_padding_mm = float(canvas.get('padding_mm', 0))
     canvas_border = bool(canvas.get('border', False))
