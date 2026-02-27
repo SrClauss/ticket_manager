@@ -596,11 +596,38 @@
                         <label class="block text-slate-300 text-xs mb-1">Espaçamento (mm)</label>
                         <input type="number" x-model.number="selectedGroup.spacing_mm" @input="updateGroupProperty('spacing_mm', parseFloat($event.target.value))" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100" />
                     </div>
+
+                    <div class="mb-2">
+                        <label class="block text-slate-300 text-xs mb-1">Adicionar elemento ao grupo</label>
+                        <div class="flex gap-2">
+                            <select x-model="groupElementToAddId" class="flex-1 bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-slate-100 text-sm">
+                                <option value="">Selecione...</option>
+                                <template x-for="el in getUnassignedElements()" :key="el.id">
+                                    <option :value="el.id" x-text="getElementLabel(el)"></option>
+                                </template>
+                            </select>
+                            <button @click="assignElementToSelectedGroup()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm">Vincular</button>
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="block text-slate-300 text-xs mb-1">Elementos do grupo (ordem flex)</label>
+                        <div x-show="getGroupMembers(selectedGroup.id).length === 0" class="text-slate-400 text-xs">Nenhum elemento no grupo</div>
+                        <template x-for="(member, mi) in getGroupMembers(selectedGroup.id)" :key="member.id">
+                            <div class="flex items-center gap-2 mb-1 p-2 bg-slate-800/50 rounded border border-slate-600">
+                                <button @click="moveGroupMember(selectedGroup.id, member.id, -1)" class="px-2 py-1 bg-slate-600 hover:bg-slate-500 text-white rounded text-xs">↑</button>
+                                <button @click="moveGroupMember(selectedGroup.id, member.id, 1)" class="px-2 py-1 bg-slate-600 hover:bg-slate-500 text-white rounded text-xs">↓</button>
+                                <span class="flex-1 text-slate-200 text-xs" x-text="getElementLabel(member)"></span>
+                                <button @click="removeElementFromGroup(member.id)" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs">Remover</button>
+                            </div>
+                        </template>
+                    </div>
+
                     <div class="flex gap-2 mt-3">
                         <button @click="selectedGroup = null" class="flex-1 px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded">Fechar</button>
                         <button @click="deleteGroup(selectedGroup.id)" class="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded">Excluir</button>
                     </div>
-                    <div class="text-slate-400 text-xs mt-2">Dica: ao adicionar elementos com um grupo selecionado, os elementos serão vinculados ao grupo (posições relativas).</div>
+                    <div class="text-slate-400 text-xs mt-2">Grupo funciona como flex: direção horizontal/vertical, espaçamento e ordem. Elementos no grupo podem ser arrastados verticalmente para ajuste fino.</div>
                 </div>
             </div>
             </div><!-- end controls section -->
@@ -1827,6 +1854,7 @@ function layoutEditor() {
         groups: [],
         selectedElement: null,
         selectedGroup: null,
+        groupElementToAddId: '',
         newElement: {
             type: 'text', value: '', size: 12, size_mm: 30, font: 'Arial', align: 'left',
             bold: false, italic: false, underline: false, strikethrough: false,
@@ -1846,6 +1874,7 @@ function layoutEditor() {
 
         init() {
             this.loadExistingLayout();
+            this.normalizeGroupState();
             this.saveState();
             this.setupKeyboardShortcuts();
             this.$nextTick(() => {
@@ -1880,67 +1909,69 @@ function layoutEditor() {
                 e.target.__startLeft = e.target.left || 0;
             });
 
-            this.fabricCanvas.on('object:moving', (e) => {
-                if (!e.target) return;
-                const target = e.target;
+            this.fabricCanvas.on('object:moving', (e) => this.onFabricObjectMoving(e));
+            this.fabricCanvas.on('object:modified', (e) => this.onFabricObjectModified(e));
+        },
 
-                if (target.groupFrameId) {
-                    target.left = target.__startLeft;
-                    target.top = Math.max(0, Math.min(this.fabricCanvas.getHeight() - target.getScaledHeight(), target.top || 0));
-                    return;
-                }
+        onFabricObjectMoving(e) {
+            if (!e.target) return;
+            const target = e.target;
 
-                const element = this.elements.find(el => el.id === target.elementId);
-                if (!element) return;
+            if (target.groupFrameId) {
+                target.left = target.__startLeft;
+                target.top = Math.max(0, Math.min(this.fabricCanvas.getHeight() - target.getScaledHeight(), target.top || 0));
+                return;
+            }
 
+            const element = this.elements.find(el => el.id === target.elementId);
+            if (!element) return;
+
+            if (element.groupId) {
+                const abs = this.getElementAbsolutePlacement(element);
+                target.left = this.mmToPx(abs.x);
+            } else {
                 const absAnchorX = this.getAbsoluteAnchorX(element);
                 target.left = this.getAlignedLeftPx(element.align || 'left', absAnchorX, target.getScaledWidth());
-                target.top = Math.max(0, Math.min(this.fabricCanvas.getHeight() - target.getScaledHeight(), target.top || 0));
-            });
+            }
 
-            this.fabricCanvas.on('object:modified', (e) => {
-                if (this._isRendering || !e.target) return;
-                const target = e.target;
-                const deltaMm = this.pxToMm((target.top || 0) - (target.__startTop || 0));
+            target.top = Math.max(0, Math.min(this.fabricCanvas.getHeight() - target.getScaledHeight(), target.top || 0));
+        },
 
-                if (target.groupFrameId) {
-                    const gi = this.groups.findIndex(g => g.id === target.groupFrameId);
-                    if (gi !== -1) {
-                        const g = { ...this.groups[gi] };
-                        g.y = Math.max(0, (parseFloat(g.y) || 0) + deltaMm);
-                        this.groups[gi] = g;
-                        if (this.selectedGroup?.id === g.id) this.selectedGroup = { ...g };
-                        this.saveState();
-                    }
-                    this.renderFabricScene();
-                    return;
+        onFabricObjectModified(e) {
+            if (this._isRendering || !e.target) return;
+            const target = e.target;
+            const deltaMm = this.pxToMm((target.top || 0) - (target.__startTop || 0));
+
+            if (target.groupFrameId) {
+                const gi = this.groups.findIndex(g => g.id === target.groupFrameId);
+                if (gi !== -1) {
+                    const group = { ...this.groups[gi] };
+                    group.y = Math.max(0, (parseFloat(group.y) || 0) + deltaMm);
+                    this.groups[gi] = group;
+                    if (this.selectedGroup?.id === group.id) this.selectedGroup = { ...group };
+                    this.saveState();
                 }
-
-                const index = this.elements.findIndex(el => el.id === target.elementId);
-                if (index === -1) {
-                    this.renderFabricScene();
-                    return;
-                }
-
-                const element = { ...this.elements[index] };
-
-                if (element.groupId) {
-                    const gi = this.groups.findIndex(g => g.id === element.groupId);
-                    if (gi !== -1) {
-                        const g = { ...this.groups[gi] };
-                        g.y = Math.max(0, (parseFloat(g.y) || 0) + deltaMm);
-                        this.groups[gi] = g;
-                        if (this.selectedGroup?.id === g.id) this.selectedGroup = { ...g };
-                    }
-                } else {
-                    element.y = Math.max(0, this.pxToMm(target.top || 0));
-                    this.elements[index] = element;
-                    if (this.selectedElement?.id === element.id) this.selectedElement = { ...element };
-                }
-
-                this.saveState();
                 this.renderFabricScene();
-            });
+                return;
+            }
+
+            const idx = this.elements.findIndex(el => el.id === target.elementId);
+            if (idx === -1) {
+                this.renderFabricScene();
+                return;
+            }
+
+            const element = { ...this.elements[idx] };
+            if (element.groupId) {
+                element.offset_y_mm = (parseFloat(element.offset_y_mm) || 0) + deltaMm;
+            } else {
+                element.y = Math.max(0, this.pxToMm(target.top || 0));
+            }
+
+            this.elements[idx] = element;
+            if (this.selectedElement?.id === element.id) this.selectedElement = { ...element };
+            this.saveState();
+            this.renderFabricScene();
         },
 
         handleSelection(e) {
@@ -1967,6 +1998,7 @@ function layoutEditor() {
                     this.elements = existingLayout.elements.map((el, idx) => ({
                         id: `elem-${Date.now()}-${idx}`,
                         align: el.align || 'left',
+                        offset_y_mm: parseFloat(el.offset_y_mm) || 0,
                         ...el
                     }));
                 }
@@ -1977,12 +2009,36 @@ function layoutEditor() {
                         y: parseFloat(g.y) || 0,
                         direction: g.direction || 'vertical',
                         spacing_mm: parseFloat(g.spacing_mm) || 2,
+                        elements: Array.isArray(g.elements) ? g.elements : [],
                         ...g
                     }));
                 }
             } catch (e) {
                 console.error('Error loading layout:', e);
             }
+        },
+
+        normalizeGroupState() {
+            this.groups = (this.groups || []).map(g => ({ ...g, elements: Array.isArray(g.elements) ? [...g.elements] : [] }));
+
+            this.elements.forEach((element) => {
+                if (!element.groupId) return;
+                const group = this.groups.find(g => g.id === element.groupId);
+                if (!group) {
+                    delete element.groupId;
+                    return;
+                }
+                if (!group.elements.includes(element.id)) {
+                    group.elements.push(element.id);
+                }
+                if (typeof element.offset_y_mm === 'undefined') {
+                    element.offset_y_mm = 0;
+                }
+            });
+
+            this.groups.forEach((group) => {
+                group.elements = group.elements.filter(id => this.elements.some(el => el.id === id && el.groupId === group.id));
+            });
         },
 
         mmToPx(mm) { return mm * 3.78; },
@@ -1997,7 +2053,7 @@ function layoutEditor() {
         },
 
         addElement() {
-            const element = { id: `elem-${Date.now()}`, type: this.newElement.type, x: 5, y: 5, z_index: this.elements.length + 1 };
+            const element = { id: `elem-${Date.now()}`, type: this.newElement.type, x: 5, y: 5, z_index: this.elements.length + 1, offset_y_mm: 0 };
             if (this.newElement.type === 'text') {
                 Object.assign(element, {
                     value: this.newElement.value || 'Texto',
@@ -2022,13 +2078,12 @@ function layoutEditor() {
                 });
             }
 
+            this.elements.push(element);
+
             if (this.selectedGroup) {
-                element.groupId = this.selectedGroup.id;
-                element.x = 0;
-                element.y = 0;
+                this.assignElementToGroup(element.id, this.selectedGroup.id, false);
             }
 
-            this.elements.push(element);
             this.saveState();
             this.renderFabricScene();
             this.resetNewElementForm();
@@ -2045,6 +2100,7 @@ function layoutEditor() {
 
         deleteElement(id) {
             if (!confirm('Excluir este elemento?')) return;
+            this.removeElementFromGroup(id, false);
             this.elements = this.elements.filter(el => el.id !== id);
             if (this.selectedElement?.id === id) this.selectedElement = null;
             this.saveState();
@@ -2076,17 +2132,12 @@ function layoutEditor() {
             const element = { ...this.elements[idx] };
             element[prop] = value;
 
-            if (prop === 'align') {
+            if (prop === 'align' && !element.groupId) {
                 const padding = this.canvas.padding || 0;
                 let absX = padding;
                 if (value === 'center') absX = this.canvas.width / 2;
                 if (value === 'right') absX = this.canvas.width - padding;
-                if (element.groupId) {
-                    const group = this.groups.find(g => g.id === element.groupId);
-                    element.x = absX - (group ? (parseFloat(group.x) || 0) : 0);
-                } else {
-                    element.x = absX;
-                }
+                element.x = absX;
             }
 
             this.elements[idx] = element;
@@ -2112,6 +2163,7 @@ function layoutEditor() {
         },
 
         getElementLabel(element) {
+            if (!element) return 'Elemento';
             if (element.type === 'text') return element.value?.substring(0, 20) || 'Texto';
             if (element.type === 'qrcode') return 'QR Code';
             if (element.type === 'logo') return 'Logo';
@@ -2124,10 +2176,11 @@ function layoutEditor() {
         },
 
         addGroup() {
-            const group = { id: `group-${Date.now()}`, x: 5, y: 5, direction: 'vertical', spacing_mm: 2, elements: [] };
+            const group = { id: `group-${Date.now()}`, x: 5, y: 5, direction: 'horizontal', spacing_mm: 2, elements: [] };
             this.groups.push(group);
             this.selectedGroup = group;
             this.selectedElement = null;
+            this.groupElementToAddId = '';
             this.saveState();
             this.renderFabricScene();
         },
@@ -2135,6 +2188,7 @@ function layoutEditor() {
         selectGroup(id, fromCanvas = false) {
             this.selectedGroup = this.groups.find(g => g.id === id) || null;
             this.selectedElement = null;
+            this.groupElementToAddId = '';
             if (!fromCanvas && this.fabricCanvas && this.selectedGroup && this._fabricGroupFramesById[this.selectedGroup.id]) {
                 this.fabricCanvas.setActiveObject(this._fabricGroupFramesById[this.selectedGroup.id]);
                 this.fabricCanvas.requestRenderAll();
@@ -2146,8 +2200,10 @@ function layoutEditor() {
             this.groups = this.groups.filter(g => g.id !== id);
             this.elements = this.elements.map(el => {
                 if (el.groupId !== id) return el;
-                const { groupId, ...rest } = el;
-                return { ...rest };
+                const copy = { ...el };
+                delete copy.groupId;
+                copy.offset_y_mm = 0;
+                return copy;
             });
             if (this.selectedGroup?.id === id) this.selectedGroup = null;
             this.saveState();
@@ -2165,17 +2221,140 @@ function layoutEditor() {
             this.renderFabricScene();
         },
 
-        getAbsolutePosition(element) {
-            const group = element.groupId ? this.groups.find(g => g.id === element.groupId) : null;
+        getUnassignedElements() {
+            return this.elements.filter(el => !el.groupId);
+        },
+
+        assignElementToSelectedGroup() {
+            if (!this.selectedGroup || !this.groupElementToAddId) return;
+            this.assignElementToGroup(this.groupElementToAddId, this.selectedGroup.id, true);
+            this.groupElementToAddId = '';
+        },
+
+        assignElementToGroup(elementId, groupId, persist = true) {
+            const eIdx = this.elements.findIndex(el => el.id === elementId);
+            const gIdx = this.groups.findIndex(g => g.id === groupId);
+            if (eIdx === -1 || gIdx === -1) return;
+
+            const element = { ...this.elements[eIdx] };
+
+            if (element.groupId) {
+                const oldGroup = this.groups.find(g => g.id === element.groupId);
+                if (oldGroup?.elements) {
+                    oldGroup.elements = oldGroup.elements.filter(id => id !== element.id);
+                }
+            }
+
+            element.groupId = groupId;
+            element.offset_y_mm = parseFloat(element.offset_y_mm) || 0;
+            this.elements[eIdx] = element;
+
+            const group = { ...this.groups[gIdx] };
+            group.elements = Array.isArray(group.elements) ? [...group.elements] : [];
+            if (!group.elements.includes(element.id)) {
+                group.elements.push(element.id);
+            }
+            this.groups[gIdx] = group;
+            if (this.selectedGroup?.id === group.id) this.selectedGroup = { ...group };
+
+            if (persist) {
+                this.saveState();
+                this.renderFabricScene();
+            }
+        },
+
+        removeElementFromGroup(elementId, persist = true) {
+            const eIdx = this.elements.findIndex(el => el.id === elementId);
+            if (eIdx === -1) return;
+            const element = { ...this.elements[eIdx] };
+            if (!element.groupId) return;
+
+            const group = this.groups.find(g => g.id === element.groupId);
+            if (group?.elements) {
+                group.elements = group.elements.filter(id => id !== element.id);
+                if (this.selectedGroup?.id === group.id) this.selectedGroup = { ...group };
+            }
+
+            delete element.groupId;
+            element.offset_y_mm = 0;
+            this.elements[eIdx] = element;
+
+            if (persist) {
+                this.saveState();
+                this.renderFabricScene();
+            }
+        },
+
+        getGroupMembers(groupId) {
+            const group = this.groups.find(g => g.id === groupId);
+            if (!group) return [];
+            const ids = Array.isArray(group.elements) ? group.elements : [];
+            return ids.map(id => this.elements.find(el => el.id === id)).filter(Boolean);
+        },
+
+        moveGroupMember(groupId, elementId, delta) {
+            const gIdx = this.groups.findIndex(g => g.id === groupId);
+            if (gIdx === -1) return;
+            const group = { ...this.groups[gIdx] };
+            group.elements = Array.isArray(group.elements) ? [...group.elements] : [];
+            const idx = group.elements.indexOf(elementId);
+            if (idx === -1) return;
+            const next = idx + delta;
+            if (next < 0 || next >= group.elements.length) return;
+            const tmp = group.elements[idx];
+            group.elements[idx] = group.elements[next];
+            group.elements[next] = tmp;
+            this.groups[gIdx] = group;
+            if (this.selectedGroup?.id === group.id) this.selectedGroup = { ...group };
+            this.saveState();
+            this.renderFabricScene();
+        },
+
+        getGroupLayoutMap(groupId) {
+            const group = this.groups.find(g => g.id === groupId);
+            if (!group) return {};
+            const members = this.getGroupMembers(groupId);
+            const spacing = parseFloat(group.spacing_mm) || 0;
+            let cursor = 0;
+            const map = {};
+
+            members.forEach((element) => {
+                const size = this.getElementSizeMm(element);
+                const offsetY = parseFloat(element.offset_y_mm) || 0;
+
+                if (group.direction === 'vertical') {
+                    map[element.id] = { x: 0, y: cursor + offsetY, width: size.width, height: size.height };
+                    cursor += size.height + spacing;
+                } else {
+                    map[element.id] = { x: cursor, y: offsetY, width: size.width, height: size.height };
+                    cursor += size.width + spacing;
+                }
+            });
+
+            return map;
+        },
+
+        getElementAbsolutePlacement(element) {
+            if (!element.groupId) {
+                return { x: parseFloat(element.x) || 0, y: parseFloat(element.y) || 0 };
+            }
+
+            const group = this.groups.find(g => g.id === element.groupId);
+            if (!group) {
+                return { x: parseFloat(element.x) || 0, y: parseFloat(element.y) || 0 };
+            }
+
+            const layoutMap = this.getGroupLayoutMap(group.id);
+            const rel = layoutMap[element.id] || { x: 0, y: 0 };
+
             return {
-                x: (parseFloat(element.x) || 0) + (group ? (parseFloat(group.x) || 0) : 0),
-                y: (parseFloat(element.y) || 0) + (group ? (parseFloat(group.y) || 0) : 0)
+                x: (parseFloat(group.x) || 0) + rel.x,
+                y: (parseFloat(group.y) || 0) + rel.y
             };
         },
 
         getAbsoluteAnchorX(element) {
-            const group = element.groupId ? this.groups.find(g => g.id === element.groupId) : null;
-            return (parseFloat(element.x) || 0) + (group ? (parseFloat(group.x) || 0) : 0);
+            return parseFloat(element.x) || 0;
         },
 
         getAlignedLeftPx(align, anchorMm, widthPx) {
@@ -2221,8 +2400,12 @@ function layoutEditor() {
 
             if (!obj) return null;
 
-            const abs = this.getAbsolutePosition(element);
-            const left = this.getAlignedLeftPx(element.align || 'left', this.getAbsoluteAnchorX(element), obj.getScaledWidth());
+            const abs = this.getElementAbsolutePlacement(element);
+            let left = this.mmToPx(abs.x);
+            if (!element.groupId) {
+                left = this.getAlignedLeftPx(element.align || 'left', this.getAbsoluteAnchorX(element), obj.getScaledWidth());
+            }
+
             obj.set({
                 left,
                 top: this.mmToPx(abs.y),
@@ -2254,25 +2437,25 @@ function layoutEditor() {
         },
 
         createGroupFrame(group) {
-            const members = this.elements.filter(el => el.groupId === group.id);
+            const members = this.getGroupMembers(group.id);
             let bounds = { x: parseFloat(group.x) || 0, y: parseFloat(group.y) || 0, width: 20, height: 20 };
 
             if (members.length) {
+                const layoutMap = this.getGroupLayoutMap(group.id);
                 let minX = Number.POSITIVE_INFINITY;
                 let minY = Number.POSITIVE_INFINITY;
                 let maxX = Number.NEGATIVE_INFINITY;
                 let maxY = Number.NEGATIVE_INFINITY;
                 members.forEach((el) => {
-                    const abs = this.getAbsolutePosition(el);
-                    const size = this.getElementSizeMm(el);
-                    minX = Math.min(minX, abs.x);
-                    minY = Math.min(minY, abs.y);
-                    maxX = Math.max(maxX, abs.x + size.width);
-                    maxY = Math.max(maxY, abs.y + size.height);
+                    const rel = layoutMap[el.id] || { x: 0, y: 0, width: 0, height: 0 };
+                    minX = Math.min(minX, rel.x);
+                    minY = Math.min(minY, rel.y);
+                    maxX = Math.max(maxX, rel.x + rel.width);
+                    maxY = Math.max(maxY, rel.y + rel.height);
                 });
                 bounds = {
-                    x: Math.max(0, minX - 2),
-                    y: Math.max(0, minY - 2),
+                    x: Math.max(0, (parseFloat(group.x) || 0) + minX - 2),
+                    y: Math.max(0, (parseFloat(group.y) || 0) + minY - 2),
                     width: Math.max(10, maxX - minX + 4),
                     height: Math.max(10, maxY - minY + 4)
                 };
@@ -2366,6 +2549,7 @@ function layoutEditor() {
             this.canvas = { ...state.canvas };
             this.elements = JSON.parse(JSON.stringify(state.elements));
             this.groups = JSON.parse(JSON.stringify(state.groups || []));
+            this.normalizeGroupState();
             this.selectedElement = null;
             this.selectedGroup = null;
             this.renderFabricScene();
@@ -2378,6 +2562,7 @@ function layoutEditor() {
             this.canvas = { ...state.canvas };
             this.elements = JSON.parse(JSON.stringify(state.elements));
             this.groups = JSON.parse(JSON.stringify(state.groups || []));
+            this.normalizeGroupState();
             this.selectedElement = null;
             this.selectedGroup = null;
             this.renderFabricScene();
@@ -2439,12 +2624,6 @@ function layoutEditor() {
                 }),
                 groups: (this.groups || []).map(g => {
                     const { id, ...rest } = g;
-                    if (rest.elements && Array.isArray(rest.elements)) {
-                        rest.elements = rest.elements.map(e => {
-                            const { id, ...erest } = e;
-                            return erest;
-                        });
-                    }
                     return rest;
                 })
             };
@@ -2472,11 +2651,9 @@ function layoutEditor() {
             if (this.canvas.width < 10 || this.canvas.height < 10) errors.push('Canvas muito pequeno (mínimo 10mm)');
 
             this.elements.forEach((el, idx) => {
-                const group = el.groupId ? this.groups.find(g => g.id === el.groupId) : null;
-                const absX = (parseFloat(el.x) || 0) + (group ? (parseFloat(group.x) || 0) : 0);
-                const absY = (parseFloat(el.y) || 0) + (group ? (parseFloat(group.y) || 0) : 0);
-                if (absX < 0 || absY < 0) errors.push(`Elemento ${idx + 1} está fora do canvas (posição negativa)`);
-                if (absX > this.canvas.width || absY > this.canvas.height) errors.push(`Elemento ${idx + 1} está fora do canvas`);
+                const abs = this.getElementAbsolutePlacement(el);
+                if (abs.x < 0 || abs.y < 0) errors.push(`Elemento ${idx + 1} está fora do canvas (posição negativa)`);
+                if (abs.x > this.canvas.width || abs.y > this.canvas.height) errors.push(`Elemento ${idx + 1} está fora do canvas`);
                 if (el.type === 'text') {
                     if (!el.value || el.value.trim() === '') errors.push(`Elemento de texto ${idx + 1} está vazio`);
                     if (el.size < 6 || el.size > 72) errors.push(`Elemento ${idx + 1}: tamanho de fonte inválido (6-72px)`);
@@ -2509,10 +2686,11 @@ function layoutEditor() {
                 if (!response.ok) throw new Error('Erro ao carregar template');
                 const template = await response.json();
                 this.canvas = { ...this.canvas, ...template.canvas };
-                this.elements = (template.elements || []).map((el, idx) => ({ id: `elem-${Date.now()}-${idx}`, align: el.align || 'left', ...el }));
+                this.elements = (template.elements || []).map((el, idx) => ({ id: `elem-${Date.now()}-${idx}`, align: el.align || 'left', offset_y_mm: parseFloat(el.offset_y_mm) || 0, ...el }));
                 this.groups = Array.isArray(template.groups)
-                    ? template.groups.map((g, gi) => ({ id: g.id || `group-${Date.now()}-${gi}`, x: parseFloat(g.x) || 0, y: parseFloat(g.y) || 0, direction: g.direction || 'vertical', spacing_mm: parseFloat(g.spacing_mm) || 2, ...g }))
+                    ? template.groups.map((g, gi) => ({ id: g.id || `group-${Date.now()}-${gi}`, x: parseFloat(g.x) || 0, y: parseFloat(g.y) || 0, direction: g.direction || 'horizontal', spacing_mm: parseFloat(g.spacing_mm) || 2, elements: Array.isArray(g.elements) ? g.elements : [], ...g }))
                     : [];
+                this.normalizeGroupState();
                 this.showTemplateSelector = false;
                 this.saveState();
                 this.renderFabricScene();
