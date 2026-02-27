@@ -817,36 +817,7 @@
                     :style="`width: ${mmToPx(canvas.width)}px; height: ${mmToPx(canvas.height)}px;`"
                     @click.self="deselectElement()"
                 >
-                    <!-- Linhas guia de alinhamento -->
-                    <div 
-                        class="guide-line guide-left"
-                        :style="`left: ${mmToPx(canvas.padding)}px; top: 0; bottom: 0; width: 1px; background: rgba(59, 130, 246, 0.3); position: absolute; pointer-events: none; z-index: 0;`"
-                    ></div>
-                    
-                    <div 
-                        class="guide-line guide-center"
-                        :style="`left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(59, 130, 246, 0.3); position: absolute; pointer-events: none; transform: translateX(-50%); z-index: 0;`"
-                    ></div>
-                    
-                    <div 
-                        class="guide-line guide-right"
-                        :style="`right: ${mmToPx(canvas.padding)}px; top: 0; bottom: 0; width: 1px; background: rgba(59, 130, 246, 0.3); position: absolute; pointer-events: none; z-index: 0;`"
-                    ></div>
-                    
-                    <!-- Draggable Elements -->
-                    <template x-for="element in elements" :key="element.id">
-                        <div
-                            :id="element.id"
-                            class="draggable-element"
-                            :class="{ 
-                                'selected': selectedElement?.id === element.id,
-                                [`element-${element.type}`]: true
-                            }"
-                            :style="getElementStyle(element)"
-                            @click.stop="selectElement(element.id)"
-                            x-text="getElementDisplay(element)"
-                        ></div>
-                    </template>
+                    <canvas id="ticketCanvasFabric"></canvas>
                 </div>
             </div>
             
@@ -899,7 +870,7 @@
                 <span>Salvar Layout</span>
             </button>
             <button 
-                @click="if(confirm('Limpar todos os elementos?')) { elements = []; saveState(); }"
+                @click="if(confirm('Limpar todos os elementos?')) { elements = []; groups = []; selectedElement = null; selectedGroup = null; saveState(); renderFabricScene(); }"
                 class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 transition"
             >
                 <span class="material-symbols-outlined">delete_sweep</span>
@@ -933,6 +904,9 @@
 {% block extra_js %}
 <!-- Alpine.js -->
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<!-- Fabric.js -->
+<script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
 
 <!-- Interact.js -->
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
@@ -1838,6 +1812,712 @@ function layoutEditor() {
                 });
             } catch (error) {
                 console.error('Load template error:', error);
+                this.showToast('Erro ao carregar template: ' + error.message, 'error');
+            }
+        }
+    };
+}
+</script>
+
+<script>
+function layoutEditor() {
+    return {
+        canvas: { width: 62, height: 120, orientation: 'portrait', padding: 5, dpi: 300 },
+        elements: [],
+        groups: [],
+        selectedElement: null,
+        selectedGroup: null,
+        newElement: {
+            type: 'text', value: '', size: 12, size_mm: 30, font: 'Arial', align: 'left',
+            bold: false, italic: false, underline: false, strikethrough: false,
+            direction: 'horizontal', length_mm: 50, thickness: 2
+        },
+        history: [],
+        historyIndex: -1,
+        previewUrl: null,
+        previewLoading: false,
+        showTemplateSelector: false,
+        showCanvasSettings: true,
+        _previewTimeout: null,
+        fabricCanvas: null,
+        _fabricObjectsByElementId: {},
+        _fabricGroupFramesById: {},
+        _isRendering: false,
+
+        init() {
+            this.loadExistingLayout();
+            this.saveState();
+            this.setupKeyboardShortcuts();
+            this.$nextTick(() => {
+                this.initFabric();
+                this.renderFabricScene();
+                this.refreshPreview();
+            });
+        },
+
+        initFabric() {
+            if (typeof fabric === 'undefined') {
+                this.showToast('Fabric.js não carregou', 'error');
+                return;
+            }
+            this.fabricCanvas = new fabric.Canvas('ticketCanvasFabric', {
+                selection: true,
+                preserveObjectStacking: true,
+                backgroundColor: '#ffffff'
+            });
+
+            this.fabricCanvas.on('selection:created', (e) => this.handleSelection(e));
+            this.fabricCanvas.on('selection:updated', (e) => this.handleSelection(e));
+            this.fabricCanvas.on('selection:cleared', () => {
+                if (this._isRendering) return;
+                this.selectedElement = null;
+                this.selectedGroup = null;
+            });
+
+            this.fabricCanvas.on('mouse:down', (e) => {
+                if (!e.target) return;
+                e.target.__startTop = e.target.top || 0;
+                e.target.__startLeft = e.target.left || 0;
+            });
+
+            this.fabricCanvas.on('object:moving', (e) => {
+                if (!e.target) return;
+                const target = e.target;
+
+                if (target.groupFrameId) {
+                    target.left = target.__startLeft;
+                    target.top = Math.max(0, Math.min(this.fabricCanvas.getHeight() - target.getScaledHeight(), target.top || 0));
+                    return;
+                }
+
+                const element = this.elements.find(el => el.id === target.elementId);
+                if (!element) return;
+
+                const absAnchorX = this.getAbsoluteAnchorX(element);
+                target.left = this.getAlignedLeftPx(element.align || 'left', absAnchorX, target.getScaledWidth());
+                target.top = Math.max(0, Math.min(this.fabricCanvas.getHeight() - target.getScaledHeight(), target.top || 0));
+            });
+
+            this.fabricCanvas.on('object:modified', (e) => {
+                if (this._isRendering || !e.target) return;
+                const target = e.target;
+                const deltaMm = this.pxToMm((target.top || 0) - (target.__startTop || 0));
+
+                if (target.groupFrameId) {
+                    const gi = this.groups.findIndex(g => g.id === target.groupFrameId);
+                    if (gi !== -1) {
+                        const g = { ...this.groups[gi] };
+                        g.y = Math.max(0, (parseFloat(g.y) || 0) + deltaMm);
+                        this.groups[gi] = g;
+                        if (this.selectedGroup?.id === g.id) this.selectedGroup = { ...g };
+                        this.saveState();
+                    }
+                    this.renderFabricScene();
+                    return;
+                }
+
+                const index = this.elements.findIndex(el => el.id === target.elementId);
+                if (index === -1) {
+                    this.renderFabricScene();
+                    return;
+                }
+
+                const element = { ...this.elements[index] };
+
+                if (element.groupId) {
+                    const gi = this.groups.findIndex(g => g.id === element.groupId);
+                    if (gi !== -1) {
+                        const g = { ...this.groups[gi] };
+                        g.y = Math.max(0, (parseFloat(g.y) || 0) + deltaMm);
+                        this.groups[gi] = g;
+                        if (this.selectedGroup?.id === g.id) this.selectedGroup = { ...g };
+                    }
+                } else {
+                    element.y = Math.max(0, this.pxToMm(target.top || 0));
+                    this.elements[index] = element;
+                    if (this.selectedElement?.id === element.id) this.selectedElement = { ...element };
+                }
+
+                this.saveState();
+                this.renderFabricScene();
+            });
+        },
+
+        handleSelection(e) {
+            if (this._isRendering) return;
+            const target = (e.selected && e.selected[0]) || e.target;
+            if (!target) return;
+
+            if (target.groupFrameId) {
+                this.selectGroup(target.groupFrameId, true);
+                return;
+            }
+            if (target.elementId) {
+                this.selectElement(target.elementId, true);
+            }
+        },
+
+        loadExistingLayout() {
+            const layoutJson = document.getElementById('layoutJson');
+            if (!layoutJson) return;
+            try {
+                const existingLayout = JSON.parse(layoutJson.value || '{}');
+                if (existingLayout.canvas) this.canvas = { ...this.canvas, ...existingLayout.canvas };
+                if (Array.isArray(existingLayout.elements)) {
+                    this.elements = existingLayout.elements.map((el, idx) => ({
+                        id: `elem-${Date.now()}-${idx}`,
+                        align: el.align || 'left',
+                        ...el
+                    }));
+                }
+                if (Array.isArray(existingLayout.groups)) {
+                    this.groups = existingLayout.groups.map((g, gi) => ({
+                        id: g.id || `group-${Date.now()}-${gi}`,
+                        x: parseFloat(g.x) || 0,
+                        y: parseFloat(g.y) || 0,
+                        direction: g.direction || 'vertical',
+                        spacing_mm: parseFloat(g.spacing_mm) || 2,
+                        ...g
+                    }));
+                }
+            } catch (e) {
+                console.error('Error loading layout:', e);
+            }
+        },
+
+        mmToPx(mm) { return mm * 3.78; },
+        pxToMm(px) { return px / 3.78; },
+
+        swapOrientation() {
+            const tmp = this.canvas.width;
+            this.canvas.width = this.canvas.height;
+            this.canvas.height = tmp;
+            this.saveState();
+            this.renderFabricScene();
+        },
+
+        addElement() {
+            const element = { id: `elem-${Date.now()}`, type: this.newElement.type, x: 5, y: 5, z_index: this.elements.length + 1 };
+            if (this.newElement.type === 'text') {
+                Object.assign(element, {
+                    value: this.newElement.value || 'Texto',
+                    size: this.newElement.size || 12,
+                    font: this.newElement.font || 'Arial',
+                    align: this.newElement.align || 'left',
+                    bold: !!this.newElement.bold,
+                    italic: !!this.newElement.italic,
+                    underline: !!this.newElement.underline,
+                    strikethrough: !!this.newElement.strikethrough
+                });
+            } else if (this.newElement.type === 'qrcode') {
+                Object.assign(element, { value: '{qrcode_hash}', size_mm: this.newElement.size_mm || 30, align: 'left' });
+            } else if (this.newElement.type === 'logo') {
+                Object.assign(element, { value: 'LOGO', size_mm: this.newElement.size_mm || 30, align: 'left' });
+            } else if (this.newElement.type === 'divider') {
+                Object.assign(element, {
+                    direction: this.newElement.direction || 'horizontal',
+                    length_mm: this.newElement.length_mm || 50,
+                    thickness: this.newElement.thickness || 2,
+                    align: 'left'
+                });
+            }
+
+            if (this.selectedGroup) {
+                element.groupId = this.selectedGroup.id;
+                element.x = 0;
+                element.y = 0;
+            }
+
+            this.elements.push(element);
+            this.saveState();
+            this.renderFabricScene();
+            this.resetNewElementForm();
+            this.$nextTick(() => this.selectElement(element.id));
+        },
+
+        resetNewElementForm() {
+            this.newElement = {
+                type: 'text', value: '', size: 12, size_mm: 30, font: 'Arial', align: 'left',
+                bold: false, italic: false, underline: false, strikethrough: false,
+                direction: 'horizontal', length_mm: 50, thickness: 2
+            };
+        },
+
+        deleteElement(id) {
+            if (!confirm('Excluir este elemento?')) return;
+            this.elements = this.elements.filter(el => el.id !== id);
+            if (this.selectedElement?.id === id) this.selectedElement = null;
+            this.saveState();
+            this.renderFabricScene();
+        },
+
+        selectElement(id, fromCanvas = false) {
+            this.selectedElement = this.elements.find(el => el.id === id) || null;
+            this.selectedGroup = null;
+            if (!fromCanvas && this.fabricCanvas && this._fabricObjectsByElementId[id]) {
+                this.fabricCanvas.setActiveObject(this._fabricObjectsByElementId[id]);
+                this.fabricCanvas.requestRenderAll();
+            }
+        },
+
+        deselectElement() {
+            this.selectedElement = null;
+            if (this.fabricCanvas) {
+                this.fabricCanvas.discardActiveObject();
+                this.fabricCanvas.requestRenderAll();
+            }
+        },
+
+        updateElementProperty(prop, value) {
+            if (!this.selectedElement) return;
+            const idx = this.elements.findIndex(el => el.id === this.selectedElement.id);
+            if (idx === -1) return;
+
+            const element = { ...this.elements[idx] };
+            element[prop] = value;
+
+            if (prop === 'align') {
+                const padding = this.canvas.padding || 0;
+                let absX = padding;
+                if (value === 'center') absX = this.canvas.width / 2;
+                if (value === 'right') absX = this.canvas.width - padding;
+                if (element.groupId) {
+                    const group = this.groups.find(g => g.id === element.groupId);
+                    element.x = absX - (group ? (parseFloat(group.x) || 0) : 0);
+                } else {
+                    element.x = absX;
+                }
+            }
+
+            this.elements[idx] = element;
+            this.selectedElement = { ...element };
+            this.saveState();
+            this.renderFabricScene();
+        },
+
+        insertTagToSelected(tag) {
+            if (!this.selectedElement || this.selectedElement.type !== 'text') return;
+            const idx = this.elements.findIndex(el => el.id === this.selectedElement.id);
+            if (idx === -1) return;
+            const element = { ...this.elements[idx] };
+            element.value = (element.value || '') + tag;
+            this.elements[idx] = element;
+            this.selectedElement = { ...element };
+            this.saveState();
+            this.renderFabricScene();
+        },
+
+        getElementIcon(type) {
+            return { text: '📝', qrcode: '🔲', logo: '🖼️', divider: '➖' }[type] || '❓';
+        },
+
+        getElementLabel(element) {
+            if (element.type === 'text') return element.value?.substring(0, 20) || 'Texto';
+            if (element.type === 'qrcode') return 'QR Code';
+            if (element.type === 'logo') return 'Logo';
+            if (element.type === 'divider') return `Linha ${element.direction === 'vertical' ? 'Vertical' : 'Horizontal'}`;
+            return element.type;
+        },
+
+        insertTag(tag) {
+            if (this.newElement.type === 'text') this.newElement.value = (this.newElement.value || '') + tag;
+        },
+
+        addGroup() {
+            const group = { id: `group-${Date.now()}`, x: 5, y: 5, direction: 'vertical', spacing_mm: 2, elements: [] };
+            this.groups.push(group);
+            this.selectedGroup = group;
+            this.selectedElement = null;
+            this.saveState();
+            this.renderFabricScene();
+        },
+
+        selectGroup(id, fromCanvas = false) {
+            this.selectedGroup = this.groups.find(g => g.id === id) || null;
+            this.selectedElement = null;
+            if (!fromCanvas && this.fabricCanvas && this.selectedGroup && this._fabricGroupFramesById[this.selectedGroup.id]) {
+                this.fabricCanvas.setActiveObject(this._fabricGroupFramesById[this.selectedGroup.id]);
+                this.fabricCanvas.requestRenderAll();
+            }
+        },
+
+        deleteGroup(id) {
+            if (!confirm('Excluir este grupo? Elementos serão desvinculados.')) return;
+            this.groups = this.groups.filter(g => g.id !== id);
+            this.elements = this.elements.map(el => {
+                if (el.groupId !== id) return el;
+                const { groupId, ...rest } = el;
+                return { ...rest };
+            });
+            if (this.selectedGroup?.id === id) this.selectedGroup = null;
+            this.saveState();
+            this.renderFabricScene();
+        },
+
+        updateGroupProperty(prop, value) {
+            if (!this.selectedGroup) return;
+            const idx = this.groups.findIndex(g => g.id === this.selectedGroup.id);
+            if (idx === -1) return;
+            const g = { ...this.groups[idx], [prop]: value };
+            this.groups[idx] = g;
+            this.selectedGroup = { ...g };
+            this.saveState();
+            this.renderFabricScene();
+        },
+
+        getAbsolutePosition(element) {
+            const group = element.groupId ? this.groups.find(g => g.id === element.groupId) : null;
+            return {
+                x: (parseFloat(element.x) || 0) + (group ? (parseFloat(group.x) || 0) : 0),
+                y: (parseFloat(element.y) || 0) + (group ? (parseFloat(group.y) || 0) : 0)
+            };
+        },
+
+        getAbsoluteAnchorX(element) {
+            const group = element.groupId ? this.groups.find(g => g.id === element.groupId) : null;
+            return (parseFloat(element.x) || 0) + (group ? (parseFloat(group.x) || 0) : 0);
+        },
+
+        getAlignedLeftPx(align, anchorMm, widthPx) {
+            const left = this.mmToPx(anchorMm);
+            if (align === 'center') return left - widthPx / 2;
+            if (align === 'right') return left - widthPx;
+            return left;
+        },
+
+        createFabricElement(element) {
+            let obj = null;
+            if (element.type === 'text') {
+                obj = new fabric.Text(element.value || 'Texto', {
+                    fontSize: parseInt(element.size, 10) || 12,
+                    fontFamily: element.font || 'Arial',
+                    fontWeight: element.bold ? 'bold' : 'normal',
+                    fontStyle: element.italic ? 'italic' : 'normal',
+                    underline: !!element.underline,
+                    linethrough: !!element.strikethrough,
+                    fill: '#111827'
+                });
+            } else if (element.type === 'qrcode' || element.type === 'logo') {
+                const sizePx = this.mmToPx(parseFloat(element.size_mm) || 30);
+                const rect = new fabric.Rect({ width: sizePx, height: sizePx, rx: 3, ry: 3, fill: '#e2e8f0', stroke: '#64748b', strokeWidth: 1 });
+                const label = new fabric.Text(element.type === 'qrcode' ? 'QR' : 'LOGO', {
+                    fontSize: 10,
+                    fill: '#334155',
+                    originX: 'center',
+                    originY: 'center',
+                    left: sizePx / 2,
+                    top: sizePx / 2
+                });
+                obj = new fabric.Group([rect, label]);
+            } else if (element.type === 'divider') {
+                const dir = element.direction || 'horizontal';
+                const thickness = Math.max(1, parseFloat(element.thickness) || 2);
+                if (dir === 'vertical') {
+                    obj = new fabric.Rect({ width: thickness, height: this.mmToPx(parseFloat(element.length_mm) || 50), fill: '#111827' });
+                } else {
+                    obj = new fabric.Rect({ width: this.mmToPx(parseFloat(element.length_mm) || 50), height: thickness, fill: '#111827' });
+                }
+            }
+
+            if (!obj) return null;
+
+            const abs = this.getAbsolutePosition(element);
+            const left = this.getAlignedLeftPx(element.align || 'left', this.getAbsoluteAnchorX(element), obj.getScaledWidth());
+            obj.set({
+                left,
+                top: this.mmToPx(abs.y),
+                lockMovementX: true,
+                lockScalingX: true,
+                lockScalingY: true,
+                lockRotation: true,
+                hasControls: false,
+                borderColor: '#667eea',
+                hoverCursor: 'ns-resize'
+            });
+            obj.elementId = element.id;
+            obj.groupId = element.groupId || null;
+            return obj;
+        },
+
+        getElementSizeMm(element) {
+            if (element.type === 'qrcode' || element.type === 'logo') {
+                const s = parseFloat(element.size_mm) || 30;
+                return { width: s, height: s };
+            }
+            if (element.type === 'divider') {
+                if (element.direction === 'vertical') return { width: this.pxToMm(parseFloat(element.thickness) || 2), height: parseFloat(element.length_mm) || 50 };
+                return { width: parseFloat(element.length_mm) || 50, height: this.pxToMm(parseFloat(element.thickness) || 2) };
+            }
+            const fontPx = parseFloat(element.size) || 12;
+            const txt = element.value || 'Texto';
+            return { width: this.pxToMm(Math.max(16, txt.length * fontPx * 0.55)), height: this.pxToMm(Math.max(14, fontPx * 1.35)) };
+        },
+
+        createGroupFrame(group) {
+            const members = this.elements.filter(el => el.groupId === group.id);
+            let bounds = { x: parseFloat(group.x) || 0, y: parseFloat(group.y) || 0, width: 20, height: 20 };
+
+            if (members.length) {
+                let minX = Number.POSITIVE_INFINITY;
+                let minY = Number.POSITIVE_INFINITY;
+                let maxX = Number.NEGATIVE_INFINITY;
+                let maxY = Number.NEGATIVE_INFINITY;
+                members.forEach((el) => {
+                    const abs = this.getAbsolutePosition(el);
+                    const size = this.getElementSizeMm(el);
+                    minX = Math.min(minX, abs.x);
+                    minY = Math.min(minY, abs.y);
+                    maxX = Math.max(maxX, abs.x + size.width);
+                    maxY = Math.max(maxY, abs.y + size.height);
+                });
+                bounds = {
+                    x: Math.max(0, minX - 2),
+                    y: Math.max(0, minY - 2),
+                    width: Math.max(10, maxX - minX + 4),
+                    height: Math.max(10, maxY - minY + 4)
+                };
+            }
+
+            const frame = new fabric.Rect({
+                left: this.mmToPx(bounds.x),
+                top: this.mmToPx(bounds.y),
+                width: this.mmToPx(bounds.width),
+                height: this.mmToPx(bounds.height),
+                fill: 'rgba(99,102,241,0.05)',
+                stroke: '#6366f1',
+                strokeWidth: 1,
+                strokeDashArray: [6, 4],
+                lockMovementX: true,
+                lockScalingX: true,
+                lockScalingY: true,
+                lockRotation: true,
+                hasControls: false,
+                hoverCursor: 'ns-resize'
+            });
+            frame.groupFrameId = group.id;
+            return frame;
+        },
+
+        renderFabricScene() {
+            if (!this.fabricCanvas) return;
+            this._isRendering = true;
+
+            this.fabricCanvas.setWidth(this.mmToPx(this.canvas.width));
+            this.fabricCanvas.setHeight(this.mmToPx(this.canvas.height));
+            this.fabricCanvas.clear();
+            this.fabricCanvas.setBackgroundColor('#ffffff', () => {});
+            this._fabricObjectsByElementId = {};
+            this._fabricGroupFramesById = {};
+
+            const pad = this.mmToPx(this.canvas.padding || 0);
+            const h = this.fabricCanvas.getHeight();
+            const w = this.fabricCanvas.getWidth();
+            const guideStyle = { stroke: 'rgba(59,130,246,0.35)', selectable: false, evented: false, excludeFromExport: true };
+            this.fabricCanvas.add(new fabric.Line([pad, 0, pad, h], guideStyle));
+            this.fabricCanvas.add(new fabric.Line([w / 2, 0, w / 2, h], guideStyle));
+            this.fabricCanvas.add(new fabric.Line([w - pad, 0, w - pad, h], guideStyle));
+
+            this.groups.forEach((group) => {
+                const frame = this.createGroupFrame(group);
+                this.fabricCanvas.add(frame);
+                frame.sendToBack();
+                this._fabricGroupFramesById[group.id] = frame;
+            });
+
+            this.elements.forEach((element) => {
+                const obj = this.createFabricElement(element);
+                if (!obj) return;
+                this.fabricCanvas.add(obj);
+                this._fabricObjectsByElementId[element.id] = obj;
+            });
+
+            if (this.selectedGroup?.id && this._fabricGroupFramesById[this.selectedGroup.id]) {
+                this.fabricCanvas.setActiveObject(this._fabricGroupFramesById[this.selectedGroup.id]);
+            } else if (this.selectedElement?.id && this._fabricObjectsByElementId[this.selectedElement.id]) {
+                this.fabricCanvas.setActiveObject(this._fabricObjectsByElementId[this.selectedElement.id]);
+            }
+
+            this.fabricCanvas.requestRenderAll();
+            this._isRendering = false;
+        },
+
+        saveState() {
+            const state = {
+                canvas: { ...this.canvas },
+                elements: JSON.parse(JSON.stringify(this.elements)),
+                groups: JSON.parse(JSON.stringify(this.groups || []))
+            };
+            if (this.historyIndex < this.history.length - 1) {
+                this.history = this.history.slice(0, this.historyIndex + 1);
+            }
+            this.history.push(state);
+            if (this.history.length > 50) {
+                this.history.shift();
+            } else {
+                this.historyIndex++;
+            }
+            this.debouncedPreview();
+        },
+
+        undo() {
+            if (this.historyIndex <= 0) return;
+            this.historyIndex--;
+            const state = this.history[this.historyIndex];
+            this.canvas = { ...state.canvas };
+            this.elements = JSON.parse(JSON.stringify(state.elements));
+            this.groups = JSON.parse(JSON.stringify(state.groups || []));
+            this.selectedElement = null;
+            this.selectedGroup = null;
+            this.renderFabricScene();
+        },
+
+        redo() {
+            if (this.historyIndex >= this.history.length - 1) return;
+            this.historyIndex++;
+            const state = this.history[this.historyIndex];
+            this.canvas = { ...state.canvas };
+            this.elements = JSON.parse(JSON.stringify(state.elements));
+            this.groups = JSON.parse(JSON.stringify(state.groups || []));
+            this.selectedElement = null;
+            this.selectedGroup = null;
+            this.renderFabricScene();
+        },
+
+        setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); this.undo(); }
+                    else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') { e.preventDefault(); this.redo(); }
+                }
+            });
+        },
+
+        debouncedPreview() {
+            clearTimeout(this._previewTimeout);
+            this._previewTimeout = setTimeout(() => this.refreshPreview(), 500);
+        },
+
+        updatePreview() { return this.refreshPreview(); },
+
+        async refreshPreview() {
+            const eventoId = document.getElementById('eventoId').value;
+            if (!eventoId) return;
+            this.previewLoading = true;
+            try {
+                const response = await fetch(`/admin/eventos/layout/${eventoId}/preview`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ canvas: this.canvas, elements: this.elements, groups: this.groups })
+                });
+                if (response.ok) {
+                    const blob = await response.blob();
+                    this.previewUrl = URL.createObjectURL(blob);
+                } else {
+                    this.showToast('Erro ao gerar preview', 'error');
+                }
+            } catch (error) {
+                this.showToast('Erro ao gerar preview: ' + error.message, 'error');
+            } finally {
+                this.previewLoading = false;
+            }
+        },
+
+        async saveLayout() {
+            const eventoId = document.getElementById('eventoId').value;
+            if (!eventoId) return;
+            const validation = this.validateLayout();
+            if (!validation.valid) {
+                this.showToast(validation.errors.join('\n'), 'error');
+                return;
+            }
+
+            const layout = {
+                canvas: this.canvas,
+                elements: this.elements.map(el => {
+                    const { id, ...rest } = el;
+                    return rest;
+                }),
+                groups: (this.groups || []).map(g => {
+                    const { id, ...rest } = g;
+                    if (rest.elements && Array.isArray(rest.elements)) {
+                        rest.elements = rest.elements.map(e => {
+                            const { id, ...erest } = e;
+                            return erest;
+                        });
+                    }
+                    return rest;
+                })
+            };
+
+            try {
+                const response = await fetch(`/admin/eventos/layout/${eventoId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ layout_ingresso: layout })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    this.showToast('Layout salvo com sucesso!', 'success');
+                    setTimeout(() => window.history.back(), 1000);
+                } else {
+                    this.showToast('Erro ao salvar: ' + (result.error || 'Desconhecido'), 'error');
+                }
+            } catch (error) {
+                this.showToast('Erro ao salvar: ' + error.message, 'error');
+            }
+        },
+
+        validateLayout() {
+            const errors = [];
+            if (this.canvas.width < 10 || this.canvas.height < 10) errors.push('Canvas muito pequeno (mínimo 10mm)');
+
+            this.elements.forEach((el, idx) => {
+                const group = el.groupId ? this.groups.find(g => g.id === el.groupId) : null;
+                const absX = (parseFloat(el.x) || 0) + (group ? (parseFloat(group.x) || 0) : 0);
+                const absY = (parseFloat(el.y) || 0) + (group ? (parseFloat(group.y) || 0) : 0);
+                if (absX < 0 || absY < 0) errors.push(`Elemento ${idx + 1} está fora do canvas (posição negativa)`);
+                if (absX > this.canvas.width || absY > this.canvas.height) errors.push(`Elemento ${idx + 1} está fora do canvas`);
+                if (el.type === 'text') {
+                    if (!el.value || el.value.trim() === '') errors.push(`Elemento de texto ${idx + 1} está vazio`);
+                    if (el.size < 6 || el.size > 72) errors.push(`Elemento ${idx + 1}: tamanho de fonte inválido (6-72px)`);
+                }
+                if ((el.type === 'qrcode' || el.type === 'logo') && (el.size_mm < 5 || el.size_mm > 100)) {
+                    errors.push(`Elemento ${idx + 1}: tamanho inválido (5-100mm)`);
+                }
+            });
+            return { valid: errors.length === 0, errors };
+        },
+
+        showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type}`;
+            const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warning' ? '⚠' : 'ℹ';
+            toast.innerHTML = `<span style="font-size: 1.5rem;">${icon}</span><span style="flex: 1;">${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => container.contains(toast) && container.removeChild(toast), 300);
+            }, 4000);
+        },
+
+        async loadTemplate(templateId) {
+            if (!confirm('Carregar template? Isso substituirá o layout atual.')) return;
+            try {
+                const response = await fetch(`/admin/templates/layout/${templateId}`);
+                if (!response.ok) throw new Error('Erro ao carregar template');
+                const template = await response.json();
+                this.canvas = { ...this.canvas, ...template.canvas };
+                this.elements = (template.elements || []).map((el, idx) => ({ id: `elem-${Date.now()}-${idx}`, align: el.align || 'left', ...el }));
+                this.groups = Array.isArray(template.groups)
+                    ? template.groups.map((g, gi) => ({ id: g.id || `group-${Date.now()}-${gi}`, x: parseFloat(g.x) || 0, y: parseFloat(g.y) || 0, direction: g.direction || 'vertical', spacing_mm: parseFloat(g.spacing_mm) || 2, ...g }))
+                    : [];
+                this.showTemplateSelector = false;
+                this.saveState();
+                this.renderFabricScene();
+                this.showToast('Template carregado com sucesso!', 'success');
+            } catch (error) {
                 this.showToast('Erro ao carregar template: ' + error.message, 'error');
             }
         }
