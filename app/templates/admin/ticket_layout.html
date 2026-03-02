@@ -844,7 +844,7 @@
                     :style="`width: ${mmToPx(canvas.width)}px; height: ${mmToPx(canvas.height)}px;`"
                     @click.self="deselectElement()"
                 >
-                    <canvas id="ticketCanvasFabric"></canvas>
+                    <canvas id="ticketCanvasFabric" :width="mmToPx(canvas.width)" :height="mmToPx(canvas.height)" style="width:100%; height:100%;"></canvas>
                 </div>
             </div>
             
@@ -2410,6 +2410,7 @@ function layoutEditor() {
                 left,
                 top: this.mmToPx(abs.y),
                 lockMovementX: true,
+                lockMovementY: false,
                 lockScalingX: true,
                 lockScalingY: true,
                 lockRotation: true,

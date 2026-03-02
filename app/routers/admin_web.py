@@ -796,7 +796,7 @@ async def admin_evento_layout_page(request: Request, evento_id: str):
         evento["id"] = evento["_id"]
         
         return templates.TemplateResponse(
-            "admin/ticket_layout.html",
+            "admin/ticket_layout_new.html",
             {"request": request, "active_page": "eventos", "evento": evento}
         )
     except Exception as e:
@@ -863,6 +863,54 @@ async def admin_evento_layout_preview(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/eventos/layout/{evento_id}/render-group")
+async def admin_evento_render_group(
+    evento_id: str,
+    request: Request,
+    dependencies=[Depends(verify_admin_access)]
+):
+    """Render a group as an image snapshot"""
+    from app.routers.evento_api import _render_layout_to_image
+    from io import BytesIO
+    import base64
+    
+    try:
+        data = await request.json()
+        group = data.get("group")
+        
+        if not group:
+            raise HTTPException(status_code=400, detail="Group data missing")
+        
+        # Create a mini layout for the group
+        mini_layout = {
+            "canvas": {
+                "width": group.get("width", 40),
+                "height": group.get("height", 30),
+                "unit": "mm",
+                "dpi": 300
+            },
+            "elements": group.get("elements", [])
+        }
+        
+        # Render to image
+        img = _render_layout_to_image(mini_layout, dpi=300)
+        
+        # Convert to base64
+        bio = BytesIO()
+        img.save(bio, format='PNG')
+        bio.seek(0)
+        img_base64 = base64.b64encode(bio.read()).decode('utf-8')
+        
+        return JSONResponse({
+            "success": True,
+            "snapshot_image": f"data:image/png;base64,{img_base64}"
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error rendering group: {str(e)}")
 
 
 @router.post("/eventos/layout/{evento_id}")

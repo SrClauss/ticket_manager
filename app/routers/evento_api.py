@@ -126,6 +126,39 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300, logo_path: O
     draw = ImageDraw.Draw(img)
 
     elements = layout.get("elements", [])
+    groups = layout.get("groups", [])
+    
+    # Render groups as images first (they should be behind regular elements)
+    for group in groups:
+        snapshot_image = group.get("snapshot_image")
+        if snapshot_image and snapshot_image.startswith("data:image"):
+            try:
+                import base64
+                import re
+                # Extract base64 data
+                match = re.search(r'base64,(.+)', snapshot_image)
+                if match:
+                    img_data = base64.b64decode(match.group(1))
+                    group_img = Image.open(BytesIO(img_data))
+                    
+                    # Calculate position and size
+                    x_mm = float(group.get('x', 0))
+                    y_mm = float(group.get('y', 0))
+                    width_mm = float(group.get('width', 40))
+                    height_mm = float(group.get('height', 30))
+                    margin_left_mm = float(group.get('margin_left', 0) or 0)
+                    
+                    x_px = _mm_to_px(x_mm + margin_left_mm, dpi_effective)
+                    y_px = _mm_to_px(y_mm, dpi_effective)
+                    width_px = _mm_to_px(width_mm, dpi_effective)
+                    height_px = _mm_to_px(height_mm, dpi_effective)
+                    
+                    # Resize and paste
+                    group_img = group_img.resize((width_px, height_px), Image.Resampling.LANCZOS)
+                    img.paste(group_img, (x_px, y_px))
+            except Exception as e:
+                logger.error(f"Error rendering group snapshot: {e}")
+    
     # Support frontend `groups` model: convert elements that reference `groupId` into absolute coords
     try:
         groups = layout.get("groups") or []
