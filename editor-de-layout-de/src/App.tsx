@@ -30,41 +30,30 @@ const TEMPLATE_TAGS = ['{NOME}', '{CPF}', '{EMAIL}', '{TIPO_INGRESSO}', '{EVENTO
 export default function App() {
   const [layoutState, setLayoutState, deleteLayoutState] = useKV<LayoutState>('ticket-layout', {
     canvas: {
-      width: 62,
+      width: 80,
       height: 120,
       orientation: 'portrait',
       padding: 5,
     },
     elements: [],
-    groups: [],
   })
 
-  const [selectedElementId, setSelectedElementId] = useState<string | null>(null)
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
-  const [mode, setMode] = useState<EditorMode>('normal')
-  const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
+  const [selectedElementIds, setSelectedElementIds] = useState<string[]>([])
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
 
   const mainCanvasRef = useRef<TicketCanvasRef>(null)
-  const groupCanvasRef = useRef<TicketCanvasRef>(null)
+
+  const selectedElement = layoutState.elements.find((e) => selectedElementIds.includes(e.id)) || null
+  const selectedElements = layoutState.elements.filter((e) => selectedElementIds.includes(e.id))
 
   if (!layoutState) {
-    return <div className="h-screen flex items-center justify-center">Loading...</div>
+    return <div className="h-screen flex items-center justify-center">Carregando...</div>
   }
-
-  const selectedElement = layoutState.elements.find((e) => e.id === selectedElementId)
-  const selectedGroup = layoutState.groups.find((g) => g.id === selectedGroupId)
-  const editingGroup = layoutState.groups.find((g) => g.id === editingGroupId)
-
-  const currentElements =
-    mode === 'editing-group'
-      ? layoutState.elements.filter((e) => e.groupId === editingGroupId)
-      : layoutState.elements.filter((e) => !e.groupId)
 
   const updateCanvas = useCallback((updates: Partial<CanvasConfig>) => {
     setLayoutState((prev) => {
-      const current = prev || { canvas: { width: 62, height: 120, orientation: 'portrait' as const, padding: 5 }, elements: [], groups: [] }
+      const current = prev || { canvas: { width: 80, height: 120, orientation: 'portrait' as const, padding: 5 }, elements: [] }
       return {
         ...current,
         canvas: { ...current.canvas, ...updates },
@@ -81,7 +70,7 @@ export default function App() {
         horizontal_position: 'center',
         margin_left: 0,
         margin_right: 0,
-        groupId: mode === 'editing-group' ? editingGroupId : null,
+        wrapText: type === 'text',
         ...(type === 'text' && { value: '{NOME}', size: 14, font: 'Arial', bold: false, italic: false }),
         ...(type === 'qrcode' && { size_mm: 30 }),
         ...(type === 'divider' && { length_mm: 40, thickness: 2 }),
@@ -89,73 +78,44 @@ export default function App() {
       }
 
       setLayoutState((prev) => {
-        const current = prev || { canvas: { width: 62, height: 120, orientation: 'portrait' as const, padding: 5 }, elements: [], groups: [] }
+        const current = prev || { canvas: { width: 80, height: 120, orientation: 'portrait' as const, padding: 5 }, elements: [] }
         return {
           ...current,
           elements: [...current.elements, newEl],
         } as LayoutState
       })
-      setSelectedElementId(newEl.id)
-      setSelectedGroupId(null)
+      setSelectedElementIds([newEl.id])
     },
-    [mode, editingGroupId, setLayoutState]
+    [setLayoutState]
   )
 
-  const addGroup = useCallback(() => {
-    if (mode === 'editing-group') {
-      toast.error('Cannot create a group inside another group')
-      return
-    }
-
-    const newGroup: TicketGroup = {
-      id: `group-${Date.now()}`,
-      y: 10,
-      width: 50,
-      height: 30,
-      horizontal_position: 'center',
-      margin_left: 0,
-      margin_right: 0,
-      snapshot: null,
-    }
-
-    setLayoutState((prev) => {
-      const current = prev || { canvas: { width: 62, height: 120, orientation: 'portrait' as const, padding: 5 }, elements: [], groups: [] }
-      return {
-        ...current,
-        groups: [...current.groups, newGroup],
-      } as LayoutState
-    })
-    setSelectedGroupId(newGroup.id)
-    setSelectedElementId(null)
-  }, [mode, setLayoutState])
-
   const deleteSelected = useCallback(() => {
-    if (selectedElementId) {
+    if (selectedElementIds.length > 0) {
       setLayoutState((prev) => {
-        const current = prev || { canvas: { width: 62, height: 120, orientation: 'portrait' as const, padding: 5 }, elements: [], groups: [] }
+        const current = prev || { canvas: { width: 80, height: 120, orientation: 'portrait' as const, padding: 5 }, elements: [] }
+        // Remover também os links que referenciam elementos deletados
+        const remainingElements = current.elements
+          .filter((e) => !selectedElementIds.includes(e.id))
+          .map((e) => {
+            if (e.link && selectedElementIds.includes(e.link.targetId)) {
+              const { link, ...rest } = e
+              return rest as TicketElement
+            }
+            return e
+          })
         return {
           ...current,
-          elements: current.elements.filter((e) => e.id !== selectedElementId),
+          elements: remainingElements,
         } as LayoutState
       })
-      setSelectedElementId(null)
-    } else if (selectedGroupId) {
-      setLayoutState((prev) => {
-        const current = prev || { canvas: { width: 62, height: 120, orientation: 'portrait' as const, padding: 5 }, elements: [], groups: [] }
-        return {
-          ...current,
-          groups: current.groups.filter((g) => g.id !== selectedGroupId),
-          elements: current.elements.filter((e) => e.groupId !== selectedGroupId),
-        } as LayoutState
-      })
-      setSelectedGroupId(null)
+      setSelectedElementIds([])
     }
-  }, [selectedElementId, selectedGroupId, setLayoutState])
+  }, [selectedElementIds, setLayoutState])
 
   const updateElement = useCallback(
     (id: string, updates: Partial<TicketElement>) => {
       setLayoutState((prev) => {
-        const current = prev || { canvas: { width: 62, height: 120, orientation: 'portrait' as const, padding: 5 }, elements: [], groups: [] }
+        const current = prev || { canvas: { width: 80, height: 120, orientation: 'portrait' as const, padding: 5 }, elements: [] }
         return {
           ...current,
           elements: current.elements.map((el) => (el.id === id ? { ...el, ...updates } : el)),
@@ -165,56 +125,71 @@ export default function App() {
     [setLayoutState]
   )
 
-  const updateGroup = useCallback(
-    (id: string, updates: Partial<TicketGroup>) => {
-      setLayoutState((prev) => {
-        const current = prev || { canvas: { width: 62, height: 120, orientation: 'portrait' as const, padding: 5 }, elements: [], groups: [] }
-        return {
-          ...current,
-          groups: current.groups.map((g) => (g.id === id ? { ...g, ...updates } : g)),
-        } as LayoutState
+  const handleElementClick = useCallback((elementId: string, shiftKey: boolean) => {
+    if (shiftKey) {
+      setSelectedElementIds((prev) => {
+        if (prev.includes(elementId)) {
+          return prev.filter((id) => id !== elementId)
+        }
+        return [...prev, elementId]
       })
-    },
-    [setLayoutState]
-  )
-
-  const enterGroupEditMode = useCallback((groupId: string) => {
-    setMode('editing-group')
-    setEditingGroupId(groupId)
-    setSelectedElementId(null)
-    setSelectedGroupId(null)
+    } else {
+      setSelectedElementIds([elementId])
+    }
   }, [])
 
-  const exitGroupEditMode = useCallback(() => {
-    if (!editingGroupId || !groupCanvasRef.current) return
+  const createLink = useCallback(() => {
+    if (selectedElementIds.length !== 2) {
+      toast.error('Selecione exatamente 2 elementos para criar um vínculo')
+      return
+    }
 
-    const snapshot = groupCanvasRef.current.getDataURL()
-    updateGroup(editingGroupId, { snapshot })
+    const [firstId, secondId] = selectedElementIds
+    updateElement(secondId, {
+      link: {
+        targetId: firstId,
+        gap: 5,
+        gapType: 'fixed',
+        position: 'right',
+      },
+    })
+    toast.success('Vínculo criado! O segundo elemento agora está posicionado em relação ao primeiro')
+  }, [selectedElementIds, updateElement])
 
-    setMode('normal')
-    setEditingGroupId(null)
-    setSelectedElementId(null)
-  }, [editingGroupId, updateGroup])
+  const removeLink = useCallback(() => {
+    if (selectedElementIds.length !== 1) {
+      toast.error('Selecione 1 elemento para remover seu vínculo')
+      return
+    }
+
+    const element = layoutState.elements.find((e) => e.id === selectedElementIds[0])
+    if (!element?.link) {
+      toast.error('Este elemento não possui vínculo')
+      return
+    }
+
+    const { link, ...rest } = element
+    updateElement(element.id, rest)
+    toast.success('Vínculo removido')
+  }, [selectedElementIds, layoutState.elements, updateElement])
 
   const generatePreview = useCallback(async () => {
-    if (mode === 'editing-group') return
-
     setPreviewLoading(true)
     await new Promise((resolve) => setTimeout(resolve, 500))
 
     const url = mainCanvasRef.current?.getDataURL()
     setPreviewUrl(url || null)
     setPreviewLoading(false)
-  }, [mode])
+  }, [])
 
   const saveLayout = useCallback(() => {
-    toast.success('Layout saved successfully!')
+    toast.success('Layout salvo com sucesso!')
   }, [])
 
   const copyTag = useCallback((tag: string) => {
     navigator.clipboard.writeText(tag).then(
-      () => toast.success(`Tag ${tag} copied!`),
-      () => toast.error('Failed to copy tag')
+      () => toast.success(`Variável ${tag} copiada!`),
+      () => toast.error('Falha ao copiar variável')
     )
   }, [])
 
@@ -222,9 +197,6 @@ export default function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) return
 
-      if (e.key === 'Escape' && mode === 'editing-group') {
-        exitGroupEditMode()
-      }
       if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault()
         deleteSelected()
@@ -233,11 +205,15 @@ export default function App() {
         e.preventDefault()
         saveLayout()
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+        e.preventDefault()
+        createLink()
+      }
     }
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [mode, exitGroupEditMode, deleteSelected, saveLayout])
+  }, [deleteSelected, saveLayout, createLink])
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background text-foreground">
@@ -245,38 +221,40 @@ export default function App() {
 
       <header className="bg-card border-b border-border p-4 flex justify-between items-center shrink-0">
         <div>
-          <h1 className="text-xl font-bold text-primary">Ticket Layout Editor</h1>
+          <h1 className="text-xl font-bold text-primary">Editor de Layout de Ingressos</h1>
           <p className="text-xs text-muted-foreground">
-            Drag elements vertically on the canvas. Configure properties in the sidebar.
+            Arraste elementos verticalmente. Use Shift+clique para selecionar múltiplos elementos.
           </p>
         </div>
         <div className="flex gap-2">
+          {selectedElementIds.length === 2 && (
+            <Button variant="secondary" size="sm" onClick={createLink}>
+              <Plus className="mr-2" size={16} />
+              Vincular (Ctrl+L)
+            </Button>
+          )}
+          {selectedElementIds.length === 1 && selectedElement?.link && (
+            <Button variant="destructive" size="sm" onClick={removeLink}>
+              <Trash className="mr-2" size={16} />
+              Desvincular
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={saveLayout}>
             <FloppyDisk className="mr-2" size={16} />
-            Save Layout
+            Salvar Layout
           </Button>
         </div>
       </header>
-
-      {mode === 'editing-group' && (
-        <div className="bg-accent text-accent-foreground px-4 py-2 text-center font-bold flex justify-center items-center gap-4 shrink-0 shadow-md">
-          <span>🎨 Editing Group - Isolated</span>
-          <Button variant="secondary" size="sm" onClick={exitGroupEditMode}>
-            <Check className="mr-2" size={16} />
-            Done Editing (ESC)
-          </Button>
-        </div>
-      )}
 
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-80 bg-card border-r border-border flex flex-col overflow-y-auto">
           <div className="p-4 border-b border-border">
             <h2 className="text-xs uppercase font-bold text-muted-foreground mb-3 tracking-wider">
-              Canvas Settings
+              Configurações do Canvas
             </h2>
             <div className="grid grid-cols-2 gap-2 mb-2">
               <div>
-                <Label className="text-xs">Width (mm)</Label>
+                <Label className="text-xs">Largura (mm)</Label>
                 <Input
                   type="number"
                   value={layoutState.canvas.width}
@@ -285,7 +263,7 @@ export default function App() {
                 />
               </div>
               <div>
-                <Label className="text-xs">Height (mm)</Label>
+                <Label className="text-xs">Altura (mm)</Label>
                 <Input
                   type="number"
                   value={layoutState.canvas.height}
@@ -295,7 +273,7 @@ export default function App() {
               </div>
             </div>
             <div>
-              <Label className="text-xs">Padding (mm)</Label>
+              <Label className="text-xs">Margem Interna (mm)</Label>
               <Input
                 type="number"
                 value={layoutState.canvas.padding}
@@ -303,14 +281,76 @@ export default function App() {
                 className="h-8"
               />
             </div>
+            <div className="mt-3">
+              <Label className="text-xs">Orientação</Label>
+              <div className="flex gap-2 mt-1">
+                <Button
+                  variant={layoutState.canvas.orientation === 'portrait' ? 'default' : 'outline'}
+                  size="sm"
+                  className="flex-1 h-8"
+                  onClick={() => {
+                    const newOrientation = 'portrait';
+                    if (layoutState.canvas.orientation !== newOrientation) {
+                      // Troca largura e altura
+                      updateCanvas({
+                        orientation: newOrientation,
+                        width: Math.min(layoutState.canvas.width, layoutState.canvas.height),
+                        height: Math.max(layoutState.canvas.width, layoutState.canvas.height),
+                      });
+                    }
+                  }}
+                >
+                  Retrato
+                </Button>
+                <Button
+                  variant={layoutState.canvas.orientation === 'landscape' ? 'default' : 'outline'}
+                  size="sm"
+                  className="flex-1 h-8"
+                  onClick={() => {
+                    const newOrientation = 'landscape';
+                    if (layoutState.canvas.orientation !== newOrientation) {
+                      // Troca largura e altura
+                      updateCanvas({
+                        orientation: newOrientation,
+                        width: Math.max(layoutState.canvas.width, layoutState.canvas.height),
+                        height: Math.min(layoutState.canvas.width, layoutState.canvas.height),
+                      });
+                    }
+                  }}
+                >
+                  Paisagem
+                </Button>
+              </div>
+            </div>
+            <div className="mt-3">
+              <Label className="text-xs">Tamanhos Padrão</Label>
+              <Select
+                value=""
+                onValueChange={(value) => {
+                  const [w, h] = value.split('x').map(Number);
+                  updateCanvas({ width: w, height: h, orientation: w < h ? 'portrait' : 'landscape' });
+                }}
+              >
+                <SelectTrigger className="h-8">
+                  <SelectValue placeholder="Selecione um tamanho..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="80x120">80mm x 120mm (Padrão)</SelectItem>
+                  <SelectItem value="62x100">62mm x 100mm (Brother QL)</SelectItem>
+                  <SelectItem value="62x29">62mm x 29mm (Pequena)</SelectItem>
+                  <SelectItem value="103x164">103mm x 164mm (Grande)</SelectItem>
+                  <SelectItem value="50x25">50mm x 25mm (Mini)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="p-4 border-b border-border">
-            <h2 className="text-xs uppercase font-bold text-muted-foreground mb-3 tracking-wider">Add Elements</h2>
-            <div className="grid grid-cols-2 gap-2">
+            <h2 className="text-xs uppercase font-bold text-muted-foreground mb-3 tracking-wider">Adicionar Elementos</h2>
+            <div className="grid grid-cols-3 gap-2">
               <Button variant="secondary" size="sm" onClick={() => addElement('text')}>
                 <TextT className="mr-2" size={16} />
-                Text
+                Texto
               </Button>
               <Button variant="secondary" size="sm" onClick={() => addElement('qrcode')}>
                 <QrCode className="mr-2" size={16} />
@@ -318,136 +358,76 @@ export default function App() {
               </Button>
               <Button variant="secondary" size="sm" onClick={() => addElement('divider')}>
                 <Minus className="mr-2" size={16} />
-                Divider
-              </Button>
-              <Button variant="default" size="sm" onClick={addGroup} className="bg-accent text-accent-foreground">
-                <Package className="mr-2" size={16} />
-                Group
+                Divisor
               </Button>
             </div>
           </div>
 
           <div className="p-4 flex-1 border-b border-border">
-            <h2 className="text-xs uppercase font-bold text-muted-foreground mb-3 tracking-wider">Layers</h2>
+            <h2 className="text-xs uppercase font-bold text-muted-foreground mb-3 tracking-wider">
+              Camadas ({selectedElementIds.length > 0 && `${selectedElementIds.length} selecionado${selectedElementIds.length > 1 ? 's' : ''}`})
+            </h2>
 
             <div className="space-y-1 mb-4">
-              {currentElements.map((el) => (
-                <div
-                  key={el.id}
-                  className={`flex items-center justify-between p-2 rounded cursor-pointer border transition ${
-                    selectedElementId === el.id
-                      ? 'bg-secondary border-primary'
-                      : 'border-transparent hover:bg-secondary/50'
-                  }`}
-                  onClick={() => {
-                    setSelectedElementId(el.id)
-                    setSelectedGroupId(null)
-                  }}
-                >
-                  <span className="text-sm truncate flex items-center gap-2">
-                    {el.type === 'text' && <TextT size={16} />}
-                    {el.type === 'qrcode' && <QrCode size={16} />}
-                    {el.type === 'divider' && <Minus size={16} />}
-                    <span className="text-foreground/80">{el.value || el.type}</span>
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setSelectedElementId(el.id)
-                      deleteSelected()
-                    }}
+              {layoutState.elements.map((el) => {
+                const isSelected = selectedElementIds.includes(el.id)
+                const isLinked = el.link !== undefined
+                const linkedTarget = isLinked ? layoutState.elements.find(e => e.id === el.link?.targetId) : null
+                
+                return (
+                  <div
+                    key={el.id}
+                    className={`flex items-center justify-between p-2 rounded cursor-pointer border transition ${
+                      isSelected
+                        ? 'bg-secondary border-primary'
+                        : 'border-transparent hover:bg-secondary/50'
+                    }`}
+                    onClick={(e) => handleElementClick(el.id, e.shiftKey)}
                   >
-                    <Trash size={14} />
-                  </Button>
-                </div>
-              ))}
-              {currentElements.length === 0 && (
-                <p className="text-xs text-muted-foreground italic">No elements.</p>
-              )}
-            </div>
-
-            {mode === 'normal' && (
-              <>
-                <h3 className="text-xs font-bold text-muted-foreground mb-2">GROUPS</h3>
-                <div className="space-y-1">
-                  {layoutState.groups.map((group) => (
-                    <div
-                      key={group.id}
-                      className={`flex items-center justify-between p-2 rounded cursor-pointer border transition ${
-                        selectedGroupId === group.id
-                          ? 'bg-secondary border-accent'
-                          : 'border-transparent hover:bg-secondary/50'
-                      }`}
-                      onClick={() => {
-                        setSelectedGroupId(group.id)
-                        setSelectedElementId(null)
+                    <span className="text-sm truncate flex items-center gap-2">
+                      {el.type === 'text' && <TextT size={16} />}
+                      {el.type === 'qrcode' && <QrCode size={16} />}
+                      {el.type === 'divider' && <Minus size={16} />}
+                      <span className="text-foreground/80">{el.value || el.type}</span>
+                      {isLinked && (
+                        <span className="text-[10px] text-accent font-bold">
+                          → {linkedTarget?.type || 'link'}
+                        </span>
+                      )}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setSelectedElementIds([el.id])
+                        deleteSelected()
                       }}
                     >
-                      <span className="text-sm flex items-center gap-2">
-                        <Package size={16} className="text-accent" />
-                        Group
-                        <span className="text-xs text-muted-foreground">
-                          ({layoutState.elements.filter((e) => e.groupId === group.id).length} items)
-                        </span>
-                      </span>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 text-accent hover:text-accent"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            enterGroupEditMode(group.id)
-                          }}
-                        >
-                          <PencilSimple size={14} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setSelectedGroupId(group.id)
-                            deleteSelected()
-                          }}
-                        >
-                          <Trash size={14} />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
+                      <Trash size={14} />
+                    </Button>
+                  </div>
+                )
+              })}
+              {layoutState.elements.length === 0 && (
+                <p className="text-xs text-muted-foreground italic">Sem elementos.</p>
+              )}
+            </div>
           </div>
         </aside>
 
         <main className="flex-1 bg-muted flex flex-col items-center justify-center p-8 overflow-y-auto">
-          {mode === 'normal' && (
-            <TicketCanvas
-              ref={mainCanvasRef}
-              config={layoutState.canvas}
-              elements={layoutState.elements}
-              groups={layoutState.groups}
-              isGroupMode={false}
-              selectedElementId={selectedElementId}
-              selectedGroupId={selectedGroupId}
-              onElementModified={(id, y) => updateElement(id, { y })}
-              onGroupModified={(id, y) => updateGroup(id, { y })}
-              onElementSelect={setSelectedElementId}
-              onGroupSelect={setSelectedGroupId}
-              onGroupDoubleClick={enterGroupEditMode}
-            />
-          )}
-
-          {mode === 'editing-group' && editingGroup && (
-            <div className="flex flex-col items-center">
+          <TicketCanvas
+            ref={mainCanvasRef}
+            config={layoutState.canvas}
+            elements={layoutState.elements}
+            selectedElementIds={selectedElementIds}
+            onElementModified={(id, y) => updateElement(id, { y })}
+            onElementSelect={handleElementClick}
+          />
               <p className="text-muted-foreground mb-4 font-medium">
-                Group Editing Mode (Size: {editingGroup.width}x{editingGroup.height}mm)
+                Modo de Edição de Grupo (Tamanho: {editingGroup.width}x{editingGroup.height}mm)
               </p>
               <TicketCanvas
                 ref={groupCanvasRef}
@@ -467,9 +447,9 @@ export default function App() {
         <aside className="w-80 bg-card border-l border-border flex flex-col overflow-y-auto">
           <div className="p-4 border-b border-border flex-1">
             <h2 className="text-xs uppercase font-bold text-muted-foreground mb-3 tracking-wider flex justify-between">
-              <span>Properties</span>
+              <span>Propriedades</span>
               {!selectedElement && !selectedGroup && (
-                <span className="text-muted-foreground/50 font-normal">None</span>
+                <span className="text-muted-foreground/50 font-normal">Nenhum</span>
               )}
             </h2>
 
@@ -482,7 +462,7 @@ export default function App() {
                 {selectedElement.type === 'text' && (
                   <>
                     <div>
-                      <Label className="text-xs">Value / Tag</Label>
+                      <Label className="text-xs">Valor / Variável</Label>
                       <Input
                         value={selectedElement.value || ''}
                         onChange={(e) => updateElement(selectedElement.id, { value: e.target.value })}
@@ -491,7 +471,7 @@ export default function App() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label className="text-xs">Font Size</Label>
+                        <Label className="text-xs">Tamanho da Fonte</Label>
                         <Input
                           type="number"
                           value={selectedElement.size || 14}
@@ -507,7 +487,7 @@ export default function App() {
                               updateElement(selectedElement.id, { bold: checked as boolean })
                             }
                           />
-                          Bold
+                          Negrito
                         </label>
                       </div>
                     </div>
@@ -516,7 +496,7 @@ export default function App() {
                 )}
 
                 <div>
-                  <Label className="text-xs">Position Y (mm)</Label>
+                  <Label className="text-xs">Posição Y (mm)</Label>
                   <Input
                     type="number"
                     step="0.5"
@@ -527,7 +507,7 @@ export default function App() {
                 </div>
 
                 <div>
-                  <Label className="text-xs">Horizontal Alignment</Label>
+                  <Label className="text-xs">Alinhamento Horizontal</Label>
                   <Select
                     value={selectedElement.horizontal_position}
                     onValueChange={(value) =>
@@ -540,16 +520,16 @@ export default function App() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="left">Left</SelectItem>
-                      <SelectItem value="center">Center</SelectItem>
-                      <SelectItem value="right">Right</SelectItem>
+                      <SelectItem value="left">Esquerda</SelectItem>
+                      <SelectItem value="center">Centro</SelectItem>
+                      <SelectItem value="right">Direita</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <Label className="text-xs">Margin Left (mm)</Label>
+                    <Label className="text-xs">Margem Esquerda (mm)</Label>
                     <Input
                       type="number"
                       step="0.5"
@@ -561,7 +541,7 @@ export default function App() {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs">Margin Right (mm)</Label>
+                    <Label className="text-xs">Margem Direita (mm)</Label>
                     <Input
                       type="number"
                       step="0.5"
@@ -573,102 +553,89 @@ export default function App() {
                     />
                   </div>
                 </div>
-              </div>
-            )}
 
-            {selectedGroup && (
-              <div className="space-y-3">
-                <div className="bg-secondary text-xs px-2 py-1 rounded text-center text-accent font-mono">
-                  {selectedGroup.id}
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs">Width (mm)</Label>
-                    <Input
-                      type="number"
-                      step="0.5"
-                      value={selectedGroup.width}
-                      onChange={(e) => updateGroup(selectedGroup.id, { width: parseFloat(e.target.value) })}
-                      className="h-8"
+                {selectedElement.type === 'text' && (
+                  <div className="flex items-center gap-2 pt-2">
+                    <Checkbox
+                      id="wrapText"
+                      checked={selectedElement.wrapText || false}
+                      onCheckedChange={(checked) =>
+                        updateElement(selectedElement.id, { wrapText: checked as boolean })
+                      }
                     />
+                    <Label htmlFor="wrapText" className="text-xs cursor-pointer">
+                      Quebra de linha automática
+                    </Label>
                   </div>
-                  <div>
-                    <Label className="text-xs">Height (mm)</Label>
-                    <Input
-                      type="number"
-                      step="0.5"
-                      value={selectedGroup.height}
-                      onChange={(e) => updateGroup(selectedGroup.id, { height: parseFloat(e.target.value) })}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
+                )}
 
-                <div>
-                  <Label className="text-xs">Position Y (mm)</Label>
-                  <Input
-                    type="number"
-                    step="0.5"
-                    value={selectedGroup.y}
-                    onChange={(e) => updateGroup(selectedGroup.id, { y: parseFloat(e.target.value) })}
-                    className="h-8"
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-xs">Horizontal Alignment</Label>
-                  <Select
-                    value={selectedGroup.horizontal_position}
-                    onValueChange={(value) =>
-                      updateGroup(selectedGroup.id, {
-                        horizontal_position: value as 'left' | 'center' | 'right',
-                      })
-                    }
-                  >
-                    <SelectTrigger className="h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="left">Left</SelectItem>
-                      <SelectItem value="center">Center</SelectItem>
-                      <SelectItem value="right">Right</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs">Margin Left (mm)</Label>
-                    <Input
-                      type="number"
-                      step="0.5"
-                      value={selectedGroup.margin_left}
-                      onChange={(e) => updateGroup(selectedGroup.id, { margin_left: parseFloat(e.target.value) })}
-                      className="h-8"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Margin Right (mm)</Label>
-                    <Input
-                      type="number"
-                      step="0.5"
-                      value={selectedGroup.margin_right}
-                      onChange={(e) => updateGroup(selectedGroup.id, { margin_right: parseFloat(e.target.value) })}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-
-                <Button className="w-full" variant="default" size="sm" onClick={() => enterGroupEditMode(selectedGroup.id)}>
-                  <PencilSimple className="mr-2" size={16} />
-                  Edit Group Content
-                </Button>
+                {selectedElement.link && (
+                  <>
+                    <Separator />
+                    <div className="bg-accent/10 p-2 rounded">
+                      <h3 className="text-xs font-bold text-accent mb-2">VÍNCULO</h3>
+                      <div className="space-y-2">
+                        <div>
+                          <Label className="text-xs">Posição Relativa</Label>
+                          <Select
+                            value={selectedElement.link.position}
+                            onValueChange={(value) =>
+                              updateElement(selectedElement.id, {
+                                link: { ...selectedElement.link!, position: value as 'right' | 'below' },
+                              })
+                            }
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="right">À direita</SelectItem>
+                              <SelectItem value="below">Abaixo</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs">Espaçamento (mm)</Label>
+                          <Input
+                            type="number"
+                            step="0.5"
+                            value={selectedElement.link.gap}
+                            onChange={(e) =>
+                              updateElement(selectedElement.id, {
+                                link: { ...selectedElement.link!, gap: parseFloat(e.target.value) },
+                              })
+                            }
+                            className="h-8"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Tipo</Label>
+                          <Select
+                            value={selectedElement.link.gapType}
+                            onValueChange={(value) =>
+                              updateElement(selectedElement.id, {
+                                link: { ...selectedElement.link!, gapType: value as 'fixed' | 'between' },
+                              })
+                            }
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="fixed">Fixo</SelectItem>
+                              <SelectItem value="between">Distribuir</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
             <div className="mt-6 pt-4 border-t border-border">
-              <h3 className="text-xs font-bold text-muted-foreground mb-2">AVAILABLE TAGS</h3>
+              <h3 className="text-xs font-bold text-muted-foreground mb-2">VARIÁVEIS DISPONÍVEIS</h3>
               <div className="flex flex-wrap gap-1">
                 {TEMPLATE_TAGS.map((tag) => (
                   <Badge
@@ -686,27 +653,23 @@ export default function App() {
 
           <div className="p-4 bg-muted border-t border-border">
             <h2 className="text-xs uppercase font-bold text-muted-foreground mb-2 flex justify-between items-center">
-              <span>Real Preview</span>
+              <span>Pré-visualização Real</span>
               <Button
                 variant="default"
                 size="sm"
                 className="h-6 text-[10px]"
                 onClick={generatePreview}
-                disabled={previewLoading || mode === 'editing-group'}
+                disabled={previewLoading}
               >
-                {previewLoading ? 'Generating...' : 'Update'}
+                {previewLoading ? 'Gerando...' : 'Atualizar'}
               </Button>
             </h2>
             <div className="min-h-[150px] bg-white rounded border border-border flex items-center justify-center p-2">
-              {mode === 'editing-group' ? (
-                <p className="text-xs text-muted-foreground text-center px-4">
-                  Exit group editing mode to generate preview.
-                </p>
-              ) : previewUrl ? (
-                <img src={previewUrl} className="max-w-full max-h-[250px] object-contain" alt="Preview" />
+              {previewUrl ? (
+                <img src={previewUrl} className="max-w-full max-h-[250px] object-contain" alt="Pré-visualização" />
               ) : (
                 <p className="text-xs text-muted-foreground text-center">
-                  Click Update to generate preview with mock data.
+                  Clique em Atualizar para gerar prévia com dados de exemplo.
                 </p>
               )}
             </div>

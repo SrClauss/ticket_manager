@@ -2,6 +2,15 @@ export type ElementType = 'text' | 'qrcode' | 'logo' | 'divider'
 
 export type HorizontalPosition = 'left' | 'center' | 'right'
 
+export type LinkGapType = 'fixed' | 'between'
+
+export interface ElementLink {
+  targetId: string
+  gap: number
+  gapType: LinkGapType
+  position: 'right' | 'below'  // posição relativa ao elemento alvo
+}
+
 export interface TicketElement {
   id: string
   type: ElementType
@@ -9,7 +18,8 @@ export interface TicketElement {
   horizontal_position: HorizontalPosition
   margin_left: number
   margin_right: number
-  groupId: string | null
+  link?: ElementLink  // vínculo com outro elemento
+  wrapText?: boolean  // quebra de linha automática
   
   value?: string
   size?: number
@@ -23,17 +33,6 @@ export interface TicketElement {
   thickness?: number
 }
 
-export interface TicketGroup {
-  id: string
-  y: number
-  width: number
-  height: number
-  horizontal_position: HorizontalPosition
-  margin_left: number
-  margin_right: number
-  snapshot: string | null
-}
-
 export interface CanvasConfig {
   width: number
   height: number
@@ -44,7 +43,6 @@ export interface CanvasConfig {
 export interface LayoutState {
   canvas: CanvasConfig
   elements: TicketElement[]
-  groups: TicketGroup[]
 }
 
-export type EditorMode = 'normal' | 'editing-group'
+export type EditorMode = 'normal'

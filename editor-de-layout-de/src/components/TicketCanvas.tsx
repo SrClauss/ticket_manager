@@ -1,20 +1,14 @@
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import * as fabric from 'fabric'
-import type { TicketElement, TicketGroup, CanvasConfig } from '@/types/layout'
+import type { TicketElement, CanvasConfig } from '@/types/layout'
 import { mmToPx, calculateHorizontalPosition } from '@/lib/canvas-utils'
 
 interface TicketCanvasProps {
   config: CanvasConfig
   elements: TicketElement[]
-  groups?: TicketGroup[]
-  isGroupMode?: boolean
-  selectedElementId: string | null
-  selectedGroupId: string | null
+  selectedElementIds: string[]
   onElementModified: (id: string, y: number) => void
-  onGroupModified?: (id: string, y: number) => void
-  onElementSelect: (id: string | null) => void
-  onGroupSelect?: (id: string | null) => void
-  onGroupDoubleClick?: (id: string) => void
+  onElementSelect: (id: string, shiftKey: boolean) => void
 }
 
 export interface TicketCanvasRef {
@@ -27,15 +21,9 @@ export const TicketCanvas = forwardRef<TicketCanvasRef, TicketCanvasProps>(
     {
       config,
       elements,
-      groups = [],
-      isGroupMode = false,
-      selectedElementId,
-      selectedGroupId,
+      selectedElementIds,
       onElementModified,
-      onGroupModified,
       onElementSelect,
-      onGroupSelect,
-      onGroupDoubleClick,
     },
     ref
   ) => {
@@ -73,12 +61,7 @@ export const TicketCanvas = forwardRef<TicketCanvasRef, TicketCanvasProps>(
 
         const newYMm = Math.max(0, obj.top! / 3.78)
 
-        if ((obj as any).isGroupFrame) {
-          const groupId = (obj as any).groupId
-          if (groupId && onGroupModified) {
-            onGroupModified(groupId, parseFloat(newYMm.toFixed(2)))
-          }
-        } else if ((obj as any).elementId) {
+        if ((obj as any).elementId) {
           const elementId = (obj as any).elementId
           if (elementId) {
             onElementModified(elementId, parseFloat(newYMm.toFixed(2)))
@@ -90,10 +73,8 @@ export const TicketCanvas = forwardRef<TicketCanvasRef, TicketCanvasProps>(
         const obj = e.selected?.[0]
         if (!obj) return
 
-        if ((obj as any).isGroupFrame) {
-          if (onGroupSelect) onGroupSelect((obj as any).groupId)
-        } else if ((obj as any).elementId) {
-          onElementSelect((obj as any).elementId)
+        if ((obj as any).elementId) {
+          onElementSelect((obj as any).elementId, false)
         }
       })
 
@@ -101,30 +82,20 @@ export const TicketCanvas = forwardRef<TicketCanvasRef, TicketCanvasProps>(
         const obj = e.selected?.[0]
         if (!obj) return
 
-        if ((obj as any).isGroupFrame) {
-          if (onGroupSelect) onGroupSelect((obj as any).groupId)
-        } else if ((obj as any).elementId) {
-          onElementSelect((obj as any).elementId)
+        if ((obj as any).elementId) {
+          onElementSelect((obj as any).elementId, false)
         }
       })
 
       canvas.on('selection:cleared', () => {
-        onElementSelect(null)
-        if (onGroupSelect) onGroupSelect(null)
-      })
-
-      canvas.on('mouse:dblclick', (e) => {
-        const obj = e.target
-        if (obj && (obj as any).isGroupFrame && onGroupDoubleClick) {
-          onGroupDoubleClick((obj as any).groupId)
-        }
+        // Não limpar seleção automaticamente - deixar o usuário controlar via UI
       })
 
       return () => {
         canvas.dispose()
         fabricCanvasRef.current = null
       }
-    }, [])
+    }, [onElementModified, onElementSelect])
 
     useEffect(() => {
       if (!fabricCanvasRef.current) return
@@ -140,16 +111,13 @@ export const TicketCanvas = forwardRef<TicketCanvasRef, TicketCanvasProps>(
 
       drawGuides(canvas, wPx, hPx, config.padding)
 
-      if (!isGroupMode) {
-        groups.forEach((group) => drawGroupFrame(canvas, group, config.width))
-      }
-
-      elements.forEach((el) => drawElement(canvas, el, config.width))
+      // Renderizar elementos com links
+      elements.forEach((el) => drawElement(canvas, el, config.width, elements))
 
       canvas.renderAll()
 
       restoreSelection(canvas)
-    }, [config, elements, groups, isGroupMode])
+    }, [config, elements, selectedElementIds])
 
     const drawGuides = (
       canvas: fabric.Canvas,
@@ -179,21 +147,45 @@ export const TicketCanvas = forwardRef<TicketCanvasRef, TicketCanvasProps>(
     const drawElement = (
       canvas: fabric.Canvas,
       el: TicketElement,
-      containerWidthMm: number
+      containerWidthMm: number,
+      allElements: TicketElement[]
     ) => {
       let obj: fabric.Object | null = null
-      const top = mmToPx(el.y || 0)
+      let top = mmToPx(el.y || 0)
+      
+      // Se o elemento tem link, calcular posição relativa
+      if (el.link) {
+        const targetEl = allElements.find(e => e.id === el.link!.targetId)
+        if (targetEl) {
+          if (el.link.position === 'right') {
+            // Posicionar à direita do elemento alvo (lógica será aplicada no positionData)
+          } else if (el.link.position === 'below') {
+            top = mmToPx((targetEl.y || 0) + 20) // Placeholder - ajustar baseado no tamanho do alvo
+          }
+        }
+      }
 
       const positionData = calculateHorizontalPosition(el, containerWidthMm)
 
       if (el.type === 'text') {
+        const maxWidth = el.wrapText ? mmToPx(containerWidthMm - (el.margin_left + el.margin_right)) : undefined
+        
         obj = new fabric.Text(el.value || 'Texto', {
           fontSize: el.size || 14,
           fontFamily: el.font || 'Arial',
           fontWeight: el.bold ? 'bold' : 'normal',
           fontStyle: el.italic ? 'italic' : 'normal',
           fill: '#000000',
+          ...(maxWidth && {
+            splitByGrapheme: true,
+            textAlign: el.horizontal_position,
+          }),
         })
+        
+        // Aplicar quebra de linha manual se necessário
+        if (maxWidth && obj.width! > maxWidth) {
+          (obj as fabric.Text).set({ width: maxWidth })
+        }
       } else if (el.type === 'qrcode' || el.type === 'logo') {
         const size = mmToPx(el.size_mm || 30)
         const rect = new fabric.Rect({
@@ -240,104 +232,32 @@ export const TicketCanvas = forwardRef<TicketCanvasRef, TicketCanvasProps>(
         } as any)
 
         ;(obj as any).elementId = el.id
-        ;(obj as any).groupId = el.groupId || null
+
+        // Marcar se o elemento está vinculado
+        if (el.link) {
+          ;(obj as any).isLinked = true
+          // Adicionar visual para indicar vínculo (borda diferente)
+          obj.set({ borderColor: '#10b981', strokeWidth: 2 } as any)
+        }
 
         canvas.add(obj)
       }
     }
 
-    const drawGroupFrame = (
-      canvas: fabric.Canvas,
-      group: TicketGroup,
-      canvasWidth: number
-    ) => {
-      const positionData = calculateHorizontalPosition(group, canvasWidth)
-      const top = mmToPx(group.y || 0)
-      const width = mmToPx(group.width || 40)
-      const height = mmToPx(group.height || 30)
-
-      const rect = new fabric.Rect({
-        width: width,
-        height: height,
-        fill: 'rgba(245, 158, 11, 0.05)',
-        stroke: '#f59e0b',
-        strokeWidth: 1,
-        strokeDashArray: [6, 4],
-        originX: 'left',
-        originY: 'top',
-      })
-
-      const groupObjs: fabric.Object[] = [rect]
-
-      if (group.snapshot) {
-        fabric.Image.fromURL(group.snapshot).then((img) => {
-          img.set({
-            width: width,
-            height: height,
-            originX: 'left',
-            originY: 'top',
-          })
-
-          const groupObj = new fabric.Group([rect, img], {
-            left: positionData.left,
-            top: top,
-            originX: positionData.originX,
-            selectable: true,
-            hasControls: false,
-            lockMovementX: true,
-            lockScalingX: true,
-            lockScalingY: true,
-            lockRotation: true,
-            borderColor: '#f59e0b',
-          } as any)
-
-          ;(groupObj as any).groupId = group.id
-          ;(groupObj as any).isGroupFrame = true
-
-          canvas.add(groupObj)
-          canvas.renderAll()
-        })
-      } else {
-        const text = new fabric.Text('📦 Grupo (Duplo clique)', {
-          fontSize: 10,
-          fill: '#d97706',
-          originX: 'center',
-          originY: 'center',
-        })
-
-        const groupObj = new fabric.Group([rect, text], {
-          left: positionData.left,
-          top: top,
-          originX: positionData.originX,
-          selectable: true,
-          hasControls: false,
-          lockMovementX: true,
-          lockScalingX: true,
-          lockScalingY: true,
-          lockRotation: true,
-          borderColor: '#f59e0b',
-        } as any)
-
-        ;(groupObj as any).groupId = group.id
-        ;(groupObj as any).isGroupFrame = true
-
-        canvas.add(groupObj)
-      }
-    }
-
     const restoreSelection = (canvas: fabric.Canvas) => {
-      const activeId = selectedElementId || selectedGroupId
-      if (!activeId) return
+      if (selectedElementIds.length === 0) return
 
-      const objToSelect = canvas.getObjects().find((o: any) => {
-        return (
-          (selectedElementId && o.elementId === activeId) ||
-          (selectedGroupId && o.groupId === activeId && o.isGroupFrame)
-        )
-      })
+      const objsToSelect = canvas.getObjects().filter((o: any) => 
+        selectedElementIds.includes(o.elementId)
+      )
 
-      if (objToSelect) {
-        canvas.setActiveObject(objToSelect)
+      if (objsToSelect.length > 0) {
+        if (objsToSelect.length === 1) {
+          canvas.setActiveObject(objsToSelect[0])
+        } else {
+          const selection = new fabric.ActiveSelection(objsToSelect, { canvas })
+          canvas.setActiveObject(selection)
+        }
         canvas.requestRenderAll()
       }
     }
