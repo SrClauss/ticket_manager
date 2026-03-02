@@ -26,6 +26,47 @@
     🎨 Editando Grupo - Pressione ESC para sair
   </div>
 
+  <!-- Canvas Configuration Row -->
+  <div class="card bg-dark border-secondary mb-3 p-3">
+    <div class="row g-3 align-items-end">
+      <div class="col-auto">
+        <label class="form-label text-muted small mb-1">Orientação</label>
+        <select class="form-select form-select-sm bg-dark text-white border-secondary"
+                :value="$store.layoutEditor.canvas.orientation"
+                @change="$store.layoutEditor.swapOrientation()">
+          <option value="portrait">📱 Portrait</option>
+          <option value="landscape">🖥️ Landscape</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label text-muted small mb-1">Largura (mm)</label>
+        <select class="form-select form-select-sm bg-dark text-white border-secondary"
+                :value="$store.layoutEditor.canvas.width"
+                @change="$store.layoutEditor.canvas.width = parseFloat($event.target.value); $store.layoutEditor.saveDraft()">
+          <option value="29">29mm (estreito)</option>
+          <option value="62">62mm (padrão)</option>
+          <option value="80">80mm (largo)</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label text-muted small mb-1">Altura (mm)</label>
+        <input type="number" min="10" step="1"
+               class="form-control form-control-sm bg-dark text-white border-secondary"
+               style="width: 90px;"
+               :value="$store.layoutEditor.canvas.height"
+               @input="$store.layoutEditor.canvas.height = parseFloat($event.target.value); $store.layoutEditor.saveDraft()">
+      </div>
+      <div class="col-auto">
+        <label class="form-label text-muted small mb-1">Padding (mm)</label>
+        <input type="number" min="0" step="0.5"
+               class="form-control form-control-sm bg-dark text-white border-secondary"
+               style="width: 80px;"
+               :value="$store.layoutEditor.canvas.padding"
+               @input="$store.layoutEditor.canvas.padding = parseFloat($event.target.value); $store.layoutEditor.saveDraft()">
+      </div>
+    </div>
+  </div>
+
   <!-- Main Layout -->
   <div class="layout-editor-container">
     
@@ -96,10 +137,10 @@
               <div class="property-group">
                 <label>Posição Horizontal</label>
                 <select :value="$store.layoutEditor.selectedElement.horizontal_position"
-                        @change="$store.layoutEditor.updateElementProperty('horizontal_position', $event.target.value); $store.layoutEditor.updateElementProperty('x', $store.layoutEditor.horizontalPositions[$event.target.value])">
-                  <option value="left">Esquerda (10mm)</option>
-                  <option value="center">Centro (31mm)</option>
-                  <option value="right">Direita (52mm)</option>
+                        @change="$store.layoutEditor.updateElementProperty('horizontal_position', $event.target.value)">
+                  <option value="left">Esquerda</option>
+                  <option value="center">Centro</option>
+                  <option value="right">Direita</option>
                 </select>
               </div>
 
@@ -210,6 +251,40 @@
           <template x-if="$store.layoutEditor.selectedGroup">
             <div>
               <div class="property-group">
+                <label>Posição Vertical (mm)</label>
+                <input type="number"
+                       step="0.5"
+                       :value="$store.layoutEditor.selectedGroup.y"
+                       @input="$store.layoutEditor.updateElementProperty('y', parseFloat($event.target.value))">
+              </div>
+
+              <div class="property-group">
+                <label>Alinhamento Externo</label>
+                <select :value="$store.layoutEditor.selectedGroup.horizontal_position"
+                        @change="$store.layoutEditor.updateElementProperty('horizontal_position', $event.target.value)">
+                  <option value="left">Esquerda</option>
+                  <option value="center">Centro</option>
+                  <option value="right">Direita</option>
+                </select>
+              </div>
+
+              <div class="property-group">
+                <label>Margem Esquerda (mm)</label>
+                <input type="number"
+                       step="0.5"
+                       :value="$store.layoutEditor.selectedGroup.margin_left"
+                       @input="$store.layoutEditor.updateElementProperty('margin_left', parseFloat($event.target.value))">
+              </div>
+
+              <div class="property-group">
+                <label>Margem Direita (mm)</label>
+                <input type="number"
+                       step="0.5"
+                       :value="$store.layoutEditor.selectedGroup.margin_right"
+                       @input="$store.layoutEditor.updateElementProperty('margin_right', parseFloat($event.target.value))">
+              </div>
+
+              <div class="property-group">
                 <label>Largura (mm)</label>
                 <input type="number" 
                        step="0.5"
@@ -256,104 +331,136 @@
 
     <!-- Canvas Area -->
     <div class="canvas-area">
-      <h5 class="text-white mb-3">Canvas</h5>
-      
-      <div class="canvas-wrapper">
-        <!-- Rulers -->
-        <div class="ruler ruler-horizontal">
-          <template x-for="i in Math.ceil($store.layoutEditor.canvas.width / 10)" :key="i">
-            <div class="ruler-mark" :style="`flex: 0 0 10mm`" x-text="(i * 10)"></div>
-          </template>
-        </div>
-        <div class="ruler ruler-vertical">
-          <template x-for="i in Math.ceil($store.layoutEditor.canvas.height / 10)" :key="i">
-            <div class="ruler-mark" :style="`flex: 0 0 10mm`" x-text="(i * 10)"></div>
-          </template>
-        </div>
 
-        <!-- Ticket Canvas -->
-        <div class="ticket-canvas"
-             :class="{ 'editing-group': $store.layoutEditor.mode === 'editing-group' }"
-             :style="`width: ${$store.layoutEditor.canvas.width}mm; height: ${$store.layoutEditor.canvas.height}mm;`"
-             @click.self="$store.layoutEditor.selectedElement = null; $store.layoutEditor.selectedGroup = null">
-          
-          <!-- Snap Guides -->
-          <div class="snap-guides">
-            <div class="snap-guide left"></div>
-            <div class="snap-guide center"></div>
-            <div class="snap-guide right"></div>
+      <!-- Normal mode: full ticket canvas -->
+      <div x-show="$store.layoutEditor.mode !== 'editing-group'">
+        <h5 class="text-white mb-3">Canvas</h5>
+        <div class="canvas-wrapper">
+          <!-- Rulers -->
+          <div class="ruler ruler-horizontal">
+            <template x-for="i in Math.ceil($store.layoutEditor.canvas.width / 10)" :key="i">
+              <div class="ruler-mark" :style="`flex: 0 0 10mm`" x-text="(i * 10)"></div>
+            </template>
+          </div>
+          <div class="ruler ruler-vertical">
+            <template x-for="i in Math.ceil($store.layoutEditor.canvas.height / 10)" :key="i">
+              <div class="ruler-mark" :style="`flex: 0 0 10mm`" x-text="(i * 10)"></div>
+            </template>
           </div>
 
-          <!-- Elements -->
-          <template x-for="element in $store.layoutEditor.elements" :key="element.id">
-            <div :id="element.id"
-                 class="draggable-element"
-                 :class="{ 
-                   'selected': $store.layoutEditor.selectedElement?.id === element.id,
-                   'fade-out': $store.layoutEditor.mode === 'editing-group',
-                   [`element-${element.type}`]: true
-                 }"
-                 :style="`
-                   left: calc(${element.x}mm + ${element.margin_left}mm);
-                   top: ${element.y}mm;
-                   font-size: ${element.size}px;
-                   text-align: ${element.align};
-                   font-weight: ${element.bold ? 'bold' : 'normal'};
-                   font-style: ${element.italic ? 'italic' : 'normal'};
-                   text-decoration: ${element.underline ? 'underline' : 'none'};
-                 `"
-                 @click.stop="$store.layoutEditor.selectElement(element.id)"
-                 x-text="element.type === 'text' ? element.value : element.type === 'qrcode' ? '🔲 QR' : '—'">
-            </div>
-          </template>
+          <!-- Ticket Canvas -->
+          <div class="ticket-canvas"
+               :style="`width: ${$store.layoutEditor.canvas.width}mm; height: ${$store.layoutEditor.canvas.height}mm;`"
+               @click.self="$store.layoutEditor.selectedElement = null; $store.layoutEditor.selectedGroup = null">
 
-          <!-- Groups -->
-          <template x-for="group in $store.layoutEditor.groups" :key="group.id">
-            <div :id="group.id"
-                 class="draggable-group"
-                 :class="{ 
-                   'selected': $store.layoutEditor.selectedGroup?.id === group.id,
-                   'editing': $store.layoutEditor.editingGroupId === group.id,
-                   'fade-out': $store.layoutEditor.mode === 'editing-group' && $store.layoutEditor.editingGroupId !== group.id
-                 }"
-                 :style="`
-                   left: calc(${group.x}mm + ${group.margin_left}mm);
-                   top: ${group.y}mm;
-                   width: ${group.width}mm;
-                   height: ${group.height}mm;
-                 `"
-                 @click.stop="$store.layoutEditor.selectGroup(group.id)"
-                 @dblclick="$store.layoutEditor.enterGroupEditMode(group.id)">
-              
-              <!-- Group snapshot or elements -->
-              <template x-if="group.snapshot_image && $store.layoutEditor.editingGroupId !== group.id">
-                <img :src="group.snapshot_image" class="group-snapshot" alt="Group">
-              </template>
-              
-              <!-- Group elements (when editing) -->
-              <template x-if="$store.layoutEditor.editingGroupId === group.id">
-                <template x-for="element in group.elements" :key="element.id">
-                  <div :id="element.id"
-                       class="draggable-element"
-                       :class="{ 
-                         'selected': $store.layoutEditor.selectedElement?.id === element.id,
-                         [`element-${element.type}`]: true
-                       }"
-                       :style="`
-                         left: ${element.x}mm;
-                         top: ${element.y}mm;
-                         font-size: ${element.size}px;
-                       `"
-                       @click.stop="$store.layoutEditor.selectElement(element.id)"
-                       x-text="element.type === 'text' ? element.value : element.type === 'qrcode' ? '🔲' : '—'">
+            <!-- Snap Guides -->
+            <div class="snap-guides">
+              <div class="snap-guide left" :style="`left: 0mm`"></div>
+              <div class="snap-guide center" :style="`left: ${$store.layoutEditor.canvas.width / 2}mm`"></div>
+              <div class="snap-guide right" :style="`left: ${$store.layoutEditor.canvas.width}mm`"></div>
+            </div>
+
+            <!-- Elements -->
+            <template x-for="element in $store.layoutEditor.elements" :key="element.id">
+              <div :id="element.id"
+                   class="draggable-element"
+                   :class="{ 
+                     'selected': $store.layoutEditor.selectedElement?.id === element.id,
+                     [`element-${element.type}`]: true
+                   }"
+                   :style="`
+                     ${$store.layoutEditor.getElementPositionStyle(element)}
+                     top: ${element.y}mm;
+                     font-size: ${element.size}px;
+                     text-align: ${element.align || 'left'};
+                     font-weight: ${element.bold ? 'bold' : 'normal'};
+                     font-style: ${element.italic ? 'italic' : 'normal'};
+                     text-decoration: ${element.underline ? 'underline' : 'none'};
+                   `"
+                   @click.stop="$store.layoutEditor.selectElement(element.id)"
+                   x-text="element.type === 'text' ? element.value : element.type === 'qrcode' ? '🔲 QR' : '—'">
+              </div>
+            </template>
+
+            <!-- Groups -->
+            <template x-for="group in $store.layoutEditor.groups" :key="group.id">
+              <div :id="group.id"
+                   class="draggable-group"
+                   :class="{ 
+                     'selected': $store.layoutEditor.selectedGroup?.id === group.id
+                   }"
+                   :style="`
+                     ${$store.layoutEditor.getGroupPositionStyle(group)}
+                     top: ${group.y}mm;
+                     width: ${group.width}mm;
+                     height: ${group.height}mm;
+                   `"
+                   @click.stop="$store.layoutEditor.selectGroup(group.id)"
+                   @dblclick="$store.layoutEditor.enterGroupEditMode(group.id)">
+
+                <!-- Group snapshot (when not editing) -->
+                <template x-if="group.snapshot_image">
+                  <img :src="group.snapshot_image" class="group-snapshot" alt="Group">
+                </template>
+
+                <!-- Group placeholder (no snapshot yet) -->
+                <template x-if="!group.snapshot_image">
+                  <div class="d-flex align-items-center justify-content-center h-100 text-muted small">
+                    📦 Grupo (duplo-clique para editar)
                   </div>
                 </template>
-              </template>
-            </div>
-          </template>
+              </div>
+            </template>
 
+          </div>
         </div>
       </div>
+
+      <!-- Group editing mode: isolated group canvas -->
+      <div x-show="$store.layoutEditor.mode === 'editing-group'" class="d-flex flex-column align-items-center">
+        <h5 class="text-white mb-1">✏️ Editando Grupo</h5>
+        <p class="text-muted small mb-3">Adicione elementos usando o painel lateral. Clique em "Salvar Grupo" quando terminar.</p>
+
+        <template x-if="$store.layoutEditor.editingGroup">
+          <div class="d-flex flex-column align-items-center">
+            <!-- Mini canvas showing only the group -->
+            <div class="ticket-canvas group-edit-canvas"
+                 :style="`width: ${$store.layoutEditor.editingGroup.width}mm; height: ${$store.layoutEditor.editingGroup.height}mm;`"
+                 @click.self="$store.layoutEditor.selectedElement = null">
+
+              <!-- Elements inside the group -->
+              <template x-for="element in $store.layoutEditor.editingGroup.elements" :key="element.id">
+                <div :id="element.id"
+                     class="draggable-element"
+                     :class="{ 
+                       'selected': $store.layoutEditor.selectedElement?.id === element.id,
+                       [`element-${element.type}`]: true
+                     }"
+                     :style="`
+                       left: ${element.x || 0}mm;
+                       top: ${element.y || 0}mm;
+                       font-size: ${element.size || 12}px;
+                       text-align: ${element.align || 'left'};
+                       font-weight: ${element.bold ? 'bold' : 'normal'};
+                       font-style: ${element.italic ? 'italic' : 'normal'};
+                       text-decoration: ${element.underline ? 'underline' : 'none'};
+                     `"
+                     @click.stop="$store.layoutEditor.selectElement(element.id)"
+                     x-text="element.type === 'text' ? element.value : element.type === 'qrcode' ? '🔲 QR' : '—'">
+                </div>
+              </template>
+            </div>
+
+            <!-- Save Group Button -->
+            <button class="btn btn-success btn-sm w-100 mt-3"
+                    style="max-width: 250px;"
+                    @click="$store.layoutEditor.exitGroupEditMode()">
+              ✅ Salvar Grupo
+            </button>
+          </div>
+        </template>
+      </div>
+
     </div>
 
     <!-- Preview Area -->
@@ -371,19 +478,12 @@
         </template>
 
         <template x-if="!$store.layoutEditor.previewLoading && $store.layoutEditor.previewUrl">
-          <div style="position: relative;">
-            <img :src="$store.layoutEditor.previewUrl" class="preview-image" alt="Preview">
-            
-            <!-- Watermark if dirty -->
-            <div x-show="$store.layoutEditor.isDirty" class="preview-watermark">
-              <div class="watermark-text">⚠️ SALVAR LAYOUT</div>
-            </div>
-          </div>
+          <img :src="$store.layoutEditor.previewUrl" class="preview-image" alt="Preview">
         </template>
 
         <template x-if="!$store.layoutEditor.previewLoading && !$store.layoutEditor.previewUrl">
           <div class="preview-loading">
-            <p>Adicione elementos para visualizar</p>
+            <p>Clique em "Atualizar Preview" para visualizar</p>
           </div>
         </template>
       </div>
@@ -453,18 +553,31 @@
         },
         end(event) {
           const target = event.target;
-          const canvas = document.querySelector('.ticket-canvas');
+          // Use closest parent canvas (works for both normal and group editing mode)
+          const canvas = target.closest('.ticket-canvas');
           const rect = target.getBoundingClientRect();
           const canvasRect = canvas.getBoundingClientRect();
+
+          const store = Alpine.store('layoutEditor');
+          
+          // Use the correct canvas dimensions based on mode
+          let canvasWidthMm, canvasHeightMm;
+          if (store.mode === 'editing-group' && store.editingGroup) {
+            canvasWidthMm = store.editingGroup.width;
+            canvasHeightMm = store.editingGroup.height;
+          } else {
+            canvasWidthMm = store.canvas.width;
+            canvasHeightMm = store.canvas.height;
+          }
 
           // Calculate position in mm
           const xPx = rect.left - canvasRect.left;
           const yPx = rect.top - canvasRect.top;
-          const xMm = (xPx / canvasRect.width) * Alpine.store('layoutEditor').canvas.width;
-          const yMm = (yPx / canvasRect.height) * Alpine.store('layoutEditor').canvas.height;
+          const xMm = (xPx / canvasRect.width) * canvasWidthMm;
+          const yMm = (yPx / canvasRect.height) * canvasHeightMm;
 
           // Update position in store
-          Alpine.store('layoutEditor').updateElementPosition(target.id, xMm, yMm);
+          store.updateElementPosition(target.id, xMm, yMm);
 
           // Reset transform
           target.style.transform = '';
