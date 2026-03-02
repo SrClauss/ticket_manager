@@ -3,6 +3,7 @@ Router web para servir a interface do editor de layout React.
 O layout é um subdocumento dentro de evento.layout_ingresso.
 O Jinja serve uma página HTML que carrega o React build de /static/editor/
 """
+from datetime import datetime
 from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from bson import ObjectId
@@ -73,5 +74,6 @@ async def editor_page(
             "evento_nome": evento.get("nome", ""),
             "api_base_url": str(request.base_url).rstrip("/"),
             "back_url": back_url,
+            "timestamp": int(datetime.now().timestamp())
         }
     )

@@ -803,7 +803,8 @@ async def admin_evento_layout_page(request: Request, evento_id: str):
                 "evento_id": evento["id"],
                 "evento_nome": evento.get("nome", ""),
                 "api_base_url": "",  # Empty because API is on same server
-                "back_url": f"/admin/eventos/{evento['id']}"
+                "back_url": f"/admin/eventos/{evento['id']}",
+                "timestamp": int(datetime.now().timestamp())
             }
         )
     except Exception as e:
