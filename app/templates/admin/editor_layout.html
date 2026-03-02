@@ -182,6 +182,17 @@
                   x-text="`(${selectedIds.length} sel.)`"></span>
           </h2>
 
+          <!-- Multi-select toggle (for mobile / no shift key) -->
+          <button @click="multiSelectMode = !multiSelectMode"
+                  :class="multiSelectMode
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'"
+                  class="w-full mb-2 py-1 text-xs rounded transition"
+                  :aria-pressed="multiSelectMode.toString()"
+                  :title="multiSelectMode ? 'Desativar seleção múltipla' : 'Ativar seleção múltipla (mobile)'">
+            <span x-text="multiSelectMode ? '✅ Seleção múltipla ativa' : '☑ Selecionar múltiplos'"></span>
+          </button>
+
           <p x-show="elements.length === 0" class="text-xs text-slate-500 italic">Sem elementos. Adicione acima.</p>
 
           <div class="space-y-1">
@@ -190,7 +201,7 @@
                    :class="selectedIds.includes(el.id)
                      ? 'bg-blue-900/50 border-blue-500'
                      : 'border-transparent hover:bg-slate-700'"
-                   @click="clickLayer(el.id, $event.shiftKey)">
+                   @click="clickLayer(el.id, $event.shiftKey || multiSelectMode)">
                 <span class="flex items-center gap-1.5 text-xs min-w-0">
                   <span x-text="el.type==='text'?'✏️':el.type==='qrcode'?'📱':el.type==='logo'?'🖼️':'➖'" class="shrink-0"></span>
                   <span class="text-slate-300 truncate" x-text="el.value || el.type"></span>
@@ -216,7 +227,7 @@
              style="background:#fff">
           <canvas id="main-canvas"></canvas>
         </div>
-        <p class="mt-2 text-[10px] text-slate-500">Arraste elementos verticalmente no canvas • Shift+clique para selecionar múltiplos</p>
+        <p class="mt-2 text-[10px] text-slate-500">Arraste elementos verticalmente no canvas • Shift+clique (ou botão <strong>☑ Selecionar múltiplos</strong>) para selecionar múltiplos</p>
       </main>
 
       <!-- ═══ RIGHT SIDEBAR ══════════════════════════════════════ -->
@@ -481,6 +492,7 @@
       cfg: { width: 80, height: 120, orientation: 'portrait', padding: 5 },
       elements: [],
       selectedIds: [],
+      multiSelectMode: false,
 
       pendingEl: null,
       pendingChanged: false,
