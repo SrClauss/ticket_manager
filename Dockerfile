@@ -23,7 +23,7 @@ WORKDIR /build
 
 # Copy React app
 COPY editor-de-layout-de/package*.json ./
-RUN npm ci --silent --only=production
+RUN npm ci
 
 COPY editor-de-layout-de/ ./
 RUN npm run build
