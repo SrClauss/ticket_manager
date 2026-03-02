@@ -1,7 +1,7 @@
 /**
  * Layout Editor with Groups - Alpine.js Store
  * Features:
- * - Horizontal snap positioning (10mm, 31mm, 52mm)
+ * - Horizontal alignment (left/center/right) with margin support
  * - Group component with isolated editing mode
  * - Groups rendered as images (backend)
  * - Draft state (localStorage)
@@ -21,13 +21,6 @@ document.addEventListener('alpine:init', () => {
       orientation: 'portrait',
       padding: 5,
       dpi: 300
-    },
-    
-    // Horizontal snap positions (mm)
-    horizontalPositions: {
-      left: 10,
-      center: 31,
-      right: 52
     },
     
     // Elements and groups
@@ -52,6 +45,68 @@ document.addEventListener('alpine:init', () => {
       this.loadDraft();
       this.setupKeyboardShortcuts();
     },
+    
+    // Computed: currently editing group
+    get editingGroup() {
+      return this.groups.find(g => g.id === this.editingGroupId) || null;
+    },
+    
+    // Swap orientation (portrait <-> landscape)
+    swapOrientation() {
+      const temp = this.canvas.width;
+      this.canvas.width = this.canvas.height;
+      this.canvas.height = temp;
+      this.canvas.orientation = this.canvas.orientation === 'portrait' ? 'landscape' : 'portrait';
+      this.saveDraft();
+    },
+    
+    // Compute CSS position style for an element based on horizontal_position and margins
+    getElementPositionStyle(element) {
+      const ml = element.margin_left || 0;
+      const mr = element.margin_right || 0;
+      const hp = element.horizontal_position || 'left';
+      const cw = this.canvas.width;
+
+      if (element.type === 'text') {
+        // Text elements span available width; text-align controls direction
+        return `left: ${ml}mm; right: ${mr}mm;`;
+      }
+
+      // QR code / divider: use size_mm or length_mm (default 30mm if not set)
+      const size = element.size_mm || element.length_mm || 30;
+      switch (hp) {
+        case 'left':
+          return `left: ${ml}mm;`;
+        case 'center':
+          return `left: ${Math.max(0, (cw - size) / 2 + ml - mr)}mm;`;
+        case 'right':
+          return `left: ${Math.max(0, cw - size - mr)}mm;`;
+        default:
+          return `left: ${ml}mm;`;
+      }
+    },
+    
+    // Compute CSS position style for a group based on horizontal_position and margins
+    getGroupPositionStyle(group) {
+      const ml = group.margin_left || 0;
+      const mr = group.margin_right || 0;
+      const hp = group.horizontal_position || 'left';
+      const w = group.width || 40;
+      const cw = this.canvas.width;
+
+      switch (hp) {
+        case 'left':
+          return `left: ${ml}mm;`;
+        case 'center':
+          // Centers the group on the canvas; asymmetric margins shift the center point
+          return `left: ${Math.max(0, (cw - w) / 2 + ml - mr)}mm;`;
+        case 'right':
+          return `left: ${Math.max(0, cw - w - mr)}mm;`;
+        default:
+          return `left: ${ml}mm;`;
+      }
+    },
+    
     
     // Load draft from localStorage
     loadDraft() {
@@ -92,7 +147,7 @@ document.addEventListener('alpine:init', () => {
       const newElement = {
         id: `elem-${Date.now()}`,
         type: type,
-        x: this.horizontalPositions.center,
+        x: 0,
         y: 20,
         horizontal_position: 'center',
         margin_left: 0,
@@ -147,7 +202,7 @@ document.addEventListener('alpine:init', () => {
     addGroup() {
       const newGroup = {
         id: `group-${Date.now()}`,
-        x: this.horizontalPositions.center,
+        x: 0,
         y: 30,
         width: 40,
         height: 30,
@@ -236,17 +291,16 @@ document.addEventListener('alpine:init', () => {
       if (element) {
         element.y = y;
         
-        // Snap horizontal position
         if (this.mode !== 'editing-group') {
-          const distances = Object.entries(this.horizontalPositions).map(([pos, val]) => ({
-            position: pos,
-            value: val,
-            distance: Math.abs(x - val)
-          }));
-          const closest = distances.reduce((a, b) => a.distance < b.distance ? a : b);
-          
-          element.x = closest.value;
-          element.horizontal_position = closest.position;
+          // Snap to left / center / right based on thirds of canvas width
+          const cw = this.canvas.width;
+          if (x < cw / 3) {
+            element.horizontal_position = 'left';
+          } else if (x < 2 * cw / 3) {
+            element.horizontal_position = 'center';
+          } else {
+            element.horizontal_position = 'right';
+          }
         } else {
           element.x = x; // Free positioning inside group
         }
