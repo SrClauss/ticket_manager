@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from typing import Optional
 from datetime import datetime, timedelta, timezone
 import math
+import json
 from bson import ObjectId
 from app.models.evento import EventoUpdate
 import app.config.database as database
@@ -780,7 +781,7 @@ def _format_planilha_datetime(value):
 
 @router.get("/eventos/layout/{evento_id}", response_class=HTMLResponse)
 async def admin_evento_layout_page(request: Request, evento_id: str):
-    """Ticket layout editor - agora com React"""
+    """Ticket layout editor – Alpine.js + Fabric.js"""
     redirect = check_admin_session(request)
     if redirect:
         return redirect
@@ -795,16 +796,18 @@ async def admin_evento_layout_page(request: Request, evento_id: str):
         evento["_id"] = str(evento["_id"])
         evento["id"] = evento["_id"]
         
-        # Usa o novo template React ao invés do antigo
+        # Carregar layout existente do evento para inicializar o editor
+        layout_ingresso = evento.get("layout_ingresso") or {}
+        initial_layout_json = json.dumps(layout_ingresso, default=str)
+
         return templates.TemplateResponse(
             "admin/editor_layout.html",
             {
                 "request": request,
                 "evento_id": evento["id"],
                 "evento_nome": evento.get("nome", ""),
-                "api_base_url": "",  # Empty because API is on same server
                 "back_url": f"/admin/eventos/{evento['id']}",
-                "timestamp": int(datetime.now().timestamp())
+                "initial_layout": initial_layout_json,
             }
         )
     except Exception as e:

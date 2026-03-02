@@ -1,7 +1,6 @@
 """
-Router web para servir a interface do editor de layout React.
+Router web para servir a interface do editor de layout (Alpine.js + Fabric.js).
 O layout é um subdocumento dentro de evento.layout_ingresso.
-O Jinja serve uma página HTML que carrega o React build de /static/editor/
 """
 from datetime import datetime
 from fastapi import APIRouter, Request, HTTPException, status
@@ -41,9 +40,8 @@ async def editor_page(
     evento_id: str
 ):
     """
-    Serve página HTML simples que carrega o React build.
-    O React já foi compilado e está em /static/editor/ (servido pelo FastAPI).
-    
+    Serve o editor de layout Alpine.js + Fabric.js para um evento.
+
     Query params:
     - evento_id: ID do evento (obrigatório)
     """
@@ -51,9 +49,9 @@ async def editor_page(
     redirect = check_admin_session(request)
     if redirect:
         return redirect
-    
+
     db = get_db()
-    
+
     # Verifica se evento existe
     try:
         evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
@@ -61,19 +59,18 @@ async def editor_page(
             raise HTTPException(status_code=404, detail="Evento não encontrado")
     except Exception:
         raise HTTPException(status_code=400, detail="ID de evento inválido")
-    
-    # URL de retorno
+
+    import json as _json
+    layout_ingresso = evento.get("layout_ingresso") or {}
     back_url = f"/admin/eventos/{evento_id}"
-    
-    # Jinja renderiza HTML que carrega JS estático
+
     return request.app.state.templates.TemplateResponse(
         "admin/editor_layout.html",
         {
             "request": request,
             "evento_id": evento_id,
             "evento_nome": evento.get("nome", ""),
-            "api_base_url": str(request.base_url).rstrip("/"),
             "back_url": back_url,
-            "timestamp": int(datetime.now().timestamp())
+            "initial_layout": _json.dumps(layout_ingresso, default=str),
         }
     )
