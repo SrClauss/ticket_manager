@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile: build Tailwind CSS + React Editor, then Python app
+# Multi-stage Dockerfile: build Tailwind CSS, then Python app
 
 # ============================================
 # Stage 1: Build Tailwind CSS
@@ -21,20 +21,7 @@ RUN npm install --no-audit --no-fund
 RUN npm run build:css
 
 # ============================================
-# Stage 2: Build React Editor
-# ============================================
-FROM node:20-alpine AS react_builder
-WORKDIR /build
-
-# Copy React app package files and install deps
-COPY editor-de-layout-de/package.json editor-de-layout-de/package-lock.json* ./
-RUN npm install --frozen-lockfile || npm install
-
-COPY editor-de-layout-de/ ./
-RUN npm run build
-
-# ============================================
-# Stage 3: Python Runtime (FastAPI)
+# Stage 2: Python Runtime (FastAPI)
 # ============================================
 FROM python:3.11-slim
 WORKDIR /app
@@ -59,9 +46,6 @@ COPY ./app /app/app
 
 # Copy built Tailwind CSS
 COPY --from=tailwind_builder /build/app/static/css/tailwind.css /app/app/static/css/tailwind.css
-
-# Copy built React Editor
-COPY --from=react_builder /build/dist /app/app/static/editor/
 
 # Create directories
 RUN mkdir -p /app/app/static/uploads /app/app/static/ingressos
