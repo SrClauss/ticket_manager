@@ -432,7 +432,7 @@ export default function App() {
           <div className="p-4 border-b border-border flex-1">
             <h2 className="text-xs uppercase font-bold text-muted-foreground mb-3 tracking-wider flex justify-between">
               <span>Propriedades</span>
-              {!selectedElement && !selectedGroup && (
+              {!selectedElement && (
                 <span className="text-muted-foreground/50 font-normal">Nenhum</span>
               )}
             </h2>
