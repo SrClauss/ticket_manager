@@ -1,0 +1,12 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Editor de Layout{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="alert alert-warning" role="alert">
+        Editor de layout desativado. Esta funcionalidade ainda não foi reconstruída.
+    </div>
+    <a href="/admin/eventos/{{ evento.id }}" class="btn btn-primary">Voltar ao evento</a>
+</div>
+{% endblock %}
