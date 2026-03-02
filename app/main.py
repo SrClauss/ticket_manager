@@ -19,6 +19,9 @@ app = FastAPI(
 
 templates = Jinja2Templates(directory="app/templates")
 
+# Store templates in app state
+app.state.templates = templates
+
 # Mount static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
@@ -58,6 +61,10 @@ app.include_router(evento_api.router, prefix="/api/eventos", tags=["Eventos API"
 # Planilha upload and import routes (admin)
 from app.routers import planilha
 app.include_router(planilha.router, prefix="/api/admin", tags=["Planilhas"]) 
+# Layout Editor (React) routes
+from app.routers import layout_editor, layout_api
+app.include_router(layout_editor.router, tags=["Layout Editor"])
+app.include_router(layout_api.router, tags=["Layout API"]) 
 
 
 # Endpoint público único para UUIDs secretos

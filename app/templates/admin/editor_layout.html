@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Layout - {{ evento_nome }}</title>
+    
+    <!-- React build CSS -->
+    <link rel="stylesheet" href="/static/editor/assets/index.css">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #root {
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <!-- Data inicial para o React -->
+    <script>
+        window.__INITIAL_DATA__ = {
+            eventoId: {{ evento_id | tojson }},
+            eventoNome: {{ evento_nome | tojson }},
+            apiBaseUrl: '{{ api_base_url }}',
+            backUrl: '{{ back_url }}'
+        };
+    </script>
+    
+    <!-- React build JS -->
+    <script type="module" src="/static/editor/assets/index.js"></script>
+</body>
+</html>

@@ -12,7 +12,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
   
   <!-- Alpine.js para Estado e reatividade na UI -->
-  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- use `defer` so Alpine doesn't run before <body> exists -->
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
   <style>
     body { background-color: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -39,7 +40,8 @@
     .toast-leave-active { opacity: 0; transition: all 200ms ease-in; }
   </style>
 
-  <script>
+  <!-- initialize Alpine store after Alpine is loaded -->
+  <script defer>
     document.addEventListener('alpine:init', () => {
       Alpine.store('layoutEditor', {
         // ... full JS omitted for brevity in snippet for replacement but included in file ...

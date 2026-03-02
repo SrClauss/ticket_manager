@@ -47,9 +47,15 @@ docker compose up -d --remove-orphans --build
 
 echo "- verifying built assets"
 if docker compose exec -T fastapi test -f /app/app/static/css/tailwind.css; then
-  echo "tailwind.css present"
+  echo "✓ tailwind.css present"
 else
-  echo "WARNING: tailwind.css not found in container at /app/app/static/css/tailwind.css"
+  echo "⚠ WARNING: tailwind.css not found"
+fi
+
+if docker compose exec -T fastapi test -d /app/app/static/editor; then
+  echo "✓ React editor present"
+else
+  echo "⚠ WARNING: React editor not found in /app/app/static/editor"
 fi
 
 SSH
