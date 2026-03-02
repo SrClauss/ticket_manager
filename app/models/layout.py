@@ -15,7 +15,7 @@ class ElementLink(BaseModel):
     targetId: str
     gap: float = Field(default=5, ge=0)
     gapType: str = Field(default="fixed", pattern="^(fixed|between)$")
-    position: str = Field(default="right", pattern="^(right|below)$")
+    position: str = Field(default="right", pattern="^(right|below|left|between)$")
 
 
 class LayoutElement(BaseModel):
