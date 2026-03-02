@@ -23,4 +23,13 @@ export default defineConfig({
       '@': resolve(projectRoot, 'src')
     }
   },
+  build: {
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/index.js',       // Nome fixo para JS principal
+        chunkFileNames: 'assets/[name].js',      // Nome fixo para chunks
+        assetFileNames: 'assets/[name].[ext]',   // Nome fixo para CSS/assets
+      }
+    }
+  }
 });

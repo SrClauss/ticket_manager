@@ -245,19 +245,19 @@ export const TicketCanvas = forwardRef<TicketCanvasRef, TicketCanvasProps>(
     }
 
     const restoreSelection = (canvas: fabric.Canvas) => {
-      if (selectedElementIds.length === 0) return
+      if (selectedElementIds.length === 0) {
+        canvas.discardActiveObject()
+        canvas.requestRenderAll()
+        return
+      }
 
-      const objsToSelect = canvas.getObjects().filter((o: any) => 
-        selectedElementIds.includes(o.elementId)
+      // Selecionar apenas o primeiro elemento selecionado no canvas
+      const objToSelect = canvas.getObjects().find((o: any) => 
+        o.elementId === selectedElementIds[0]
       )
 
-      if (objsToSelect.length > 0) {
-        if (objsToSelect.length === 1) {
-          canvas.setActiveObject(objsToSelect[0])
-        } else {
-          const selection = new fabric.ActiveSelection(objsToSelect, { canvas })
-          canvas.setActiveObject(selection)
-        }
+      if (objToSelect) {
+        canvas.setActiveObject(objToSelect)
         canvas.requestRenderAll()
       }
     }

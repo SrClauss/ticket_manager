@@ -10,6 +10,14 @@ class CanvasConfig(BaseModel):
     padding: float = Field(default=5, ge=0)
 
 
+class ElementLink(BaseModel):
+    """Vínculo entre elementos"""
+    targetId: str
+    gap: float = Field(default=5, ge=0)
+    gapType: str = Field(default="fixed", pattern="^(fixed|between)$")
+    position: str = Field(default="right", pattern="^(right|below)$")
+
+
 class LayoutElement(BaseModel):
     """Elemento individual do layout (texto, qrcode, divider)"""
     id: str
@@ -18,7 +26,8 @@ class LayoutElement(BaseModel):
     horizontal_position: str = Field(..., pattern="^(left|center|right)$")
     margin_left: float = Field(default=0, ge=0)
     margin_right: float = Field(default=0, ge=0)
-    groupId: Optional[str] = None
+    link: Optional[ElementLink] = None
+    wrapText: Optional[bool] = None
     
     # Propriedades de texto
     value: Optional[str] = None
@@ -35,18 +44,6 @@ class LayoutElement(BaseModel):
     thickness: Optional[float] = Field(None, gt=0)
 
 
-class LayoutGroup(BaseModel):
-    """Grupo de elementos (container)"""
-    id: str
-    y: float = Field(..., ge=0)
-    width: float = Field(..., gt=0)
-    height: float = Field(..., gt=0)
-    horizontal_position: str = Field(..., pattern="^(left|center|right)$")
-    margin_left: float = Field(default=0, ge=0)
-    margin_right: float = Field(default=0, ge=0)
-    snapshot: Optional[str] = None
-
-
 class LayoutUpdate(BaseModel):
     """
     Modelo para atualização do layout_ingresso de um evento.
@@ -54,14 +51,13 @@ class LayoutUpdate(BaseModel):
     """
     canvas: CanvasConfig
     elements: List[LayoutElement] = Field(default_factory=list)
-    groups: List[LayoutGroup] = Field(default_factory=list)
     
     @classmethod
     def default_layout(cls):
         """Retorna um layout padrão para novo evento"""
         return {
             "canvas": {
-                "width": 62,
+                "width": 80,
                 "height": 120,
                 "orientation": "portrait",
                 "padding": 5
@@ -74,7 +70,7 @@ class LayoutUpdate(BaseModel):
                     "horizontal_position": "center",
                     "margin_left": 0,
                     "margin_right": 0,
-                    "groupId": None,
+                    "wrapText": False,
                     "value": "{EVENTO_NOME}",
                     "size": 16,
                     "font": "Arial",
@@ -88,7 +84,7 @@ class LayoutUpdate(BaseModel):
                     "horizontal_position": "center",
                     "margin_left": 0,
                     "margin_right": 0,
-                    "groupId": None,
+                    "wrapText": True,
                     "value": "{NOME}",
                     "size": 14,
                     "font": "Arial",
@@ -102,7 +98,6 @@ class LayoutUpdate(BaseModel):
                     "horizontal_position": "center",
                     "margin_left": 0,
                     "margin_right": 0,
-                    "groupId": None,
                     "size_mm": 30
                 },
                 {
@@ -112,13 +107,12 @@ class LayoutUpdate(BaseModel):
                     "horizontal_position": "center",
                     "margin_left": 0,
                     "margin_right": 0,
-                    "groupId": None,
+                    "wrapText": False,
                     "value": "{CPF}",
                     "size": 10,
                     "font": "Arial",
                     "bold": False,
                     "italic": False
                 }
-            ],
-            "groups": []
+            ]
         }

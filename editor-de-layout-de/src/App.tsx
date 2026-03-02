@@ -426,22 +426,6 @@ export default function App() {
             onElementModified={(id, y) => updateElement(id, { y })}
             onElementSelect={handleElementClick}
           />
-              <p className="text-muted-foreground mb-4 font-medium">
-                Modo de Edição de Grupo (Tamanho: {editingGroup.width}x{editingGroup.height}mm)
-              </p>
-              <TicketCanvas
-                ref={groupCanvasRef}
-                config={{ ...editingGroup, orientation: 'portrait', padding: layoutState.canvas.padding }}
-                elements={layoutState.elements.filter((e) => e.groupId === editingGroupId)}
-                groups={[]}
-                isGroupMode={true}
-                selectedElementId={selectedElementId}
-                selectedGroupId={null}
-                onElementModified={(id, y) => updateElement(id, { y })}
-                onElementSelect={setSelectedElementId}
-              />
-            </div>
-          )}
         </main>
 
         <aside className="w-80 bg-card border-l border-border flex flex-col overflow-y-auto">
