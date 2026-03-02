@@ -197,15 +197,58 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300, logo_path: O
         except Exception:
             pass
 
+    # Section info (vertical or horizontal split, from editor)
+    section = layout.get("section")  # None | {type: 'vertical'|'horizontal', pos_mm: float}
+
+    def _element_area(el):
+        """Return (area_start_px, area_width_px, anchor_px, h_pos) for element.
+
+        Uses the new model fields (horizontal_position, margin_left, margin_right, sector)
+        with fallback to legacy fields (x, align, margin_mm).
+        """
+        # -- horizontal position / alignment
+        h_pos = el.get("horizontal_position") or el.get("align") or "center"
+
+        # -- margins
+        margin_left_mm  = float(el.get("margin_left",  el.get("margin_mm", 0)) or 0)
+        margin_right_mm = float(el.get("margin_right", el.get("margin_mm", 0)) or 0)
+        margin_left_px  = _mm_to_px(margin_left_mm,  dpi_effective)
+        margin_right_px = _mm_to_px(margin_right_mm, dpi_effective)
+
+        # -- sector-aware area boundaries
+        sector = el.get("sector")
+        if section and section.get("type") == "vertical" and sector in ("A", "B"):
+            sec_pos_mm = float(section.get("pos_mm", width_mm / 2) or width_mm / 2)
+            if sector == "A":
+                area_start_mm, area_width_mm = 0.0, sec_pos_mm
+            else:
+                area_start_mm, area_width_mm = sec_pos_mm, width_mm - sec_pos_mm
+        else:
+            # Legacy: if element has explicit x, honour it; otherwise use full canvas width
+            x_mm = float(el.get("x", 0) or 0)
+            area_start_mm = x_mm if h_pos in ("left",) else 0.0
+            area_width_mm = width_mm
+
+        area_start_px = _mm_to_px(area_start_mm, dpi_effective)
+        area_width_px = _mm_to_px(area_width_mm, dpi_effective)
+        usable_width_px = max(10, area_width_px - margin_left_px - margin_right_px)
+
+        # -- anchor pixel (matches Canvas hPos logic)
+        if h_pos == "left":
+            anchor_px = area_start_px + margin_left_px
+        elif h_pos == "right":
+            anchor_px = area_start_px + area_width_px - margin_right_px
+        else:  # center
+            anchor_px = area_start_px + area_width_px // 2 + margin_left_px - margin_right_px
+
+        return area_start_px, area_width_px, usable_width_px, anchor_px, h_pos
+
     for el in elements:
         etype = el.get("type")
-        x_mm = float(el.get('x', 0))
         y_mm = float(el.get('y', 0))
-        el_margin_mm = float(el.get('margin_mm', 0) or 0)
-        
-        # convert margin to pixels using effective dpi
-        margin_px = _mm_to_px(el_margin_mm, dpi_effective) if el_margin_mm else 0
-        
+
+        area_start_px, area_width_px, usable_width_px, anchor_px, h_pos = _element_area(el)
+
         if etype == "text":
             text = str(el.get("value", ""))
             # interpret size as points (pt) and convert to pixel size using DPI so font scales physically
@@ -219,109 +262,83 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300, logo_path: O
                 except Exception:
                     font = ImageFont.load_default()
 
-            # Get alignment and calculate anchor-based position
-            align = el.get("align", "left")
-            x_base = _mm_to_px(x_mm, dpi_effective) + margin_px
-            y_start = _mm_to_px(y_mm, dpi_effective) + margin_px
-            
-            # Calculate maximum text width based on canvas width, padding, and element position
-            canvas_padding_px = _mm_to_px(canvas_padding_mm, dpi_effective) if canvas_padding_mm else 0
-            
-            # Calculate max width based on alignment
-            if align == "center":
-                # For center alignment, max width is twice the distance to nearest edge
-                max_width_px = min(x_base - canvas_padding_px, img_width_px - x_base - canvas_padding_px) * 2
-            elif align == "right":
-                # For right alignment, max width is from left edge to x position
-                max_width_px = x_base - canvas_padding_px
-            else:  # left or default
-                # For left alignment, max width is from x position to right edge
-                max_width_px = img_width_px - x_base - canvas_padding_px
-            
-            # Ensure reasonable minimum
-            max_width_px = max(50, max_width_px)
-            
-            # Wrap text into multiple lines
-            lines = _wrap_text(text, font, max_width_px, draw)
-            
+            y_start = _mm_to_px(y_mm, dpi_effective)
+
+            # Wrap text only when wrapText flag is set (default True for backward compat)
+            wrap = el.get("wrapText", True)
+            if wrap:
+                lines = _wrap_text(text, font, usable_width_px, draw)
+            else:
+                lines = [text]
+
             # Calculate line height (font size + 20% spacing)
             try:
                 bbox = draw.textbbox((0, 0), "Ay", font=font)
                 line_height = int((bbox[3] - bbox[1]) * 1.2)
             except:
                 line_height = int(font_px * 1.2)
-            
-            # Draw each line
+
+            # Draw each line respecting alignment within the sector area
             current_y = y_start
             for line in lines:
-                # Calculate text width for alignment
                 try:
                     bbox = draw.textbbox((0, 0), line, font=font)
                     text_width = bbox[2] - bbox[0]
                 except:
                     text_width = draw.textsize(line, font=font)[0]
-                
-                # Apply anchor-based positioning
-                if align == "center":
-                    x = int(x_base - (text_width / 2))
-                elif align == "right":
-                    x = int(x_base - text_width)
-                else:  # left or default
-                    x = int(x_base)
-                
+
+                if h_pos == "left":
+                    x = anchor_px
+                elif h_pos == "right":
+                    x = anchor_px - text_width
+                else:  # center
+                    x = anchor_px - text_width // 2
+
+                # Clamp so text stays within its area
+                x = max(area_start_px, min(x, area_start_px + area_width_px - text_width))
+
                 draw.text((x, int(current_y)), line, fill='black', font=font)
                 current_y += line_height
-            
+
         elif etype == "qrcode":
 
             qr_text = str(el.get("value", ""))
             size_mm = float(el.get("size_mm", 30))
-            # reduce QR size by margin on both sides
-            try:
-                adj_size_mm = max(1, size_mm - (el_margin_mm * 2))
-            except Exception:
-                adj_size_mm = size_mm
-            size_px = _mm_to_px(adj_size_mm, dpi_effective)
-            
+            size_px = _mm_to_px(size_mm, dpi_effective)
+
             qr = qrcode.make(qr_text)
             qr = qr.resize((size_px, size_px))
-            
-            # Get alignment for QR codes (optional feature)
-            align = el.get("align", "left")
-            x_base = _mm_to_px(x_mm, dpi_effective) + margin_px
-            y = _mm_to_px(y_mm, dpi_effective) + margin_px
-            
-            # Apply anchor-based positioning for QR codes
-            if align == "center":
-                x = int(x_base - (size_px / 2))
-            elif align == "right":
-                x = int(x_base - size_px)
-            else:  # left or default
-                x = int(x_base)
-            
+
+            y = _mm_to_px(y_mm, dpi_effective)
+
+            if h_pos == "left":
+                x = anchor_px
+            elif h_pos == "right":
+                x = anchor_px - size_px
+            else:  # center
+                x = anchor_px - size_px // 2
+
+            # Clamp within area
+            x = max(area_start_px, min(x, area_start_px + area_width_px - size_px))
+
             img.paste(qr, (x, int(y)))
             
         elif etype == "logo":
             # Render logo image or placeholder
             size_mm = float(el.get("size_mm", 30))
-            try:
-                adj_size_mm = max(1, size_mm - (el_margin_mm * 2))
-            except Exception:
-                adj_size_mm = size_mm
-            size_px = _mm_to_px(adj_size_mm, dpi_effective)
-            
-            # Get alignment
-            align = el.get("align", "left")
-            x_base = _mm_to_px(x_mm, dpi_effective) + margin_px
-            y = _mm_to_px(y_mm, dpi_effective) + margin_px
-            
-            # Apply anchor-based positioning
-            if align == "center":
-                x = int(x_base - (size_px / 2))
-            elif align == "right":
-                x = int(x_base - size_px)
-            else:  # left or default
-                x = int(x_base)
+            size_px = _mm_to_px(size_mm, dpi_effective)
+
+            y = _mm_to_px(y_mm, dpi_effective)
+
+            if h_pos == "left":
+                x = anchor_px
+            elif h_pos == "right":
+                x = anchor_px - size_px
+            else:  # center
+                x = anchor_px - size_px // 2
+
+            # Clamp within area
+            x = max(area_start_px, min(x, area_start_px + area_width_px - size_px))
             
             # Try to load real logo image first
             logo_img = None

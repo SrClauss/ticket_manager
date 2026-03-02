@@ -830,7 +830,7 @@ async def admin_evento_layout_preview(
         if isinstance(data, dict) and "layout_ingresso" in data:
             layout = data.get("layout_ingresso")
         elif isinstance(data, dict) and ("canvas" in data or "elements" in data):
-            layout = {"canvas": data.get("canvas", {}), "elements": data.get("elements", [])}
+            layout = {"canvas": data.get("canvas", {}), "elements": data.get("elements", []), "section": data.get("section")}
         else:
             layout = data
         
