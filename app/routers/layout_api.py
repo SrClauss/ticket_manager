@@ -7,8 +7,7 @@ from datetime import datetime
 from bson import ObjectId
 
 from app.config.database import get_database
-from app.config.auth import get_current_admin
-from app.models.admin import Admin
+from app.config.auth import verify_admin_access
 from app.models.layout import LayoutUpdate
 
 
@@ -23,7 +22,7 @@ def get_db():
 @router.get("/{evento_id}/layout")
 async def get_evento_layout(
     evento_id: str,
-    current_admin: Admin = Depends(get_current_admin)
+    admin_payload: dict = Depends(verify_admin_access)
 ):
     """Obtém o layout de ingresso de um evento específico"""
     db = get_db()
@@ -65,7 +64,7 @@ async def get_evento_layout(
 async def update_evento_layout(
     evento_id: str,
     data: LayoutUpdate,
-    current_admin: Admin = Depends(get_current_admin)
+    admin_payload: dict = Depends(verify_admin_access)
 ):
     """Atualiza o layout de ingresso de um evento"""
     db = get_db()
