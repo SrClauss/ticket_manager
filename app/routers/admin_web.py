@@ -780,7 +780,7 @@ def _format_planilha_datetime(value):
 
 @router.get("/eventos/layout/{evento_id}", response_class=HTMLResponse)
 async def admin_evento_layout_page(request: Request, evento_id: str):
-    """Ticket layout editor"""
+    """Ticket layout editor - agora com React"""
     redirect = check_admin_session(request)
     if redirect:
         return redirect
@@ -795,9 +795,15 @@ async def admin_evento_layout_page(request: Request, evento_id: str):
         evento["_id"] = str(evento["_id"])
         evento["id"] = evento["_id"]
         
+        # Usa o novo template React ao invés do antigo
         return templates.TemplateResponse(
-            "admin/ticket_layout.html",
-            {"request": request, "active_page": "eventos", "evento": evento}
+            "admin/editor_layout.html",
+            {
+                "request": request,
+                "evento_id": evento["id"],
+                "evento_nome": evento.get("nome", ""),
+                "back_url": f"/admin/eventos/{evento['id']}"
+            }
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
