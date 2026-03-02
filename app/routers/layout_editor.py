@@ -3,13 +3,12 @@ Router web para servir a interface do editor de layout React.
 O layout é um subdocumento dentro de evento.layout_ingresso.
 O Jinja serve uma página HTML que carrega o React build de /static/editor/
 """
-from fastapi import APIRouter, Request, Depends, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Request, HTTPException, status
+from fastapi.responses import HTMLResponse, RedirectResponse
 from bson import ObjectId
 
 from app.config.database import get_database
-from app.config.auth import get_current_admin_web
-from app.models.admin import Admin
+from app.config.auth import verify_jwt_token
 
 
 router = APIRouter(prefix="/admin/editor", tags=["Layout Editor"])
@@ -20,11 +19,25 @@ def get_db():
     return get_database()
 
 
+def check_admin_session(request: Request):
+    """Check if admin is logged in via JWT cookie"""
+    jwt_token = request.cookies.get("admin_jwt")
+    if not jwt_token:
+        return RedirectResponse(url="/admin/login", status_code=status.HTTP_303_SEE_OTHER)
+    
+    try:
+        payload = verify_jwt_token(jwt_token)
+        if payload.get("role") != "admin":
+            return RedirectResponse(url="/admin/login", status_code=status.HTTP_303_SEE_OTHER)
+        return None
+    except HTTPException:
+        return RedirectResponse(url="/admin/login", status_code=status.HTTP_303_SEE_OTHER)
+
+
 @router.get("/", response_class=HTMLResponse)
 async def editor_page(
     request: Request,
-    evento_id: str,
-    current_admin: Admin = Depends(get_current_admin_web)
+    evento_id: str
 ):
     """
     Serve página HTML simples que carrega o React build.
@@ -33,6 +46,11 @@ async def editor_page(
     Query params:
     - evento_id: ID do evento (obrigatório)
     """
+    # Verificar autenticação
+    redirect = check_admin_session(request)
+    if redirect:
+        return redirect
+    
     db = get_db()
     
     # Verifica se evento existe
