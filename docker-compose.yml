@@ -36,7 +36,6 @@ services:
     networks:
       - ticket_manager_network
     volumes:
-      - ./app:/app/app
       - uploads_data:/app/app/static/uploads
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
