@@ -373,10 +373,10 @@ export default function App() {
                       {el.type === 'text' && <TextT size={16} />}
                       {el.type === 'qrcode' && <QrCode size={16} />}
                       {el.type === 'divider' && <Minus size={16} />}
-                      <span className="text-foreground/80">{el.value || el.type}</span>
-                      {isLinked && (
+                      <span className="text-foreground/80">{String(el.value || el.type)}</span>
+                      {isLinked && linkedTarget && (
                         <span className="text-[10px] text-accent font-bold">
-                          → {linkedTarget?.type || 'link'}
+                          → {String(linkedTarget.type || 'link')}
                         </span>
                       )}
                     </span>
