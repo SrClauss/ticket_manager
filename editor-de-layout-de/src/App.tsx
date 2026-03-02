@@ -22,7 +22,7 @@ import {
   Check,
 } from '@phosphor-icons/react'
 import { TicketCanvas, TicketCanvasRef } from '@/components/TicketCanvas'
-import type { TicketElement, TicketGroup, CanvasConfig, LayoutState, EditorMode } from '@/types/layout'
+import type { TicketElement, CanvasConfig, LayoutState } from '@/types/layout'
 
 const TEMPLATE_TAGS = ['{NOME}', '{CPF}', '{EMAIL}', '{TIPO_INGRESSO}', '{EVENTO_NOME}', '{DATA}', '{HORARIO}']
 
@@ -46,19 +46,12 @@ export default function App() {
   const selectedElement = layoutState.elements.find((e) => selectedElementIds.includes(e.id)) || null
   const selectedElements = layoutState.elements.filter((e) => selectedElementIds.includes(e.id))
 
-  if (!layoutState) {
-    return <div className="h-screen flex items-center justify-center">Carregando...</div>
-  }
-
   const updateCanvas = useCallback((updates: Partial<CanvasConfig>) => {
-    setLayoutState((prev) => {
-      const current = prev || { canvas: { width: 80, height: 120, orientation: 'portrait' as const, padding: 5 }, elements: [] }
-      return {
-        ...current,
-        canvas: { ...current.canvas, ...updates },
-      } as LayoutState
-    })
-  }, [setLayoutState])
+    setLayoutState((prev) => ({
+      ...prev,
+      canvas: { ...prev.canvas, ...updates },
+    }))
+  }, [])
 
   const addElement = useCallback(
     (type: 'text' | 'qrcode' | 'divider', initialProps = {}) => {
@@ -76,24 +69,20 @@ export default function App() {
         ...initialProps,
       }
 
-      setLayoutState((prev) => {
-        const current = prev || { canvas: { width: 80, height: 120, orientation: 'portrait' as const, padding: 5 }, elements: [] }
-        return {
-          ...current,
-          elements: [...current.elements, newEl],
-        } as LayoutState
-      })
+      setLayoutState((prev) => ({
+        ...prev,
+        elements: [...prev.elements, newEl],
+      }))
       setSelectedElementIds([newEl.id])
     },
-    [setLayoutState]
+    []
   )
 
   const deleteSelected = useCallback(() => {
     if (selectedElementIds.length > 0) {
       setLayoutState((prev) => {
-        const current = prev || { canvas: { width: 80, height: 120, orientation: 'portrait' as const, padding: 5 }, elements: [] }
         // Remover também os links que referenciam elementos deletados
-        const remainingElements = current.elements
+        const remainingElements = prev.elements
           .filter((e) => !selectedElementIds.includes(e.id))
           .map((e) => {
             if (e.link && selectedElementIds.includes(e.link.targetId)) {
@@ -103,25 +92,22 @@ export default function App() {
             return e
           })
         return {
-          ...current,
+          ...prev,
           elements: remainingElements,
-        } as LayoutState
+        }
       })
       setSelectedElementIds([])
     }
-  }, [selectedElementIds, setLayoutState])
+  }, [selectedElementIds])
 
   const updateElement = useCallback(
     (id: string, updates: Partial<TicketElement>) => {
-      setLayoutState((prev) => {
-        const current = prev || { canvas: { width: 80, height: 120, orientation: 'portrait' as const, padding: 5 }, elements: [] }
-        return {
-          ...current,
-          elements: current.elements.map((el) => (el.id === id ? { ...el, ...updates } : el)),
-        } as LayoutState
-      })
+      setLayoutState((prev) => ({
+        ...prev,
+        elements: prev.elements.map((el) => (el.id === id ? { ...el, ...updates } : el)),
+      }))
     },
-    [setLayoutState]
+    []
   )
 
   const handleElementClick = useCallback((elementId: string, shiftKey: boolean) => {
