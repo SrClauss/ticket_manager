@@ -21,9 +21,9 @@ RUN npm run build:css
 FROM node:20-alpine AS react_builder
 WORKDIR /build
 
-# Copy React app package files
-COPY editor-de-layout-de/package.json editor-de-layout-de/package-lock.json ./
-RUN npm ci
+# Copy React app package files and install deps
+COPY editor-de-layout-de/package.json editor-de-layout-de/package-lock.json* ./
+RUN npm install --frozen-lockfile || npm install
 
 COPY editor-de-layout-de/ ./
 RUN npm run build
