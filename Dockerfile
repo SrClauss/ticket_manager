@@ -11,6 +11,11 @@ COPY package.json package-lock.json* ./
 COPY tailwind.config.js postcss.config.js ./
 COPY app/static/css/tailwind_input.css ./app/static/css/
 
+# Copy templates and Python files so Tailwind can scan them for classes
+COPY app/templates ./app/templates/
+COPY app/*.py ./app/
+COPY app/*/*.py ./app/*/
+
 # Build Tailwind
 RUN npm install --no-audit --no-fund
 RUN npm run build:css
