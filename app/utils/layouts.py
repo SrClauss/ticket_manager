@@ -102,8 +102,6 @@ def embed_layout(layout_template: Dict[str, Any], participante: Dict[str, Any], 
         return out
 
     elements = layout.get("elements", [])
-    groups = layout.get("groups", [])
-    
     # merge compiled groups into elements for rendering/embedding
     if layout.get("groups"):
         try:
@@ -114,15 +112,6 @@ def embed_layout(layout_template: Dict[str, Any], participante: Dict[str, Any], 
         except Exception:
             # on any failure fall back to original elements
             pass
-    
-    # Process groups - replace placeholders in group elements
-    for group in groups:
-        for el in group.get("elements", []):
-            if el.get("type") == "text":
-                el["value"] = replace_vals(el.get("value", ""))
-            elif el.get("type") == "qrcode":
-                el["value"] = replace_vals(el.get("value", "{qrcode_hash}"))
-    
     # If elements reference groups by `groupId`, convert their coords to absolute using group's origin
     groups_map = {}
     try:
