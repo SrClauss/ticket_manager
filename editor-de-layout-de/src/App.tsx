@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { useKV } from '@github/spark/hooks'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
@@ -28,7 +27,7 @@ import type { TicketElement, TicketGroup, CanvasConfig, LayoutState, EditorMode 
 const TEMPLATE_TAGS = ['{NOME}', '{CPF}', '{EMAIL}', '{TIPO_INGRESSO}', '{EVENTO_NOME}', '{DATA}', '{HORARIO}']
 
 export default function App() {
-  const [layoutState, setLayoutState, deleteLayoutState] = useKV<LayoutState>('ticket-layout', {
+  const [layoutState, setLayoutState] = useState<LayoutState>({
     canvas: {
       width: 80,
       height: 120,
