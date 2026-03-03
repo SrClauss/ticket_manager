@@ -386,13 +386,28 @@ async def criar_participante(
 
             if tipo:
                 try:
-                    # garante CPF único por evento quando possível
+                    # Verifica se já existe ingresso para este CPF no evento ANTES de tentar criar
                     participante_cpf = created_participante.get("cpf")
-                    try:
-                        participante_cpf = await _ensure_participante_cpf_unico(db, str(evento.get("_id") or evento_id), created_participante.get("_id"), created_participante)
-                    except Exception:
-                        # ignore uniqueness enforcement failures here (still create ingresso)
-                        participante_cpf = participante_cpf
+                    if participante_cpf:
+                        # Verifica na coleção de ingressos
+                        existing_ingresso = await db.ingressos_emitidos.find_one({
+                            "evento_id": str(evento.get("_id") or evento_id), 
+                            "participante_cpf": participante_cpf
+                        })
+                        if existing_ingresso:
+                            # CPF já tem ingresso, não criar novo mas retornar participante normalmente
+                            return Participante(**created_participante)
+                        
+                        # Verifica em ingressos embutidos
+                        existing_part = await db.participantes.find_one({
+                            "ingressos": {"$elemMatch": {
+                                "evento_id": str(evento.get("_id") or evento_id), 
+                                "participante_cpf": participante_cpf
+                            }}
+                        })
+                        if existing_part:
+                            # CPF já tem ingresso, não criar novo mas retornar participante normalmente
+                            return Participante(**created_participante)
 
                     qrcode_hash = generate_qrcode_hash()
                     tipo_id = str(tipo.get("_id") or tipo.get("id") or tipo.get("numero"))
@@ -505,12 +520,29 @@ async def emitir_ingresso(
             detail="ID de participante inválido"
         )
     
-    participante_cpf = await _ensure_participante_cpf_unico(
-        db,
-        evento_id,
-        emissao.participante_id,
-        participante
-    )
+    # Verifica se já existe ingresso para este CPF no evento
+    participante_cpf = participante.get("cpf")
+    if participante_cpf:
+        # Verifica na coleção de ingressos
+        existing_ingresso = await db.ingressos_emitidos.find_one({
+            "evento_id": evento_id, 
+            "participante_cpf": participante_cpf
+        })
+        if existing_ingresso:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"CPF {participante_cpf} já possui ingresso para este evento"
+            )
+        
+        # Verifica em ingressos embutidos
+        existing_part = await db.participantes.find_one({
+            "ingressos": {"$elemMatch": {"evento_id": evento_id, "participante_cpf": participante_cpf}}
+        })
+        if existing_part:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"CPF {participante_cpf} já possui ingresso para este evento"
+            )
     
     # Cria o ingresso
     qrcode_hash = generate_qrcode_hash()
