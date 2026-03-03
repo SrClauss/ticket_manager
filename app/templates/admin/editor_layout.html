@@ -1,22 +1,23 @@
-{% extends 'admin/base.html' %}
-
-{% block title %}Editor de Layout – {{ evento_nome }}{% endblock %}
-
-{% block extra_css %}
-<style>
-  [x-cloak] { display: none !important; }
-  body { margin: 0; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #1e293b; }
-  ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-  .canvas-wrap { display: inline-block; box-shadow: 0 8px 32px rgba(0,0,0,.6); border-radius: 3px; }
-  .layer-item { cursor: pointer; user-select: none; }
-  input[type=number]::-webkit-inner-spin-button { opacity: 1; }
-</style>
-{% endblock %}
-
-{% block content %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor de Layout – {{ evento_nome }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    [x-cloak] { display: none !important; }
+    body { margin: 0; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1e293b; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    .canvas-wrap { display: inline-block; box-shadow: 0 8px 32px rgba(0,0,0,.6); border-radius: 3px; }
+    .layer-item { cursor: pointer; user-select: none; }
+    input[type=number]::-webkit-inner-spin-button { opacity: 1; }
+  </style>
+</head>
+<body>
 
   <!-- ── Toast stack ──────────────────────────────────────── -->
   <div class="fixed top-3 right-3 z-[9999] flex flex-col gap-2 pointer-events-none" aria-live="polite">
@@ -577,9 +578,6 @@
     </div><!-- /workspace -->
   </div><!-- /flex-col -->
 
-{% endblock %}
-
-{% block extra_js %}
   <!-- ──────────────────────────── Alpine component ─────────────────────────── -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -1108,4 +1106,5 @@
     };
   }
   </script>
-{% endblock %}
+</body>
+</html>
