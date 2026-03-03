@@ -366,79 +366,9 @@ async def criar_participante(
     created_participante["_id"] = str(created_participante["_id"])
     created_participante = normalize_bson_types(created_participante)
 
-    # Se veio um evento via token, tenta emitir ingresso padrão para o participante
-    if evento_id:
-        try:
-            evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
-        except Exception:
-            evento = await db.eventos.find_one({"_id": evento_id})
-
-        if evento:
-            # procura tipo padrao embutido no evento
-            tipo = None
-            for t in evento.get("tipos_ingresso", []) or []:
-                if t.get("padrao"):
-                    tipo = t
-                    break
-            # fallback: procura na coleção de tipos
-            if not tipo:
-                tipo = await db.tipos_ingresso.find_one({"evento_id": str(evento.get("_id") or evento_id), "padrao": True})
-
-            if tipo:
-                try:
-                    # Verifica se já existe ingresso para este CPF no evento ANTES de tentar criar
-                    participante_cpf = created_participante.get("cpf")
-                    if participante_cpf:
-                        # Verifica na coleção de ingressos
-                        existing_ingresso = await db.ingressos_emitidos.find_one({
-                            "evento_id": str(evento.get("_id") or evento_id), 
-                            "participante_cpf": participante_cpf
-                        })
-                        if existing_ingresso:
-                            # CPF já tem ingresso, não criar novo mas retornar participante normalmente
-                            return Participante(**created_participante)
-                        
-                        # Verifica em ingressos embutidos
-                        existing_part = await db.participantes.find_one({
-                            "ingressos": {"$elemMatch": {
-                                "evento_id": str(evento.get("_id") or evento_id), 
-                                "participante_cpf": participante_cpf
-                            }}
-                        })
-                        if existing_part:
-                            # CPF já tem ingresso, não criar novo mas retornar participante normalmente
-                            return Participante(**created_participante)
-
-                    qrcode_hash = generate_qrcode_hash()
-                    tipo_id = str(tipo.get("_id") or tipo.get("id") or tipo.get("numero"))
-
-                    ingresso_dict = {
-                        "evento_id": str(evento.get("_id") or evento_id),
-                        "tipo_ingresso_id": tipo_id,
-                        "participante_id": created_participante.get("_id"),
-                        "participante_cpf": participante_cpf,
-                        "status": "Ativo",
-                        "qrcode_hash": qrcode_hash,
-                        "data_emissao": datetime.now(timezone.utc)
-                    }
-
-                    try:
-                        res = await db.ingressos_emitidos.insert_one(ingresso_dict)
-                        ingresso_dict["_id"] = res.inserted_id
-                    except Exception:
-                        pass
-                    
-                    # Normalizar ingresso antes de embedar (converter ObjectId->str)
-                    ingresso_dict = normalize_participante_data(ingresso_dict)
-
-                    # também armazena embutido no participante
-                    try:
-                        await db.participantes.update_one({"_id": ObjectId(created_participante.get("_id"))}, {"$push": {"ingressos": ingresso_dict}})
-                    except Exception:
-                        await db.participantes.update_one({"_id": created_participante.get("_id")}, {"$push": {"ingressos": ingresso_dict}})
-                except Exception:
-                    # não bloquear criação de participante por falha na emissão automática
-                    pass
+    # Nota: A criação automática de ingresso foi removida.
+    # O fluxo correto é: criar participante → emitir ingresso separadamente
+    # Isso permite selecionar o tipo de ingresso adequado no momento da emissão
 
     return Participante(**created_participante)
 
