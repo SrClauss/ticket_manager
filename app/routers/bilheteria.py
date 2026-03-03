@@ -230,6 +230,72 @@ async def get_ilhas(evento_id: str = Depends(verify_token_bilheteria)):
     return {"ilhas": ilhas}
 
 
+async def _count_ingressos_affecting_ilha(db, evento_id: str, ilha_id: str) -> int:
+    """Conta ingressos que reduzem a capacidade da ilha:
+       - ingressos_emitidos com ilha_id igual
+       - ingressos_emitidos cujo tipo de ingresso tem permissoes incluindo a ilha
+       - ingressos embutidos em participantes
+    """
+    tipos_ids = set()
+
+    # tentar extrair tipos embutidos no evento (quando presente)
+    try:
+        evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+    except Exception:
+        evento = await db.eventos.find_one({"_id": evento_id})
+
+    if evento and evento.get("tipos_ingresso"):
+        for t in evento.get("tipos_ingresso", []):
+            if ilha_id in (t.get("permissoes") or []):
+                tipos_ids.add(str(t.get("_id") or t.get("id") or t.get("numero")))
+
+    # também busca na coleção de tipos por permissões explícitas
+    cursor = db.tipos_ingresso.find({"evento_id": evento_id, "permissoes": ilha_id})
+    async for t in cursor:
+        tipos_ids.add(str(t.get("_id")))
+
+    # preparar possíveis ObjectId para comparar com campos que usam ObjectId
+    obj_tipos = []
+    for tid in list(tipos_ids):
+        try:
+            obj_tipos.append(ObjectId(tid))
+        except Exception:
+            pass
+
+    or_clauses = [{"ilha_id": ilha_id}]
+    if tipos_ids:
+        or_clauses.append({"tipo_ingresso_id": {"$in": list(tipos_ids)}})
+    if obj_tipos:
+        or_clauses.append({"tipo_ingresso_id": {"$in": obj_tipos}})
+
+    count_legacy = 0
+    if or_clauses:
+        count_legacy = await db.ingressos_emitidos.count_documents({"evento_id": evento_id, "$or": or_clauses})
+
+    # contar ingressos embutidos em participantes
+    count_embedded = 0
+    cursor = db.participantes.find({"ingressos": {"$exists": True}})
+    async for p in cursor:
+        for ing in p.get("ingressos", []):
+            if str(ing.get("evento_id")) != str(evento_id):
+                continue
+            if ing.get("ilha_id") == ilha_id:
+                count_embedded += 1
+                continue
+            tipo = ing.get("tipo_ingresso_id")
+            if not tipo:
+                continue
+            if str(tipo) in tipos_ids:
+                count_embedded += 1
+                continue
+            try:
+                if ObjectId(str(tipo)) in obj_tipos:
+                    count_embedded += 1
+            except Exception:
+                pass
+
+    return count_legacy + count_embedded
+
 # estatísticas rápidas de cada ilha
 @router.get("/ilhas/{ilha_id}/stats")
 async def ilha_stats(
@@ -257,7 +323,7 @@ async def ilha_stats(
             capacidade = ilh.get("capacidade_maxima", 0)
     if capacidade is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ilha não encontrada")
-    total = await db.ingressos_emitidos.count_documents({"ilha_id": ilha_id})
+    total = await _count_ingressos_affecting_ilha(db, evento_id, ilha_id)
     return {"ilha_id": ilha_id, "capacidade_maxima": capacidade, "ingressos_emitidos": total}
 
 
@@ -417,8 +483,8 @@ async def emitir_ingresso(
                 ilh_obj = None
         if not ilh_obj:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ilha não encontrada")
-        # contar ingressos já emitidos para a ilha
-        cont = await db.ingressos_emitidos.count_documents({"ilha_id": emissao.ilha_id})
+        # contar ingressos já emitidos para a ilha (inclui tipos com permissões e ingressos embutidos)
+        cont = await _count_ingressos_affecting_ilha(db, evento_id, emissao.ilha_id)
         if cont >= ilh_obj.get("capacidade_maxima", 0):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

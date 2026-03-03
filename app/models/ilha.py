@@ -23,7 +23,6 @@ class Ilha(IlhaBase):
     """Modelo completo de Ilha"""
     id: str = Field(..., alias="_id")
     evento_id: str
-    "çak"
     model_config = ConfigDict(
         populate_by_name=True,
         json_schema_extra={
