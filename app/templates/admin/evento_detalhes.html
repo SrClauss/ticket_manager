@@ -135,6 +135,7 @@
             <th class="px-4 py-2">Descrição</th>
             <th class="px-4 py-2">Valor</th>
             <th class="px-4 py-2">Permissões</th>
+            <th class="px-4 py-2">Ações</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-700/50">
@@ -148,6 +149,20 @@
             </td>
             <td class="px-4 py-2 text-slate-100">R$ {{ "%.2f"|format(tipo.valor) }}</td>
             <td class="px-4 py-2">{% if tipo.permissoes|length > 0 %}<span class="chip chip-ativo">{{ tipo.permissoes|length }} ilha(s)</span>{% else %}<span class="badge">0 ilhas</span>{% endif %}</td>
+            <td class="px-4 py-2">
+              <button 
+                data-bs-toggle="modal" 
+                data-bs-target="#editTipoIngressoModal" 
+                data-tipo-id="{{ tipo.id }}" 
+                data-tipo-descricao="{{ tipo.descricao }}"
+                data-tipo-valor="{{ tipo.valor }}"
+                data-tipo-permissoes="{{ tipo.permissoes|tojson }}"
+                data-tipo-padrao="{{ tipo.padrao }}"
+                class="edit-tipo-btn px-3 py-1 bg-slate-700 rounded-md text-slate-100 hover:bg-slate-600"
+              >
+                Editar
+              </button>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
@@ -240,6 +255,51 @@
           <div class="flex justify-end gap-2">
             <button type="button" data-bs-dismiss="modal" class="px-4 py-2 bg-slate-700 rounded-md text-slate-100">Cancelar</button>
             <button type="button" onclick="addTipoIngresso()" class="px-4 py-2 bg-blue-500 text-slate-900 rounded-md">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="editTipoIngressoModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content md-card">
+      <div class="p-4">
+        <h5 class="text-slate-100 mb-3">Editar Tipo de Ingresso</h5>
+        <form id="editTipoIngressoForm" class="space-y-3">
+          <input type="hidden" id="editTipoId" />
+          <div>
+            <label class="text-sm text-slate-100">Descrição *</label>
+            <input type="text" id="editTipoDescricao" required class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
+          </div>
+          <div>
+            <label class="text-sm text-slate-100">Valor (R$) *</label>
+            <input type="number" id="editTipoValor" min="0" step="0.01" required class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
+          </div>
+          <div>
+            <label class="inline-flex items-center gap-2 text-slate-100">
+              <input type="checkbox" id="editTipoPadrao" class="form-checkbox" />
+              Tipo Padrão
+            </label>
+          </div>
+          <div>
+            <label class="text-sm text-slate-100">Permissões de Acesso</label>
+            <div class="space-y-2" id="editTipoPermissoesContainer">
+              {% for ilha in ilhas %}
+              <label class="inline-flex items-center gap-2 text-slate-100">
+                <input type="checkbox" class="form-checkbox edit-tipo-ilha-checkbox" value="{{ ilha.id }}" />
+                {{ ilha.nome_setor }}
+              </label>
+              {% endfor %}
+              {% if not ilhas %}
+              <p class="text-slate-400">Nenhuma ilha disponível.</p>
+              {% endif %}
+            </div>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button type="button" data-bs-dismiss="modal" class="px-4 py-2 bg-slate-700 rounded-md text-slate-100">Cancelar</button>
+            <button type="button" onclick="saveEditTipoIngresso()" class="px-4 py-2 bg-blue-500 text-slate-900 rounded-md">Salvar</button>
           </div>
         </form>
       </div>
@@ -391,10 +451,87 @@
         } catch (error) { console.error('Error:', error); alert('Erro ao atualizar ilha'); }
     }
 
+    // Edit tipo ingresso handlers
+    function openEditTipoIngressoModalFromButton(btn) {
+        const id = btn.dataset.tipoId;
+        const descricao = btn.dataset.tipoDescricao || '';
+        const valor = btn.dataset.tipoValor || '0';
+        const padrao = btn.dataset.tipoPadrao === 'True';
+        let permissoes = [];
+        try {
+            permissoes = JSON.parse(btn.dataset.tipoPermissoes || '[]');
+        } catch (e) {
+            console.error('Failed to parse permissoes', e);
+        }
+        
+        document.getElementById('editTipoId').value = id;
+        document.getElementById('editTipoDescricao').value = descricao;
+        document.getElementById('editTipoValor').value = valor;
+        document.getElementById('editTipoPadrao').checked = padrao;
+        
+        // Uncheck all and then check selected
+        document.querySelectorAll('.edit-tipo-ilha-checkbox').forEach(checkbox => {
+            checkbox.checked = permissoes.includes(checkbox.value);
+        });
+    }
+
+    async function saveEditTipoIngresso() {
+        const id = document.getElementById('editTipoId').value;
+        if (!id) return alert('ID do tipo de ingresso ausente');
+        const form = document.getElementById('editTipoIngressoForm');
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+        
+        const jwt = getAdminJWT();
+        if (!jwt) { 
+            alert('Sessão expirada. Por favor, faça login novamente.'); 
+            window.location.href = '/admin/login'; 
+            return; 
+        }
+        
+        // Get selected ilhas
+        const permissoes = [];
+        document.querySelectorAll('.edit-tipo-ilha-checkbox:checked').forEach(checkbox => {
+            permissoes.push(checkbox.value);
+        });
+        
+        const data = {
+            descricao: document.getElementById('editTipoDescricao').value,
+            valor: parseFloat(document.getElementById('editTipoValor').value),
+            padrao: document.getElementById('editTipoPadrao').checked,
+            permissoes: permissoes
+        };
+        
+        try {
+            const response = await fetch(`${API_BASE}/tipos-ingresso/${id}`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'Authorization': `Bearer ${jwt}` 
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (response.ok) { 
+                alert('Tipo de ingresso atualizado com sucesso!'); 
+                location.reload(); 
+            } else { 
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.detail || 'Erro ao atualizar tipo de ingresso'); 
+            }
+        } catch (error) { 
+            console.error('Error:', error); 
+            alert('Erro ao atualizar tipo de ingresso: ' + error.message); 
+        }
+    }
+
     // Attach click handler to populate edit modal before bootstrap shows it
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.edit-ilha-btn').forEach(btn => {
             btn.addEventListener('click', function(ev) { openEditIlhaModalFromButton(this); });
+        });
+        
+        document.querySelectorAll('.edit-tipo-btn').forEach(btn => {
+            btn.addEventListener('click', function(ev) { openEditTipoIngressoModalFromButton(this); });
         });
     });
 
