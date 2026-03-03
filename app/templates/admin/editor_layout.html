@@ -4,7 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Editor de Layout – {{ evento_nome }}</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
   <style>
     [x-cloak] { display: none !important; }
     body { margin: 0; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; }
@@ -17,7 +21,8 @@
     input[type=number]::-webkit-inner-spin-button { opacity: 1; }
   </style>
 </head>
-<body>
+
+<body class="bg-slate-900 text-slate-100 h-screen overflow-hidden" x-data="editorApp()" x-cloak>
 
   <!-- ── Toast stack ──────────────────────────────────────── -->
   <div class="fixed top-3 right-3 z-[9999] flex flex-col gap-2 pointer-events-none" aria-live="polite">
@@ -578,9 +583,8 @@
     </div><!-- /workspace -->
   </div><!-- /flex-col -->
 
+
   <!-- ──────────────────────────── Alpine component ─────────────────────────── -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script>
   const MM = 3.78;                       // 1 mm → px (96 dpi approx)
   const toP = mm  => mm  * MM;
