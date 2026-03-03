@@ -325,6 +325,9 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300, logo_path: O
             
         elif etype == "logo":
             # Render logo image or placeholder
+            logger.info(f"[RENDER] Renderizando elemento tipo 'logo': y={el.get('y')}mm, size={el.get('size_mm', 30)}mm")
+            logger.info(f"[RENDER] logo_blob disponível: {logo_blob is not None}, logo_path: {logo_path}")
+            
             size_mm = float(el.get("size_mm", 30))
             size_px = _mm_to_px(size_mm, dpi_effective)
 
@@ -664,6 +667,18 @@ async def render_ingresso_jpg(evento_id: str, ingresso_id: str, dpi: int = 300, 
     evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
     logo_path = evento.get("logo_path") if evento else None
     logo_blob = evento.get("logo_blob") if evento else None
+    
+    # Debug logging for logo
+    if evento:
+        logger.info(f"[RENDER] Evento {evento_id}: logo_path={logo_path}, logo_blob presente={logo_blob is not None}")
+        if logo_blob:
+            if isinstance(logo_blob, dict):
+                data_len = len(logo_blob.get('data', ''))
+                logger.info(f"[RENDER] logo_blob: content_type={logo_blob.get('content_type')}, data_len={data_len}")
+            else:
+                logger.warning(f"[RENDER] logo_blob existe mas não é dict: {type(logo_blob)}")
+    else:
+        logger.warning(f"[RENDER] Evento {evento_id} não encontrado!")
     
     # Get or create embedded layout
     from_participante = participante is not None

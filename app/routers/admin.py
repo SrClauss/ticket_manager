@@ -1128,6 +1128,59 @@ async def backfill_ingresso_layouts(evento_id: str):
     return {"updated": updated, "ids": updated_ids}
 
 
+@router.post("/limpar-layouts-cache/{evento_id}", dependencies=[Depends(verify_admin_access)])
+async def limpar_layouts_cache(evento_id: str):
+    """Remove TODOS os layouts embedded dos ingressos de um evento, forçando regeração no próximo render.
+    
+    Útil quando o layout do evento foi alterado (ex: logo adicionada) e os ingressos antigos
+    precisam ser renderizados com o novo layout.
+    """
+    db = get_database()
+    
+    # Verificar se evento existe
+    try:
+        evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="ID de evento inválido")
+    
+    if not evento:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evento não encontrado")
+    
+    # Limpar layouts embedded de ingressos em participantes
+    result_participantes = await db.participantes.update_many(
+        {"ingressos.evento_id": evento_id, "ingressos.layout_ingresso": {"$exists": True}},
+        {"$unset": {"ingressos.$[elem].layout_ingresso": ""}}
+        ,
+        array_filters=[{"elem.evento_id": evento_id}]
+    )
+    
+    # Limpar layouts embedded de ingressos standalone
+    result_standalone = await db.ingressos_emitidos.update_many(
+        {"evento_id": evento_id, "layout_ingresso": {"$exists": True}},
+        {"$unset": {"layout_ingresso": ""}}
+    )
+    
+    # Limpar imagens renderizadas em disco
+    from pathlib import Path
+    import shutil
+    ingressos_dir = Path('app') / 'static' / 'ingressos'
+    deleted_files = 0
+    if ingressos_dir.exists():
+        for file in ingressos_dir.glob("*.jpg"):
+            try:
+                file.unlink()
+                deleted_files += 1
+            except Exception:
+                pass
+    
+    return {
+        "message": "Cache de layouts limpo com sucesso",
+        "participantes_atualizados": result_participantes.modified_count,
+        "standalone_atualizados": result_standalone.modified_count,
+        "arquivos_deletados": deleted_files
+    }
+
+
 # ==================== ROTAS SECRETAS (UUID) ====================
 
 @router.post("/_secret/reset-admin/{uuid}")
