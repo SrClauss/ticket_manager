@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # MongoDB
+  mongodb:
+    image: mongo:7
+    container_name: ticket_mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-SecurePassword123}
+      MONGO_INITDB_DATABASE: ticket_manager
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - ticket_network
+
+  # FastAPI (serve tudo: API + React build em /static/editor/)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: ticket_app
+    restart: unless-stopped
+    environment:
+      MONGODB_URL: mongodb://admin:${MONGO_PASSWORD:-SecurePassword123}@mongodb:27017
+      DATABASE_NAME: ticket_manager
+      ENV: production
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
+    networks:
+      - ticket_network
+    volumes:
+      # Dados dinâmicos produzidos pela app
+      - ./app/static/uploads:/app/app/static/uploads
+      - ./app/static/ingressos:/app/app/static/ingressos
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mongodb_data:
+
+networks:
+  ticket_network:
+    driver: bridge

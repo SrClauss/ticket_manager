@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor de Layout – {{ evento_nome }}</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <style>
+    [x-cloak] { display: none !important; }
+    body { margin: 0; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1e293b; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    .canvas-wrap { display: inline-block; box-shadow: 0 8px 32px rgba(0,0,0,.6); border-radius: 3px; }
+    .layer-item { cursor: pointer; user-select: none; }
+    input[type=number]::-webkit-inner-spin-button { opacity: 1; }
+  </style>
+</head>
+
+<body class="bg-slate-900 text-slate-100 h-screen overflow-hidden" x-data="editorApp()" x-cloak>
+
+  <!-- ── Toast stack ──────────────────────────────────────── -->
+  <div class="fixed top-3 right-3 z-[9999] flex flex-col gap-2 pointer-events-none" aria-live="polite">
+    <template x-for="t in toasts" :key="t.id">
+      <div class="pointer-events-auto flex items-center gap-2 px-4 py-2.5 rounded-lg shadow-xl text-sm font-medium"
+           :class="{
+             'bg-emerald-600 text-white': t.type === 'success',
+             'bg-red-600   text-white': t.type === 'error',
+             'bg-blue-600  text-white': t.type === 'info'
+           }"
+           x-show="t.visible"
+           x-transition:enter="transition ease-out duration-200"
+           x-transition:enter-start="opacity-0 translate-x-4"
+           x-transition:enter-end="opacity-100 translate-x-0"
+           x-transition:leave="transition ease-in duration-150"
+           x-transition:leave-start="opacity-100"
+           x-transition:leave-end="opacity-0"
+           x-text="t.msg"></div>
+    </template>
+  </div>
+
+  <div class="flex flex-col h-screen">
+
+    <!-- ── Header ────────────────────────────────────────────── -->
+    <header class="flex items-center justify-between bg-slate-800 border-b border-slate-700 px-4 py-2.5 shrink-0 gap-3">
+      <div class="min-w-0">
+        <h1 class="text-base font-bold text-blue-400 leading-tight">Editor de Layout de Ingressos</h1>
+        <p class="text-[11px] text-slate-400 truncate">Evento: <span class="text-slate-200" x-text="eventoNome"></span></p>
+      </div>
+
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- Delete selected -->
+        <button x-show="selectedIds.length > 0"
+                @click="deleteSelected()"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded bg-slate-700 hover:bg-red-700 transition">
+          🗑 Excluir
+        </button>
+        <!-- Preview -->
+        <button @click="generatePreview()"
+                :disabled="previewLoading"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded bg-slate-600 hover:bg-slate-500 disabled:opacity-50 transition">
+          <span x-text="previewLoading ? '⏳ Gerando…' : '👁 Prévia'"></span>
+        </button>
+        <!-- Save -->
+        <button @click="saveLayout()"
+                :disabled="saving"
+                class="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold rounded bg-blue-600 hover:bg-blue-500 disabled:opacity-50 transition shadow">
+          <span x-text="saving ? '⏳ Salvando…' : '💾 Salvar'"></span>
+        </button>
+        <!-- Back -->
+        <a :href="backUrl"
+           class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded bg-slate-700 hover:bg-slate-600 transition">
+          ← Voltar
+        </a>
+      </div>
+    </header>
+
+    <!-- ── Workspace ──────────────────────────────────────────── -->
+    <div class="flex flex-1 overflow-hidden">
+
+      <!-- ═══ LEFT SIDEBAR ═════════════════════════════════════ -->
+      <aside class="w-64 bg-slate-800 border-r border-slate-700 flex flex-col overflow-y-auto shrink-0">
+
+        <!-- Canvas config -->
+        <section class="p-3 border-b border-slate-700 space-y-2">
+          <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Canvas</h2>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-0.5">Largura (mm)</label>
+              <input type="number" min="10" max="300" step="1"
+                     x-model.number="cfg.width" @change="rerender()"
+                     class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-0.5">Altura (mm)</label>
+              <input type="number" min="10" max="400" step="1"
+                     x-model.number="cfg.height" @change="rerender()"
+                     class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+            </div>
+          </div>
+
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-0.5">Margem interna (mm)</label>
+            <input type="number" min="0" max="20" step="0.5"
+                   x-model.number="cfg.padding" @change="rerender()"
+                   class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+          </div>
+
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-0.5">Orientação</label>
+            <div class="flex gap-1">
+              <button @click="setOrientation('portrait')"
+                      :class="cfg.orientation==='portrait'?'bg-blue-600 text-white':'bg-slate-700 text-slate-300 hover:bg-slate-600'"
+                      class="flex-1 py-1 text-xs rounded transition">Retrato</button>
+              <button @click="setOrientation('landscape')"
+                      :class="cfg.orientation==='landscape'?'bg-blue-600 text-white':'bg-slate-700 text-slate-300 hover:bg-slate-600'"
+                      class="flex-1 py-1 text-xs rounded transition">Paisagem</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-0.5">Tamanhos padrão</label>
+            <select @change="applyPreset($event.target.value); $event.target.value=''"
+                    class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+              <option value="">Selecione…</option>
+              <option value="80x120">80×120 mm (Padrão)</option>
+              <option value="62x100">62×100 mm (Brother QL)</option>
+              <option value="62x29">62×29 mm (Pequena)</option>
+              <option value="103x164">103×164 mm (Grande)</option>
+              <option value="50x25">50×25 mm (Mini)</option>
+            </select>
+          </div>
+        </section>
+
+        <!-- Sections -->
+        <section class="p-3 border-b border-slate-700">
+          <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Seções</h2>
+          <div class="grid grid-cols-2 gap-1.5">
+            <button @click="addSection('vertical')"
+                    :class="section?.type === 'vertical' ? 'bg-orange-700 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'"
+                    class="rounded py-2 text-xs transition text-center">
+              ↕<br><span class="text-[10px]">Seção Vertical</span>
+            </button>
+            <button @click="addSection('horizontal')"
+                    :class="section?.type === 'horizontal' ? 'bg-orange-700 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'"
+                    class="rounded py-2 text-xs transition text-center">
+              ↔<br><span class="text-[10px]">Seção Horizontal</span>
+            </button>
+          </div>
+          <div x-show="section" class="mt-2 space-y-1">
+            <p class="text-[10px] text-orange-300">
+              Seção <span x-text="section?.type === 'vertical' ? 'vertical (eixo X)' : 'horizontal (eixo Y)'"></span> ativa.
+              <br>Setor A = <span x-text="section?.type === 'vertical' ? 'esquerda' : 'topo'"></span> •
+              Setor B = <span x-text="section?.type === 'vertical' ? 'direita' : 'base'"></span>
+            </p>
+            <p class="text-[10px] text-slate-500">Arraste a linha laranja no canvas para reposicionar.</p>
+            <button @click="removeSection()"
+                    class="w-full mt-1 py-1 text-xs rounded bg-slate-700 hover:bg-red-800 text-slate-300 transition">
+              ✕ Remover seção
+            </button>
+          </div>
+        </section>
+
+        <!-- Add elements -->
+        <section class="p-3 border-b border-slate-700">
+          <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Adicionar</h2>
+          <div class="grid grid-cols-2 gap-1.5">
+            <button @click="startInsert('text')"
+                    class="bg-slate-700 hover:bg-slate-600 rounded py-2 text-xs transition text-center">
+              ✏️<br>Texto
+            </button>
+            <button @click="startInsert('qrcode')"
+                    class="bg-slate-700 hover:bg-slate-600 rounded py-2 text-xs transition text-center">
+              📱<br>QR Code
+            </button>
+            <button @click="startInsert('logo')"
+                    class="bg-slate-700 hover:bg-slate-600 rounded py-2 text-xs transition text-center">
+              🖼️<br>Logo
+            </button>
+            <button @click="startInsert('divider')"
+                    class="bg-slate-700 hover:bg-slate-600 rounded py-2 text-xs transition text-center">
+              ➖<br>Divisor
+            </button>
+          </div>
+        </section>
+
+        <!-- Layers -->
+        <section class="p-3 flex-1 overflow-y-auto">
+          <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Camadas</h2>
+
+          <p x-show="elements.length === 0" class="text-xs text-slate-500 italic">Sem elementos. Adicione acima.</p>
+
+          <div class="space-y-1">
+            <template x-for="el in elements" :key="el.id">
+              <div class="layer-item flex items-center justify-between px-2 py-1.5 rounded border transition"
+                   :class="selectedIds.includes(el.id)
+                     ? 'bg-blue-900/50 border-blue-500'
+                     : 'border-transparent hover:bg-slate-700'"
+                   @click="clickLayer(el.id)">
+                <span class="flex items-center gap-1.5 text-xs min-w-0">
+                  <span x-text="el.type==='text'?'✏️':el.type==='qrcode'?'📱':el.type==='logo'?'🖼️':'➖'" class="shrink-0"></span>
+                  <span class="text-slate-300 truncate" x-text="el.value || el.type"></span>
+                  <span x-show="el.sector" class="shrink-0 text-[9px] font-bold px-1 rounded"
+                        :class="el.sector === 'A' ? 'bg-blue-800 text-blue-200' : 'bg-orange-800 text-orange-200'"
+                        x-text="el.sector"></span>
+                </span>
+                <button @click.stop="deleteSingle(el.id)"
+                        class="shrink-0 ml-1 text-slate-500 hover:text-red-400 transition text-xs leading-none">✕</button>
+              </div>
+            </template>
+          </div>
+        </section>
+      </aside>
+
+      <!-- ═══ CANVAS AREA ════════════════════════════════════════ -->
+      <main class="flex-1 bg-slate-950 flex flex-col items-center justify-center overflow-auto p-6">
+        <div class="canvas-wrap border-2 border-blue-600/70 rounded overflow-hidden"
+             style="background:#fff">
+          <canvas id="main-canvas"></canvas>
+        </div>
+        <p class="mt-2 text-[10px] text-slate-500">Arraste elementos verticalmente no canvas • Arraste a linha laranja para reposicionar a seção</p>
+      </main>
+
+      <!-- ═══ RIGHT SIDEBAR ══════════════════════════════════════ -->
+      <aside class="w-72 bg-slate-800 border-l border-slate-700 flex flex-col overflow-hidden shrink-0">
+
+        <!-- ─── PRE-INSERTION FORM ─────────────────────────────── -->
+        <section x-show="insertingType" class="p-3 border-b border-slate-700 overflow-y-auto" style="flex:1; min-height:0;">
+          <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-3">
+            Novo:
+            <span class="text-blue-300" x-text="insertingType === 'text' ? 'Texto' : insertingType === 'qrcode' ? 'QR Code' : insertingType === 'logo' ? 'Logo' : 'Divisor'"></span>
+          </h2>
+
+          <!-- Sector selection (shown when section exists) -->
+          <div x-show="section" class="mb-3 p-2 rounded border border-orange-600/60 bg-orange-900/20 space-y-2">
+            <h3 class="text-[10px] font-bold text-orange-300 uppercase tracking-wider">Setor de inserção</h3>
+            <div class="flex gap-2">
+              <button @click="insertingSector = 'A'"
+                      :class="insertingSector === 'A' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'"
+                      class="flex-1 py-1.5 text-xs rounded transition">
+                A – <span x-text="section?.type === 'vertical' ? 'Esquerda' : 'Topo'"></span>
+              </button>
+              <button @click="insertingSector = 'B'"
+                      :class="insertingSector === 'B' ? 'bg-orange-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'"
+                      class="flex-1 py-1.5 text-xs rounded transition">
+                B – <span x-text="section?.type === 'vertical' ? 'Direita' : 'Base'"></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Text properties -->
+          <template x-if="insertingType === 'text'">
+            <div class="space-y-2">
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-0.5">Valor / Variável</label>
+                <input type="text" x-model="insertingProps.value"
+                       class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs font-mono">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-[10px] text-slate-400 block mb-0.5">Tamanho (pt)</label>
+                  <input type="number" min="6" max="72" x-model.number="insertingProps.size"
+                         class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+                </div>
+                <div>
+                  <label class="text-[10px] text-slate-400 block mb-0.5">Fonte</label>
+                  <select x-model="insertingProps.font"
+                          class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+                    <option>Arial</option>
+                    <option>Times New Roman</option>
+                    <option>Courier New</option>
+                    <option>Verdana</option>
+                  </select>
+                </div>
+              </div>
+              <div class="flex gap-4">
+                <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                  <input type="checkbox" x-model="insertingProps.bold"><span>Negrito</span>
+                </label>
+                <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                  <input type="checkbox" x-model="insertingProps.italic"><span>Itálico</span>
+                </label>
+                <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                  <input type="checkbox" x-model="insertingProps.wrapText"><span>Quebra</span>
+                </label>
+              </div>
+            </div>
+          </template>
+
+          <!-- QR Code properties -->
+          <template x-if="insertingType === 'qrcode'">
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-0.5">Tamanho (mm)</label>
+              <input type="number" min="10" max="80" x-model.number="insertingProps.size_mm"
+                     class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+            </div>
+          </template>
+
+          <!-- Logo properties -->
+          <template x-if="insertingType === 'logo'">
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-0.5">Tamanho (mm)</label>
+              <input type="number" min="10" max="80" x-model.number="insertingProps.size_mm"
+                     class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+            </div>
+          </template>
+
+          <!-- Divider properties -->
+          <template x-if="insertingType === 'divider'">
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-0.5">Comprimento (mm)</label>
+                <input type="number" min="5" max="200" x-model.number="insertingProps.length_mm"
+                       class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-0.5">Espessura (px)</label>
+                <input type="number" min="1" max="20" x-model.number="insertingProps.thickness"
+                       class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+              </div>
+            </div>
+          </template>
+
+          <!-- Common position -->
+          <div class="mt-3 space-y-2">
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-0.5">Posição Y (mm)</label>
+              <input type="number" step="0.5" x-model.number="insertingProps.y"
+                     class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-0.5">Alinhamento horizontal</label>
+              <select x-model="insertingProps.horizontal_position"
+                      class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+                <option value="left">Esquerda</option>
+                <option value="center">Centro</option>
+                <option value="right">Direita</option>
+              </select>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-0.5">Margem esq. (mm)</label>
+                <input type="number" step="0.5" x-model.number="insertingProps.margin_left"
+                       class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-0.5">Margem dir. (mm)</label>
+                <input type="number" step="0.5" x-model.number="insertingProps.margin_right"
+                       class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+              </div>
+            </div>
+          </div>
+
+          <!-- Confirm / Cancel -->
+          <div class="flex gap-2 mt-4">
+            <button @click="confirmInsert()"
+                    class="flex-1 py-2 text-sm font-bold rounded bg-emerald-600 hover:bg-emerald-500 text-white transition shadow">
+              ✅ Inserir
+            </button>
+            <button @click="cancelInsert()"
+                    class="px-3 py-2 text-xs rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition">
+              ✕
+            </button>
+          </div>
+        </section>
+
+        <!-- ─── ELEMENT PROPERTIES (editing) ──────────────────── -->
+        <section x-show="!insertingType" class="p-3 border-b border-slate-700 overflow-y-auto" style="flex:1; min-height:0;">
+          <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Propriedades</h2>
+
+          <p x-show="!selectedEl" class="text-xs text-slate-500 italic">
+            Selecione um elemento para editar.
+          </p>
+
+          <div x-show="selectedEl" class="space-y-3">
+
+            <!-- Element ID badge -->
+            <div class="bg-slate-700 text-[10px] px-2 py-1 rounded text-center text-blue-300 font-mono truncate"
+                 x-text="selectedEl?.id"></div>
+
+            <!-- Sector badge -->
+            <div x-show="selectedEl?.sector" class="text-center">
+              <span class="text-[10px] px-2 py-0.5 rounded font-bold"
+                    :class="selectedEl?.sector === 'A' ? 'bg-blue-800 text-blue-200' : 'bg-orange-800 text-orange-200'"
+                    x-text="'Setor ' + (selectedEl?.sector ?? '')"></span>
+            </div>
+
+            <!-- ── Text properties ── -->
+            <template x-if="pendingEl?.type === 'text'">
+              <div class="space-y-2">
+                <div>
+                  <label class="text-[10px] text-slate-400 block mb-0.5">Valor / Variável</label>
+                  <input type="text"
+                         :value="pendingEl?.value ?? ''"
+                         @input="if(pendingEl){ pendingEl.value = $event.target.value; pendingChanged = true; }"
+                         class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs font-mono">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="text-[10px] text-slate-400 block mb-0.5">Tamanho (pt)</label>
+                    <input type="number" min="6" max="72"
+                           :value="pendingEl?.size ?? 14"
+                           @input="if(pendingEl){ pendingEl.size = +$event.target.value; pendingChanged = true; }"
+                           class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+                  </div>
+                  <div>
+                    <label class="text-[10px] text-slate-400 block mb-0.5">Fonte</label>
+                    <select :value="pendingEl?.font ?? 'Arial'"
+                            @change="if(pendingEl){ pendingEl.font = $event.target.value; pendingChanged = true; }"
+                            class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+                      <option>Arial</option>
+                      <option>Times New Roman</option>
+                      <option>Courier New</option>
+                      <option>Verdana</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="flex gap-4">
+                  <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                    <input type="checkbox"
+                           :checked="pendingEl?.bold ?? false"
+                           @change="if(pendingEl){ pendingEl.bold = $event.target.checked; pendingChanged = true; }">
+                    <span>Negrito</span>
+                  </label>
+                  <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                    <input type="checkbox"
+                           :checked="pendingEl?.italic ?? false"
+                           @change="if(pendingEl){ pendingEl.italic = $event.target.checked; pendingChanged = true; }">
+                    <span>Itálico</span>
+                  </label>
+                  <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                    <input type="checkbox"
+                           :checked="pendingEl?.wrapText ?? true"
+                           @change="if(pendingEl){ pendingEl.wrapText = $event.target.checked; pendingChanged = true; }">
+                    <span>Quebra</span>
+                  </label>
+                </div>
+              </div>
+            </template>
+
+            <!-- ── QR Code properties ── -->
+            <template x-if="pendingEl?.type === 'qrcode'">
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-0.5">Tamanho (mm)</label>
+                <input type="number" min="10" max="80"
+                       :value="pendingEl?.size_mm ?? 30"
+                       @input="if(pendingEl){ pendingEl.size_mm = +$event.target.value; pendingChanged = true; }"
+                       class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+              </div>
+            </template>
+
+            <!-- ── Logo properties ── -->
+            <template x-if="pendingEl?.type === 'logo'">
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-0.5">Tamanho (mm)</label>
+                <input type="number" min="10" max="80"
+                       :value="pendingEl?.size_mm ?? 30"
+                       @input="if(pendingEl){ pendingEl.size_mm = +$event.target.value; pendingChanged = true; }"
+                       class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+              </div>
+            </template>
+
+            <!-- ── Divider properties ── -->
+            <template x-if="pendingEl?.type === 'divider'">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-[10px] text-slate-400 block mb-0.5">Comprimento (mm)</label>
+                  <input type="number" min="5" max="200"
+                         :value="pendingEl?.length_mm ?? 40"
+                         @input="if(pendingEl){ pendingEl.length_mm = +$event.target.value; pendingChanged = true; }"
+                         class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+                </div>
+                <div>
+                  <label class="text-[10px] text-slate-400 block mb-0.5">Espessura (px)</label>
+                  <input type="number" min="1" max="20"
+                         :value="pendingEl?.thickness ?? 2"
+                         @input="if(pendingEl){ pendingEl.thickness = +$event.target.value; pendingChanged = true; }"
+                         class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+                </div>
+              </div>
+            </template>
+
+            <!-- ── Common position / alignment ── -->
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-0.5">Posição Y (mm)</label>
+              <input type="number" step="0.5"
+                     :value="pendingEl?.y ?? 0"
+                     @input="if(pendingEl){ pendingEl.y = +$event.target.value; pendingChanged = true; }"
+                     class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+            </div>
+
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-0.5">Alinhamento horizontal</label>
+              <select :value="pendingEl?.horizontal_position ?? 'center'"
+                      @change="if(pendingEl){ pendingEl.horizontal_position = $event.target.value; pendingChanged = true; }"
+                      class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+                <option value="left">Esquerda</option>
+                <option value="center">Centro</option>
+                <option value="right">Direita</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-0.5">Margem esq. (mm)</label>
+                <input type="number" step="0.5"
+                       :value="pendingEl?.margin_left ?? 0"
+                       @input="if(pendingEl){ pendingEl.margin_left = +$event.target.value; pendingChanged = true; }"
+                       class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-0.5">Margem dir. (mm)</label>
+                <input type="number" step="0.5"
+                       :value="pendingEl?.margin_right ?? 0"
+                       @input="if(pendingEl){ pendingEl.margin_right = +$event.target.value; pendingChanged = true; }"
+                       class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+              </div>
+            </div>
+
+            <!-- ── Aplicar button ── -->
+            <div x-show="pendingChanged" class="sticky bottom-0 pt-2">
+              <button @click="applyPendingProps()"
+                      class="w-full py-2 text-sm font-bold rounded bg-emerald-600 hover:bg-emerald-500 text-white transition shadow-lg">
+                ✅ Aplicar Alterações
+              </button>
+            </div>
+
+          </div><!-- /selectedEl -->
+
+          <!-- Template tags -->
+          <div class="mt-4 pt-3 border-t border-slate-700">
+            <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tags</h3>
+            <p class="text-[9px] text-slate-500 mb-2">Clique para aplicar ao texto selecionado</p>
+            <div class="flex flex-wrap gap-1">
+              <template x-for="tag in TAGS" :key="tag">
+                <button @click="applyTag(tag)"
+                        class="text-[9px] bg-slate-700 hover:bg-blue-700 text-slate-300 hover:text-white px-1.5 py-0.5 rounded transition font-mono"
+                        x-text="tag"></button>
+              </template>
+              <!-- Texto livre TAG -->
+              <button @click="toggleFreeText()"
+                      :class="showFreeText ? 'bg-amber-600 text-white' : 'bg-amber-900/60 hover:bg-amber-700 text-amber-300'"
+                      class="text-[9px] px-1.5 py-0.5 rounded transition font-mono">
+                📝 Texto livre
+              </button>
+            </div>
+            <!-- Free text input -->
+            <div x-show="showFreeText" class="mt-2 space-y-1">
+              <input type="text"
+                     x-model="freeTextValue"
+                     @keydown.enter="applyFreeText()"
+                     placeholder="Digite o texto…"
+                     class="w-full bg-slate-700 border border-amber-600/60 rounded px-2 py-1 text-xs">
+              <button @click="applyFreeText()"
+                      class="w-full py-1 text-xs font-bold rounded bg-amber-600 hover:bg-amber-500 text-white transition">
+                Aplicar texto
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Preview panel (always visible at bottom) -->
+        <section class="p-3 bg-slate-900 shrink-0 border-t border-slate-700">
+          <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Pré-visualização real</h2>
+          <div class="min-h-[80px] bg-white rounded border border-slate-600 flex items-center justify-center p-2">
+            <img x-show="previewUrl" :src="previewUrl"
+                 class="max-w-full max-h-[160px] object-contain" alt="Prévia do ingresso">
+            <p x-show="!previewUrl && !previewLoading"
+               class="text-[10px] text-slate-400 text-center">
+               Clique em <strong>👁 Prévia</strong> no cabeçalho.
+            </p>
+            <p x-show="previewLoading" class="text-xs text-slate-400">Gerando prévia…</p>
+          </div>
+        </section>
+
+      </aside>
+    </div><!-- /workspace -->
+  </div><!-- /flex-col -->
+
+
+  <!-- ──────────────────────────── Alpine component ─────────────────────────── -->
+  <script>
+  const MM = 3.78;                       // 1 mm → px (96 dpi approx)
+  const toP = mm  => mm  * MM;
+  const toM = px  => px  / MM;
+
+  function hPos(el, cw_mm) {
+    const cw = toP(cw_mm);
+    const ml = toP(el.margin_left  || 0);
+    const mr = toP(el.margin_right || 0);
+    if (el.horizontal_position === 'left')  return { left: ml,              originX: 'left'   };
+    if (el.horizontal_position === 'right') return { left: cw - mr,         originX: 'right'  };
+    return                                         { left: cw/2 + ml - mr,  originX: 'center' };
+  }
+
+  function editorApp() {
+    return {
+      // ── init data (overwritten from Jinja) ──
+      eventoId : '{{ evento_id }}',
+      eventoNome: '{{ evento_nome | e }}',
+      backUrl  : '{{ back_url }}',
+
+      TAGS: ['{NOME}','{CPF}','{EMAIL}','{TIPO_INGRESSO}','{EVENTO_NOME}','{DATA}','{HORARIO}'],
+
+      cfg: { width: 80, height: 120, orientation: 'portrait', padding: 5 },
+      elements: [],
+      selectedIds: [],   // always 0 or 1 elements
+
+      // Section state
+      section: null,     // null | { type: 'vertical'|'horizontal', pos_mm: number }
+
+      // Pre-insertion state
+      insertingType: null,
+      insertingProps: {},
+      insertingSector: null,
+
+      // Properties editing state
+      pendingEl: null,
+      pendingChanged: false,
+
+      // Tags / free text
+      showFreeText: false,
+      freeTextValue: '',
+
+      fc: null,           // Fabric.Canvas instance
+
+      previewUrl: null,
+      previewLoading: false,
+      saving: false,
+      toasts: [],
+
+      // ── computed shortcuts ──
+      get selectedEl() {
+        return this.elements.find(e => this.selectedIds.includes(e.id)) ?? null;
+      },
+
+      // ══════════════════════════════════════════════════════════════
+      //  INIT
+      // ══════════════════════════════════════════════════════════════
+      init() {
+        // 1. Boot Fabric.js (single-select only)
+        this.fc = new fabric.Canvas('main-canvas', {
+          selection: false,
+          preserveObjectStacking: true,
+          backgroundColor: '#ffffff',
+        });
+
+        // 2. Load layout injected by server
+        try {
+          const raw = {{ initial_layout | safe }};
+          if (raw && raw.canvas)   this.cfg     = { ...this.cfg, ...raw.canvas };
+          if (raw && raw.elements) this.elements = raw.elements;
+          if (raw && raw.section)  this.section  = raw.section;
+        } catch(e) { console.warn('No initial layout', e); }
+
+        // 3. First render
+        this.rerender();
+
+        // 4. Fabric events
+        this.fc.on('object:modified', e => {
+          const obj = e.target;
+          if (obj?.sectionLine) {
+            // Section line was dragged – update its position.
+            // The Rect is 6px wide/tall and positioned at (pos - 3), so the
+            // true section position = obj.left + 3 (half the line width).
+            if (this.section.type === 'vertical') {
+              this.section.pos_mm = parseFloat(toM(obj.left + 3).toFixed(2));
+            } else {
+              this.section.pos_mm = parseFloat(toM(obj.top + 3).toFixed(2));
+            }
+            this.rerender();
+            return;
+          }
+          if (!obj?.elementId) return;
+          const el = this.elements.find(x => x.id === obj.elementId);
+          if (el) {
+            const newY = parseFloat(toM(obj.top).toFixed(2));
+            el.y = newY;
+            obj.set({ left: this._getElLeft(el).left });
+            obj.setCoords();
+            this.fc.requestRenderAll();
+          }
+        });
+
+        this.fc.on('selection:created', e => this._syncSelection(e));
+        this.fc.on('selection:updated', e => this._syncSelection(e));
+        this.fc.on('selection:cleared',  () => { this.selectedIds = []; });
+
+        // 5. Keyboard shortcuts
+        document.addEventListener('keydown', ev => {
+          const tag = document.activeElement?.tagName || '';
+          if (['INPUT','TEXTAREA','SELECT'].includes(tag)) return;
+          if (ev.key === 'Delete' || ev.key === 'Backspace') {
+            ev.preventDefault();
+            this.deleteSelected();
+          }
+          if ((ev.ctrlKey || ev.metaKey) && ev.key === 's') {
+            ev.preventDefault(); this.saveLayout();
+          }
+        });
+
+        // 6. Watch selection changes to reset pending props
+        this.$watch('selectedIds', () => this._resetPending());
+      },
+
+      _syncSelection(e) {
+        const objs = e.selected || [];
+        if (objs.length) {
+          const id = objs[0].elementId;
+          if (id) this.selectedIds = [id];
+        }
+      },
+
+      // ══════════════════════════════════════════════════════════════
+      //  CANVAS CONFIG
+      // ══════════════════════════════════════════════════════════════
+      setOrientation(o) {
+        if (this.cfg.orientation === o) return;
+        this.cfg.orientation = o;
+        const [a, b] = [this.cfg.width, this.cfg.height];
+        if (o === 'portrait')  { this.cfg.width = Math.min(a,b); this.cfg.height = Math.max(a,b); }
+        else                   { this.cfg.width = Math.max(a,b); this.cfg.height = Math.min(a,b); }
+        this.rerender();
+      },
+      applyPreset(v) {
+        if (!v) return;
+        const [w, h] = v.split('x').map(Number);
+        this.cfg.width = w; this.cfg.height = h;
+        this.cfg.orientation = w < h ? 'portrait' : 'landscape';
+        this.rerender();
+      },
+
+      // ══════════════════════════════════════════════════════════════
+      //  SECTION MANAGEMENT
+      // ══════════════════════════════════════════════════════════════
+      addSection(type) {
+        if (this.section && this.section.type === type) {
+          this.removeSection();
+          return;
+        }
+        const pos_mm = type === 'vertical'
+          ? parseFloat((this.cfg.width  / 2).toFixed(1))
+          : parseFloat((this.cfg.height / 2).toFixed(1));
+        this.section = { type, pos_mm };
+        this.rerender();
+        this.toast(`Seção ${type === 'vertical' ? 'vertical' : 'horizontal'} adicionada. Arraste a linha laranja para reposicionar.`, 'success');
+      },
+
+      removeSection() {
+        this.elements.forEach(el => { delete el.sector; });
+        this.section = null;
+        this.rerender();
+        this.toast('Seção removida.', 'info');
+      },
+
+      // ══════════════════════════════════════════════════════════════
+      //  PRE-INSERTION DIALOG
+      // ══════════════════════════════════════════════════════════════
+      startInsert(type) {
+        this.insertingType = type;
+        this.insertingProps = {
+          y: 10,
+          horizontal_position: 'center',
+          margin_left: 0,
+          margin_right: 0,
+          ...(type === 'text'    && { value: '{NOME}', size: 14, font: 'Arial', bold: false, italic: false, wrapText: true }),
+          ...(type === 'qrcode' && { size_mm: 30 }),
+          ...(type === 'logo'   && { size_mm: 30 }),
+          ...(type === 'divider'&& { length_mm: 40, thickness: 2 }),
+        };
+        this.insertingSector = this.section ? 'A' : null;
+        this.selectedIds = [];
+      },
+
+      cancelInsert() {
+        this.insertingType   = null;
+        this.insertingProps  = {};
+        this.insertingSector = null;
+      },
+
+      confirmInsert() {
+        if (!this.insertingType) return;
+        if (this.section && !this.insertingSector) {
+          this.toast('Seção ativa: escolha o setor A ou B antes de inserir.', 'error');
+          return;
+        }
+        const id = 'el-' + Date.now();
+        const el = {
+          id,
+          type: this.insertingType,
+          ...JSON.parse(JSON.stringify(this.insertingProps)),
+          ...(this.insertingSector ? { sector: this.insertingSector } : {}),
+        };
+        this.elements.push(el);
+        this.selectedIds = [id];
+        this.cancelInsert();
+        this.rerender();
+      },
+
+      // ══════════════════════════════════════════════════════════════
+      //  ELEMENT MANAGEMENT
+      // ══════════════════════════════════════════════════════════════
+      deleteSelected() {
+        if (!this.selectedIds.length) return;
+        const del = new Set(this.selectedIds);
+        this.elements = this.elements.filter(e => !del.has(e.id));
+        this.selectedIds = [];
+        this.rerender();
+      },
+
+      deleteSingle(id) {
+        this.elements = this.elements.filter(e => e.id !== id);
+        if (this.selectedIds.includes(id)) this.selectedIds = [];
+        this.rerender();
+      },
+
+      // Pending props management (Apply button)
+      _resetPending() {
+        const el = this.selectedEl;
+        this.pendingEl = el ? JSON.parse(JSON.stringify(el)) : null;
+        this.pendingChanged = false;
+      },
+
+      applyPendingProps() {
+        const el = this.selectedEl;
+        if (!el || !this.pendingEl) return;
+        const pending = JSON.parse(JSON.stringify(this.pendingEl));
+        Object.keys(pending).forEach(k => { el[k] = pending[k]; });
+        Object.keys(el).forEach(k => { if (!(k in pending)) delete el[k]; });
+        this.pendingChanged = false;
+        this.rerender();
+        this.toast('Propriedades aplicadas!', 'success');
+      },
+
+      clickLayer(id) {
+        this.selectedIds = this.selectedIds.includes(id) ? [] : [id];
+        this._syncFabricSelection();
+      },
+
+      _syncFabricSelection() {
+        if (!this.fc) return;
+        const id = this.selectedIds[0];
+        if (!id) { this.fc.discardActiveObject(); this.fc.requestRenderAll(); return; }
+        const obj = this.fc.getObjects().find(o => o.elementId === id);
+        if (obj) { this.fc.setActiveObject(obj); this.fc.requestRenderAll(); }
+      },
+
+      // ══════════════════════════════════════════════════════════════
+      //  TAGS
+      // ══════════════════════════════════════════════════════════════
+      applyTag(tag) {
+        const el = this.selectedEl;
+        if (el && el.type === 'text' && this.pendingEl) {
+          this.pendingEl.value = tag;
+          this.pendingChanged = true;
+          this.toast(`Tag ${tag} aplicada. Clique em ✅ Aplicar.`, 'info');
+        } else {
+          navigator.clipboard.writeText(tag)
+            .then(() => this.toast(`${tag} copiado!`, 'success'))
+            .catch(() => this.toast('Falha ao copiar.', 'error'));
+        }
+      },
+
+      toggleFreeText() {
+        this.showFreeText = !this.showFreeText;
+        this.freeTextValue = '';
+      },
+
+      applyFreeText() {
+        if (!this.freeTextValue.trim()) {
+          this.toast('Digite um texto antes de aplicar.', 'error');
+          return;
+        }
+        const el = this.selectedEl;
+        if (el && el.type === 'text' && this.pendingEl) {
+          this.pendingEl.value = this.freeTextValue.trim();
+          this.pendingChanged = true;
+          this.showFreeText = false;
+          this.freeTextValue = '';
+          this.toast('Texto livre aplicado. Clique em ✅ Aplicar.', 'info');
+        } else {
+          this.toast('Selecione um elemento de Texto para aplicar o texto livre.', 'error');
+        }
+      },
+
+      // ══════════════════════════════════════════════════════════════
+      //  CANVAS RENDERING  (Fabric.js)
+      // ══════════════════════════════════════════════════════════════
+      rerender() {
+        if (!this.fc) return;
+        const fc = this.fc;
+        fc.clear();
+
+        const W = toP(this.cfg.width);
+        const H = toP(this.cfg.height);
+        fc.setDimensions({ width: W, height: H });
+        fc.set({ backgroundColor: '#ffffff' });
+
+        this._drawGuides(fc, W, H);
+
+        // Draw section line first (so elements render on top)
+        if (this.section) this._drawSection(fc, W, H);
+
+        // Single-pass element rendering
+        this.elements.forEach(el => {
+          const obj = this._makeObj(el);
+          if (!obj) return;
+          this._applyCommon(obj, el, toP(el.y || 0));
+          fc.add(obj);
+          obj.setCoords();
+        });
+
+        fc.renderAll();
+        this._restoreSelection();
+      },
+
+      _drawGuides(fc, W, H) {
+        const pad   = toP(this.cfg.padding);
+        const props = { stroke: 'rgba(59,130,246,0.22)', strokeWidth: 1, selectable: false, evented: false };
+        fc.add(
+          new fabric.Line([pad,   0, pad,   H], props),
+          new fabric.Line([W-pad, 0, W-pad, H], props),
+          new fabric.Line([W/2,   0, W/2,   H], { ...props, strokeDashArray: [4,4] })
+        );
+      },
+
+      _drawSection(fc, W, H) {
+        const pos = toP(this.section.pos_mm || 0);
+        // The section is rendered as a 6px-wide (or tall) Rect centred on pos.
+        // It is offset by 3px (half of 6px) so the visual centre matches pos_mm.
+        let obj;
+        if (this.section.type === 'vertical') {
+          obj = new fabric.Rect({
+            left:   pos - 3,
+            top:    0,
+            width:  6,
+            height: H,
+            fill:   'rgba(251,146,60,0.25)',
+            stroke: 'rgba(251,146,60,0.9)',
+            strokeWidth: 1,
+            lockMovementY: true,
+            lockScalingX:  true,
+            lockScalingY:  true,
+            lockRotation:  true,
+            hasControls:   false,
+            borderColor:   '#f97316',
+            hoverCursor:   'ew-resize',
+          });
+        } else {
+          obj = new fabric.Rect({
+            left:   0,
+            top:    pos - 3,
+            width:  W,
+            height: 6,
+            fill:   'rgba(251,146,60,0.25)',
+            stroke: 'rgba(251,146,60,0.9)',
+            strokeWidth: 1,
+            lockMovementX: true,
+            lockScalingX:  true,
+            lockScalingY:  true,
+            lockRotation:  true,
+            hasControls:   false,
+            borderColor:   '#f97316',
+            hoverCursor:   'ns-resize',
+          });
+        }
+        obj.sectionLine = true;
+        fc.add(obj);
+
+        // Sector labels
+        const labelProps = { fontSize: 9, fill: 'rgba(251,146,60,0.7)', selectable: false, evented: false };
+        if (this.section.type === 'vertical') {
+          fc.add(new fabric.Text('A', { ...labelProps, left: 4, top: 4 }));
+          fc.add(new fabric.Text('B', { ...labelProps, left: pos + 6, top: 4 }));
+        } else {
+          fc.add(new fabric.Text('A', { ...labelProps, left: 4, top: 4 }));
+          fc.add(new fabric.Text('B', { ...labelProps, left: 4, top: pos + 6 }));
+        }
+      },
+
+      _makeObj(el) {
+        if (el.type === 'text') {
+          return new fabric.Text(String(el.value || 'Texto'), {
+            fontSize:   el.size   || 14,
+            fontFamily: el.font   || 'Arial',
+            fontWeight: el.bold   ? 'bold'   : 'normal',
+            fontStyle:  el.italic ? 'italic' : 'normal',
+            fill: '#000000',
+          });
+        }
+
+        if (el.type === 'qrcode' || el.type === 'logo') {
+          const sz  = toP(el.size_mm || 30);
+          const rect = new fabric.Rect({ width: sz, height: sz, fill: '#f1f5f9', stroke: '#94a3b8', strokeWidth: 1 });
+          const lbl  = new fabric.Text(el.type === 'qrcode' ? 'QR' : 'LOGO',
+            { fontSize: 11, fill: '#475569', originX: 'center', originY: 'center', left: sz/2, top: sz/2 });
+          return new fabric.Group([rect, lbl]);
+        }
+
+        if (el.type === 'divider') {
+          return new fabric.Rect({
+            width:  toP(el.length_mm || 40),
+            height: el.thickness || 2,
+            fill:   '#000000',
+          });
+        }
+
+        return null;
+      },
+
+      // Compute horizontal position respecting sector boundaries for vertical sections
+      _getElLeft(el) {
+        if (this.section && this.section.type === 'vertical' && el.sector) {
+          const secPos = this.section.pos_mm;
+          if (el.sector === 'A') {
+            return hPos(el, secPos);
+          } else {
+            const p = hPos(el, this.cfg.width - secPos);
+            return { left: p.left + toP(secPos), originX: p.originX };
+          }
+        }
+        return hPos(el, this.cfg.width);
+      },
+
+      _applyCommon(obj, el, top) {
+        const pos = this._getElLeft(el);
+        obj.set({
+          left:          pos.left,
+          top:           top,
+          originX:       pos.originX,
+          lockMovementX: true,
+          lockScalingX:  true,
+          lockScalingY:  true,
+          lockRotation:  true,
+          hasControls:   false,
+          borderColor:   el.sector === 'B' ? '#f97316' : '#3b82f6',
+        });
+        obj.elementId = el.id;
+      },
+
+      _restoreSelection() {
+        const id = this.selectedIds[0];
+        if (!id) return;
+        const obj = this.fc.getObjects().find(o => o.elementId === id);
+        if (obj) { this.fc.setActiveObject(obj); this.fc.requestRenderAll(); }
+      },
+
+      // ══════════════════════════════════════════════════════════════
+      //  SAVE / PREVIEW
+      // ══════════════════════════════════════════════════════════════
+      async saveLayout() {
+        this.saving = true;
+        try {
+          const resp = await fetch(`/admin/eventos/layout/${this.eventoId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ layout_ingresso: { canvas: this.cfg, elements: this.elements, section: this.section } }),
+          });
+          if (!resp.ok) {
+            const err = await resp.json().catch(() => ({ detail: 'Erro desconhecido' }));
+            throw new Error(err.detail || 'Falha ao salvar');
+          }
+          this.toast('Layout salvo com sucesso! 🎉', 'success');
+        } catch (e) {
+          this.toast('Erro ao salvar: ' + e.message, 'error');
+        } finally {
+          this.saving = false;
+        }
+      },
+
+      async generatePreview() {
+        this.previewLoading = true;
+        this.previewUrl = null;
+        try {
+          const resp = await fetch(`/admin/eventos/layout/${this.eventoId}/preview`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ canvas: this.cfg, elements: this.elements, section: this.section }),
+          });
+          if (!resp.ok) throw new Error('Servidor retornou ' + resp.status);
+          const blob = await resp.blob();
+          this.previewUrl = URL.createObjectURL(blob);
+        } catch (e) {
+          this.toast('Erro ao gerar prévia: ' + e.message, 'error');
+        } finally {
+          this.previewLoading = false;
+        }
+      },
+
+      // ══════════════════════════════════════════════════════════════
+      //  MISC
+      // ══════════════════════════════════════════════════════════════
+      toast(msg, type = 'info') {
+        const id = Date.now();
+        this.toasts.push({ id, msg, type, visible: true });
+        setTimeout(() => {
+          const t = this.toasts.find(x => x.id === id);
+          if (t) t.visible = false;
+          setTimeout(() => { this.toasts = this.toasts.filter(x => x.id !== id); }, 350);
+        }, 3500);
+      },
+    };
+  }
+  </script>
+</body>
+</html>

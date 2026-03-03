@@ -1,0 +1,349 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+
+<!-- Toast notification -->
+<div id="toast" style="display:none; position:fixed; top:20px; right:20px; z-index:9999; padding:12px 20px; background:#1e293b; color:#e2e8f0; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.3); border-left:4px solid #3b82f6;">
+</div>
+
+<header class="p-6 md:px-12 pt-8">
+  <div class="mb-4">
+    <a href="#" onclick="history.back(); return false;" class="inline-flex items-center gap-2 px-3 py-1 bg-slate-700 text-slate-100 rounded-md">← Voltar</a>
+  </div>
+  <h1 class="text-3xl font-light text-slate-100">⚙️ Configurações – {{ evento.nome }}</h1>
+  <p class="text-sm text-slate-400 mt-2">Logo do projeto, campos obrigatórios, modelo de planilha e histórico.</p>
+  
+  {% if logo_saved %}
+  <div class="mt-3 p-3 rounded-md bg-emerald-800 text-emerald-100">✅ Logo salvo com sucesso!</div>
+  {% endif %}
+</header>
+
+<main class="px-4 md:px-12 pb-24">
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <!-- Logo Section -->
+    <section class="xl:col-span-1 md-card p-4">
+      <h2 class="text-lg font-semibold text-slate-100 mb-2">Logo do Projeto</h2>
+      <p class="text-sm text-slate-400 mb-4">Envie uma imagem para usar como logo nos ingressos e documentos.</p>
+      <form id="logoForm" method="post" action="/admin/eventos/{{ evento.id }}/logo" enctype="multipart/form-data" class="space-y-3">
+        {% if evento.logo_path %}
+        <div class="mb-3">
+          <div class="text-xs text-slate-400 uppercase font-semibold mb-2">Logo Atual</div>
+          <img src="/static/uploads/{{ evento.logo_path }}" alt="Logo" class="max-w-full max-h-32 object-contain bg-white p-2 rounded-lg" />
+        </div>
+        {% endif %}
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">Selecionar nova imagem</label>
+          <input type="file" name="logo" accept="image/*" class="w-full text-sm text-slate-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-slate-700 file:text-slate-100 hover:file:bg-slate-600" />
+          <p class="text-xs text-slate-400 mt-1">Formatos: PNG, JPG, JPEG. Tamanho máximo: 5MB</p>
+        </div>
+        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg">💾 Salvar Logo</button>
+      </form>
+    </section>
+
+    <!-- Fields and Inscriptions -->
+    <section class="xl:col-span-1 md-card p-4">
+      <h2 class="text-lg font-semibold text-slate-100 mb-2">Campos de Planilha e Inscrições</h2>
+      <p class="text-sm text-slate-400 mb-4">Defina os campos obrigatórios e controle inscrições públicas.</p>
+      <form id="settingsForm" method="post" action="/admin/eventos/{{ evento.id }}/planilhas/campos" class="space-y-3"> 
+        {% if padrao_error %}
+        <div class="mt-2 p-2 rounded bg-red-800 text-red-200">É necessário definir um tipo de ingresso <strong>padrão</strong> para o evento antes de salvar as configurações da planilha.</div>
+        {% endif %}
+        <div class="text-sm font-medium text-slate-300">Campos obrigatórios</div>
+        <div class="flex flex-wrap gap-2">
+          {% for campo in campos_base %}
+            <label class="inline-flex items-center gap-2 text-slate-300 opacity-75"><input type="checkbox" checked disabled class="form-checkbox"/> {{ campo }}</label>
+          {% endfor %}
+          {% for campo in campos_opcionais %}
+            <label class="inline-flex items-center gap-2 text-slate-300"><input type="checkbox" name="campos" value="{{ campo }}" {% if campo in campos_atual %}checked{% endif %} class="form-checkbox"/> {{ campo }}</label>
+          {% endfor %}
+        </div>
+
+        <div class="pt-3 border-t border-slate-700/50">
+          <div class="mb-2">
+            <label class="block text-sm font-medium text-slate-300 mb-1">Tipo de ingresso padrão</label>
+            <select name="tipo_padrao" class="w-full bg-slate-900 text-slate-100 p-2 rounded">
+              <option value="">-- Selecionar padrão --</option>
+              {% for tipo in tipos_ingresso %}
+                <option value="{{ tipo.id }}" {% if tipo.padrao %}selected{% endif %}>{{ tipo.descricao }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <label class="inline-flex items-center gap-2 text-slate-300"><input type="checkbox" name="aceita_inscricoes" {% if evento.aceita_inscricoes %}checked{% endif %} class="form-checkbox"/> Aceitar inscrições públicas</label>
+        </div>
+
+        <div class="flex gap-2 mt-3">
+          <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg">Salvar</button>
+          <button type="button" id="regenerateTokenBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 text-slate-100 rounded-lg">Gerar/Regenerar token</button>
+        </div>
+
+        {% if evento.token_inscricao %}
+        <div class="mt-3 bg-slate-800 p-3 rounded-lg border border-slate-700">
+          <div class="text-xs text-slate-400 uppercase font-semibold">Link Público</div>
+          <a href="/inscricao/{{ evento.nome_normalizado or evento.id }}" class="text-blue-400 underline block truncate">/inscricao/{{ evento.nome_normalizado or evento.id }}</a>
+          <div class="text-xs text-slate-400 mt-2">Token</div>
+          <div class="text-slate-100 font-mono text-sm break-all">{{ evento.token_inscricao }}</div>
+        </div>
+        {% endif %}
+      </form>
+    </section>
+
+    <!-- Combined: modelo, upload, histórico -->
+    <section class="xl:col-span-2 md-card p-4">
+      <div class="flex justify-between items-start">
+        <div>
+          <h2 class="text-lg font-semibold text-slate-100">Modelo, Upload e Histórico</h2>
+          <p class="text-sm text-slate-400">Baixe o modelo, gerencie links por empresa e acompanhe importações.</p>
+        </div>
+        <div class="hidden xl:flex items-center gap-2">
+          <a href="/admin/eventos/{{ evento.id }}/planilhas/empresas" class="px-3 py-2 bg-slate-700 text-slate-100 rounded-lg">Gerenciar links</a>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 mt-4">
+        <div class="p-3 bg-slate-800 rounded-lg border border-slate-700">
+          <h3 class="text-sm text-slate-400">Modelo oficial</h3>
+          <p class="text-xs text-slate-400 mb-3">Baixe o arquivo .xlsx com as colunas recomendadas.</p>
+          <button id="downloadModelBtn" class="w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 text-slate-900 rounded-lg">Baixar modelo (.xlsx)</button>
+        </div>
+
+        <div class="p-3 bg-slate-800 rounded-lg border border-slate-700 md:col-span-2">
+          <h3 class="text-sm text-slate-400">Enviar planilha</h3>
+          <p class="text-xs text-slate-400 mb-3">Envie arquivos .xlsx ou .csv. O arquivo será validado antes de persistir.</p>
+          <div class="flex flex-col xl:flex-row items-start xl:items-center gap-3">
+            <input id="planilhaFile" type="file" accept=".xlsx,.csv" class="text-sm text-slate-200 w-full xl:w-auto" />
+            <button id="uploadBtn" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg w-full xl:w-auto">Enviar Arquivo</button>
+          </div>
+          <div class="mt-4">
+            <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden">
+              <div id="progressFill" class="h-2 bg-gradient-to-r from-blue-500 to-blue-400" style="width:0%"></div>
+            </div>
+            <div class="text-right text-xs text-slate-400 mt-1" id="progressText">PROCESSANDO 0%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6">
+        <h3 class="text-sm text-slate-100 mb-3">Histórico de importações</h3>
+        {% if importacoes %}
+        <div class="overflow-x-auto bg-slate-800 rounded-lg border border-slate-700 p-2">
+          <table class="w-full text-left">
+            <thead class="text-slate-400 text-xs uppercase">
+              <tr><th class="px-3 py-2">Arquivo</th><th class="px-3 py-2">Data</th><th class="px-3 py-2">Status</th><th class="px-3 py-2">Resumo</th><th class="px-3 py-2 text-right">Ações</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700/50">
+              {% for item in importacoes %}
+              <tr class="hover:bg-slate-700/30 transition-colors">
+                <td class="px-3 py-2 text-slate-100">{{ item.filename }}</td>
+                <td class="px-3 py-2 text-slate-400">{{ item.created_at_display }}</td>
+                <td class="px-3 py-2 text-slate-400">{{ item.status }}</td>
+                <td class="px-3 py-2 text-slate-400">Linhas: {{ item.stats.total }} • Erros: {{ item.stats.erros }}</td>
+                <td class="px-3 py-2 text-right"><button class="inline-flex items-center gap-2 px-3 py-1 bg-slate-700 text-slate-100 rounded-lg" onclick="downloadReport('{{ item.id }}')">Baixar JSON</button></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-slate-400">Nenhum upload registrado.</p>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+function toast(msg){ 
+  const t = document.getElementById('toast'); 
+  if (!t) {
+    console.error('Toast element not found');
+    return;
+  }
+  t.textContent = msg; 
+  t.style.display = 'block'; 
+  setTimeout(() => t.style.display = 'none', 4000); 
+}
+
+function getCookie(name){ 
+  const v = `; ${document.cookie}`; 
+  const p = v.split(`; ${name}=`); 
+  if (p.length === 2) return p.pop().split(';').shift(); 
+}
+
+// Download model via fetch to avoid redirect error pages
+document.getElementById('downloadModelBtn').addEventListener('click', async function(){
+  try{
+    // Get JWT token from cookie
+    const token = getCookie('admin_jwt');
+    const headers = {
+      'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    };
+    
+    // Add Authorization header if token exists
+    if (token) {
+      headers['Authorization'] = 'Bearer ' + token;
+    }
+    
+    const resp = await fetch('/api/admin/eventos/{{ evento.id }}/planilha-modelo', { 
+      method: 'GET',
+      credentials: 'same-origin',  // Include cookies for authentication
+      headers: headers
+    });
+    
+    if (!resp.ok) { 
+      const errorText = await resp.text();
+      console.error('Error response:', errorText);
+      toast('Erro ao gerar modelo: ' + resp.status); 
+      return; 
+    }
+    
+    const blob = await resp.blob();
+    const cd = resp.headers.get('Content-Disposition') || '';
+    let filename = 'modelo_{{ evento.id }}.xlsx';
+    const m = cd.match(/filename="?([^\";]+)"?/);
+    if (m) filename = m[1];
+    
+    const url = URL.createObjectURL(blob); 
+    const a = document.createElement('a'); 
+    a.href = url; 
+    a.download = filename; 
+    document.body.appendChild(a); 
+    a.click(); 
+    a.remove(); 
+    URL.revokeObjectURL(url);
+    toast('Download iniciado');
+  } catch(e) { 
+    console.error(e); 
+    toast('Erro de rede ao baixar modelo'); 
+  }
+});
+
+// Regenerate token: POST to the /inscricoes endpoint so backend will persist the new token
+// Creates a transient form and submits it to avoid changing the visible settings form behavior.
+document.getElementById('regenerateTokenBtn').addEventListener('click', function(){
+  const f = document.createElement('form');
+  f.method = 'post';
+  f.action = `/admin/eventos/{{ evento.id }}/planilhas/inscricoes`;
+  const input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'regenerate';
+  input.value = '1';
+  f.appendChild(input);
+  document.body.appendChild(f);
+  f.submit();
+});
+
+// Upload handling (reuse existing endpoint)
+async function handleUpload(){
+  const fileInput = document.getElementById('planilhaFile'); 
+  if (!fileInput.files.length) { 
+    toast('Selecione um arquivo'); 
+    return; 
+  }
+  
+  const file = fileInput.files[0]; 
+  const form = new FormData(); 
+  form.append('file', file);
+  
+  const token = getCookie('admin_jwt'); 
+  const headers = {}; 
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  
+  const resp = await fetch(`/api/admin/eventos/{{ evento.id }}/planilha-upload`, { 
+    method: 'POST', 
+    body: form, 
+    headers,
+    credentials: 'same-origin'
+  });
+  
+  if (!resp.ok) { 
+    const txt = await resp.text(); 
+    toast('Erro ao enviar: ' + (txt || resp.status)); 
+    return; 
+  }
+  
+  const data = await resp.json(); 
+  const importId = data.import_id; 
+  
+  if (!importId) { 
+    toast('Upload enviado'); 
+    setTimeout(() => location.reload(), 1200); 
+    return; 
+  }
+  
+  toast('Processando...');
+  
+  // poll
+  const pollUrl = `/api/admin/eventos/{{ evento.id }}/planilha-importacao/${importId}`;
+  const progressFill = document.getElementById('progressFill'); 
+  const progressText = document.getElementById('progressText');
+  
+  const pollHeaders = {};
+  if (token) pollHeaders['Authorization'] = 'Bearer ' + token;
+  
+  const iv = setInterval(async () => {
+    try { 
+      const r = await fetch(pollUrl, { 
+        credentials: 'same-origin',
+        headers: pollHeaders
+      }); 
+      if (!r.ok) return; 
+      
+      const s = await r.json(); 
+      const processed = (s.progress && s.progress.processed) || 0; 
+      const total = (s.progress && s.progress.total) || null; 
+      const pct = total ? Math.round((processed / total) * 100) : (processed % 100); 
+      
+      progressFill.style.width = pct + '%'; 
+      progressText.textContent = `PROCESSANDO ${pct}%`; 
+      
+      if (s.status && s.status !== 'processing') { 
+        clearInterval(iv); 
+        toast('Processamento finalizado: ' + s.status); 
+        setTimeout(() => location.reload(), 900); 
+      } 
+    } catch(e) { 
+      console.error(e); 
+    }
+  }, 800);
+}
+
+document.getElementById('uploadBtn').addEventListener('click', handleUpload);
+
+// Download report
+async function downloadReport(importId) { 
+  try { 
+    const token = getCookie('admin_jwt');
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = 'Bearer ' + token;
+    }
+    
+    const r = await fetch(`/api/admin/eventos/{{ evento.id }}/planilha-importacao/${importId}`, {
+      credentials: 'same-origin',
+      headers: headers
+    }); 
+    
+    if (!r.ok) { 
+      toast('Erro ao obter relatório'); 
+      return; 
+    } 
+    
+    const data = await r.json(); 
+    const blob = new Blob([JSON.stringify(data.relatorio || data, null, 2)], {type: 'application/json'}); 
+    const url = URL.createObjectURL(blob); 
+    const a = document.createElement('a'); 
+    a.href = url; 
+    a.download = `relatorio_${importId}.json`; 
+    document.body.appendChild(a); 
+    a.click(); 
+    a.remove(); 
+    URL.revokeObjectURL(url); 
+    toast('Download iniciado'); 
+  } catch(e) { 
+    console.error(e); 
+    toast('Erro ao baixar relatório'); 
+  } 
+}
+
+</script>
+
+{% endblock %}

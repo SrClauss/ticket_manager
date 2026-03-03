@@ -1,0 +1,470 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ evento.nome }} - Detalhes{% endblock %}
+
+{% block content %}
+<header class="p-6 md:px-12 pt-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+  <div class="flex items-start gap-4">
+    <div class="h-20 w-20 rounded-lg bg-slate-900 overflow-hidden flex items-center justify-center">
+      {% if evento.logo_base64 %}
+      <img src="data:image/jpeg;base64,{{ evento.logo_base64 }}" alt="Logo do evento" class="h-full w-full object-cover" />
+      {% else %}
+      <span class="material-symbols-outlined text-3xl text-slate-500">event</span>
+      {% endif %}
+    </div>
+    <div>
+      <h1 class="text-2xl font-semibold text-slate-100">{{ evento.nome }}</h1>
+      <p class="text-sm text-slate-400 mt-1 max-w-xl">{{ evento.descricao }}</p>
+      <div class="mt-3 flex items-center gap-3">
+        {% if evento.ativo %}
+        <span class="chip chip-ativo">Ativo</span>
+        {% else %}
+        <span class="chip chip-failed">Inativo</span>
+        {% endif %}
+        <div class="text-sm text-slate-400">Criado em: {{ evento.data_criacao.strftime('%d/%m/%Y') }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <form action="/admin/eventos/{{ evento.id }}/delete" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.');" class="inline">
+      <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition">Excluir</button>
+    </form>
+    <a href="/admin/eventos" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-100 rounded-lg">Voltar</a>
+  </div>
+</header>
+
+<main class="px-4 md:px-12 pb-24 space-y-6">
+  <!-- Top stats -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="md-card p-4 text-center">
+      <span class="material-symbols-outlined text-3xl text-slate-100">calendar_month</span>
+      <div class="mt-2 text-sm text-slate-400">Data do Evento</div>
+      <div class="mt-1 text-lg text-slate-100 font-medium">{{ evento.data_evento.strftime('%d/%m/%Y %H:%M') }}</div>
+    </div>
+
+    <div class="md-card p-4 text-center">
+      <span class="material-symbols-outlined text-3xl text-slate-100">key</span>
+      <div class="mt-2 text-sm text-slate-400">Token Bilheteria</div>
+      <div class="mt-1 flex items-center justify-center gap-2">
+        <div class="token-box bg-slate-900 px-3 py-2 rounded-md flex items-center gap-3">
+          <code class="text-slate-100 truncate max-w-[20rem]">{{ evento.token_bilheteria }}</code>
+          <button data-token="{{ evento.token_bilheteria }}" class="copy-token-btn inline-flex items-center p-2 bg-slate-700 hover:bg-slate-600 rounded-md text-slate-100" title="Copiar token bilheteria">
+            <span class="material-symbols-outlined">content_copy</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="md-card p-4 text-center">
+      <span class="material-symbols-outlined text-3xl text-slate-100">shield</span>
+      <div class="mt-2 text-sm text-slate-400">Token Portaria</div>
+      <div class="mt-1 flex items-center justify-center gap-2">
+        <div class="token-box bg-slate-900 px-3 py-2 rounded-md flex items-center gap-3">
+          <code class="text-slate-100 truncate max-w-[20rem]">{{ evento.token_portaria }}</code>
+          <button data-token="{{ evento.token_portaria }}" class="copy-token-btn inline-flex items-center p-2 bg-slate-700 hover:bg-slate-600 rounded-md text-slate-100" title="Copiar token portaria">
+            <span class="material-symbols-outlined">content_copy</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick links -->
+  <div class="md-card p-4">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="flex flex-wrap gap-3">
+        <a href="/admin/eventos/layout/{{ evento.id }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-slate-900 rounded-lg hover:bg-blue-400 transition">Editor de Layout</a>
+        <a href="/admin/eventos/{{ evento.id }}/planilhas" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 text-slate-100 rounded-lg hover:bg-slate-600">⚙️ Configurações</a>
+        <a href="/admin/eventos/{{ evento.id }}/participantes" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 text-slate-100 rounded-lg hover:bg-slate-600">Gerenciar Participantes</a>
+      </div>
+      <div class="text-sm text-slate-400 flex items-center gap-2">
+        <span>Página pública:</span>
+        <a href="/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso" class="text-blue-400 underline truncate">/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso</a>
+        <button class="copy-link-btn p-2 bg-slate-700 rounded-md text-slate-100" data-link="/inscricao/{{ evento.nome_normalizado or evento.id }}/meu-ingresso" title="Copiar link público">
+          <span class="material-symbols-outlined">link</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mostrar status de inscrições públicas quando presente na query-string -->
+    {% if insc_saved %}
+    <div id="insc-status" class="mt-4 p-3 rounded-md bg-emerald-800 text-emerald-100">✅ Inscrições públicas ativadas com sucesso.</div>
+    {% elif insc_error %}
+    <div id="insc-status" class="mt-4 p-3 rounded-md bg-rose-800 text-rose-100">⚠️ Não foi possível ativar inscrições públicas — verifique os campos obrigatórios da planilha.</div>
+    {% endif %}
+  </div>
+
+  <!-- Ilhas/Setores -->
+  <section class="md-card p-4">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg text-slate-100">Ilhas / Setores</h3>
+      <button data-bs-toggle="modal" data-bs-target="#addIlhaModal" class="inline-flex items-center gap-2 px-3 py-2 bg-slate-700 text-slate-100 rounded-md">Adicionar Ilha</button>
+    </div>
+    {% if ilhas %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for ilha in ilhas %}
+      <div class="md-card p-4 flex items-center justify-between">
+        <div>
+          <h5 class="text-slate-100 font-semibold">{{ ilha.nome_setor }}</h5>
+          <p class="text-sm text-slate-400">Capacidade: {{ ilha.capacidade_maxima }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button data-bs-toggle="modal" data-bs-target="#editIlhaModal" data-ilha-id="{{ ilha.id }}" data-ilha-nome="{{ ilha.nome_setor }}" data-ilha-capacidade="{{ ilha.capacidade_maxima }}" class="edit-ilha-btn px-2 py-1 bg-slate-700 rounded-md text-slate-100">Editar</button>
+          <button class="px-2 py-1 bg-red-600 rounded-md text-white">Remover</button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-slate-400 text-center">Nenhuma ilha cadastrada</p>
+    {% endif %}
+  </section>
+
+  <!-- Tipos de Ingresso -->
+  <section class="md-card p-4">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg text-slate-100">Tipos de Ingresso</h3>
+      <button data-bs-toggle="modal" data-bs-target="#addTipoIngressoModal" class="inline-flex items-center gap-2 px-3 py-2 bg-slate-700 text-slate-100 rounded-md">Adicionar Tipo</button>
+    </div>
+    {% if tipos_ingresso %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead class="text-slate-400 text-xs uppercase">
+          <tr>
+            <th class="px-4 py-2">Descrição</th>
+            <th class="px-4 py-2">Valor</th>
+            <th class="px-4 py-2">Permissões</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-700/50">
+          {% for tipo in tipos_ingresso %}
+          <tr class="hover:bg-slate-700/30 transition-colors">
+            <td class="px-4 py-2 text-slate-100">
+              {{ tipo.descricao }}
+              {% if tipo.padrao %}
+                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded bg-green-700 text-green-100 text-xs font-semibold">Padrão</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-2 text-slate-100">R$ {{ "%.2f"|format(tipo.valor) }}</td>
+            <td class="px-4 py-2">{% if tipo.permissoes|length > 0 %}<span class="chip chip-ativo">{{ tipo.permissoes|length }} ilha(s)</span>{% else %}<span class="badge">0 ilhas</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-slate-400 text-center">Nenhum tipo de ingresso cadastrado</p>
+    {% endif %}
+  </section>
+</main>
+
+<!-- Modals (unchanged structure, JS handler will show/hide) -->
+<div class="modal" id="addIlhaModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content md-card">
+      <div class="p-4">
+        <h5 class="text-slate-100 mb-3">Adicionar Ilha/Setor</h5>
+        <form id="addIlhaForm" class="space-y-3">
+          <div>
+            <label class="text-sm text-slate-100">Nome do Setor *</label>
+            <input type="text" id="ilhaNome" required class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
+          </div>
+          <div>
+            <label class="text-sm text-slate-100">Capacidade Máxima *</label>
+            <input type="number" id="ilhaCapacidade" min="1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
+          </div>
+          <div class="flex justify-end gap-2">
+            <button type="button" data-bs-dismiss="modal" class="px-4 py-2 bg-slate-700 rounded-md text-slate-100">Cancelar</button>
+            <button type="button" onclick="addIlha()" class="px-4 py-2 bg-blue-500 text-slate-900 rounded-md">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="editIlhaModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content md-card">
+      <div class="p-4">
+        <h5 class="text-slate-100 mb-3">Editar Ilha/Setor</h5>
+        <form id="editIlhaForm" class="space-y-3">
+          <input type="hidden" id="editIlhaId" />
+          <div>
+            <label class="text-sm text-slate-100">Nome do Setor *</label>
+            <input type="text" id="editIlhaNome" required class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
+          </div>
+          <div>
+            <label class="text-sm text-slate-100">Capacidade Máxima *</label>
+            <input type="number" id="editIlhaCapacidade" min="1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
+          </div>
+          <div class="flex justify-end gap-2">
+            <button type="button" data-bs-dismiss="modal" class="px-4 py-2 bg-slate-700 rounded-md text-slate-100">Cancelar</button>
+            <button type="button" onclick="saveEditIlha()" class="px-4 py-2 bg-blue-500 text-slate-900 rounded-md">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="addTipoIngressoModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content md-card">
+      <div class="p-4">
+        <h5 class="text-slate-100 mb-3">Adicionar Tipo de Ingresso</h5>
+        <form id="addTipoIngressoForm" class="space-y-3">
+          <div>
+            <label class="text-sm text-slate-100">Descrição *</label>
+            <input type="text" id="tipoDescricao" required class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
+          </div>
+          <div>
+            <label class="text-sm text-slate-100">Valor (R$) *</label>
+            <input type="number" id="tipoValor" min="0" step="0.01" required class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-slate-100" />
+          </div>
+          <div>
+            <label class="text-sm text-slate-100">Permissões de Acesso</label>
+            <div class="space-y-2">
+              {% for ilha in ilhas %}
+              <label class="inline-flex items-center gap-2 text-slate-100">
+                <input type="checkbox" id="ilha_{{ ilha.id }}" class="form-checkbox" value="{{ ilha.id }}" />
+                {{ ilha.nome_setor }}
+              </label>
+              {% endfor %}
+              {% if not ilhas %}
+              <p class="text-slate-400">Nenhuma ilha disponível. Adicione ilhas primeiro.</p>
+              {% endif %}
+            </div>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button type="button" data-bs-dismiss="modal" class="px-4 py-2 bg-slate-700 rounded-md text-slate-100">Cancelar</button>
+            <button type="button" onclick="addTipoIngresso()" class="px-4 py-2 bg-blue-500 text-slate-900 rounded-md">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const EVENTO_ID = "{{ evento.id }}";
+    const API_BASE = "/api/admin";
+    
+    // Get admin JWT from cookie
+    function getAdminJWT() {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'admin_jwt') {
+                return value;
+            }
+        }
+        return null;
+    }
+    
+    async function addIlha() {
+        const form = document.getElementById('addIlhaForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        const jwt = getAdminJWT();
+        if (!jwt) {
+            alert('Sessão expirada. Por favor, faça login novamente.');
+            window.location.href = '/admin/login';
+            return;
+        }
+        
+        const data = {
+            evento_id: EVENTO_ID,
+            nome_setor: document.getElementById('ilhaNome').value,
+            capacidade_maxima: parseInt(document.getElementById('ilhaCapacidade').value)
+        };
+        
+        try {
+            const response = await fetch(`${API_BASE}/ilhas`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${jwt}`
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+                alert('Ilha adicionada com sucesso!');
+                location.reload();
+            } else {
+                throw new Error('Erro ao adicionar ilha');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Erro ao adicionar ilha');
+        }
+    }
+    
+    async function addTipoIngresso() {
+        const form = document.getElementById('addTipoIngressoForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        const jwt = getAdminJWT();
+        if (!jwt) {
+            alert('Sessão expirada. Por favor, faça login novamente.');
+            window.location.href = '/admin/login';
+            return;
+        }
+        
+        // Get selected ilhas
+        const permissoes = [];
+        document.querySelectorAll('[id^="ilha_"]:checked').forEach(checkbox => {
+            permissoes.push(checkbox.value);
+        });
+        
+        const data = {
+            evento_id: EVENTO_ID,
+            descricao: document.getElementById('tipoDescricao').value,
+            valor: parseFloat(document.getElementById('tipoValor').value),
+            permissoes: permissoes
+        };
+        
+        try {
+            const response = await fetch(`${API_BASE}/tipos-ingresso`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${jwt}`
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+                alert('Tipo de ingresso adicionado com sucesso!');
+                location.reload();
+            } else {
+                throw new Error('Erro ao adicionar tipo de ingresso');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Erro ao adicionar tipo de ingresso');
+        }
+    }
+    
+    // Edit ilha handlers
+    function openEditIlhaModalFromButton(btn) {
+        const id = btn.dataset.ilhaId;
+        const nome = btn.dataset.ilhaNome || '';
+        const cap = btn.dataset.ilhaCapacidade || '';
+        const idField = document.getElementById('editIlhaId');
+        const nomeField = document.getElementById('editIlhaNome');
+        const capField = document.getElementById('editIlhaCapacidade');
+        if (idField) idField.value = id;
+        if (nomeField) nomeField.value = nome;
+        if (capField) capField.value = cap;
+    }
+
+    async function saveEditIlha() {
+        const id = document.getElementById('editIlhaId').value;
+        if (!id) return alert('ID da ilha ausente');
+        const form = document.getElementById('editIlhaForm');
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+        const jwt = getAdminJWT();
+        if (!jwt) { alert('Sessão expirada. Por favor, faça login novamente.'); window.location.href = '/admin/login'; return; }
+        const data = {
+            nome_setor: document.getElementById('editIlhaNome').value,
+            capacidade_maxima: parseInt(document.getElementById('editIlhaCapacidade').value)
+        };
+        try {
+            const response = await fetch(`${API_BASE}/ilhas/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwt}` },
+                body: JSON.stringify(data)
+            });
+            if (response.ok) { alert('Ilha atualizada com sucesso!'); location.reload(); } else { throw new Error('Erro ao atualizar ilha'); }
+        } catch (error) { console.error('Error:', error); alert('Erro ao atualizar ilha'); }
+    }
+
+    // Attach click handler to populate edit modal before bootstrap shows it
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.edit-ilha-btn').forEach(btn => {
+            btn.addEventListener('click', function(ev) { openEditIlhaModalFromButton(this); });
+        });
+    });
+
+    // Copy token helper + toast
+    function showToast(message) {
+        const container = document.querySelector('.toast-container');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = 'toast align-items-center show';
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `<div class=" flex "><div class="toast-body">${message}</div><button type="button" class=" inline-flex items-center px-3 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 -close me-2 ms-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>`;
+        container.appendChild(toast);
+        // Auto-remove
+        setTimeout(() => { try { toast.remove(); } catch(e){} }, 3000);
+    }
+
+    async function copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            try { await navigator.clipboard.writeText(text); return true; } catch (e) { /* fallback below */ }
+        }
+        try {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            textarea.remove();
+            return true;
+        } catch (e) { return false; }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Attach copy handlers for tokens
+        document.querySelectorAll('.copy-token-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const token = this.dataset.token || '';
+                try {
+                    await copyToClipboard(token);
+                    showToast('Token copiado para a área de transferência');
+                    this.classList.add('active');
+                    setTimeout(()=> this.classList.remove('active'), 800);
+                } catch (err) {
+                    console.error('Clipboard error', err);
+                    showToast('Falha ao copiar token');
+                }
+            });
+        });
+
+        // Attach copy handler for public link
+        document.querySelectorAll('.copy-link-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const path = this.dataset.link || '';
+                const full = window.location.origin + path;
+                try {
+                    await copyToClipboard(full);
+                    showToast('Link público copiado');
+                    this.classList.add('active');
+                    setTimeout(()=> this.classList.remove('active'), 800);
+                } catch (err) {
+                    console.error('Clipboard error', err);
+                    showToast('Falha ao copiar link');
+                }
+            });
+        });
+
+        // Re-init icons for any dynamically added copy icons
+        lucide.createIcons();
+    });
+
+</script>
+{% endblock %}

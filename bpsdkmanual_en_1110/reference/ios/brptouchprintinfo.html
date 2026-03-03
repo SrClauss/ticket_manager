@@ -1,0 +1,4269 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="brptouchprinter.html">
+      
+      
+        <link rel="next" href="brptouchprinterstatus.html">
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.1">
+    
+    
+      
+        <title>BRPtouchPrintInfo - Brother Print SDK Manual</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.402914a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../../css/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="" data-md-color-accent="">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#properties" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Brother Print SDK Manual" class="md-header__button md-logo" aria-label="Brother Print SDK Manual" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Brother Print SDK Manual
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              BRPtouchPrintInfo
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Brother Print SDK Manual" class="md-nav__button md-logo" aria-label="Brother Print SDK Manual" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Brother Print SDK Manual
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+          Overview
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1">
+          <span class="md-nav__icon md-icon"></span>
+          Overview
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.html" class="md-nav__link">
+        What's Brother Print SDK
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../overview/supported-environment.html" class="md-nav__link">
+        Supported OS
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../overview/supported-printer.html" class="md-nav__link">
+        Supported Printer
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          Guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+          Getting Started
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_2_1">
+          <span class="md-nav__icon md-icon"></span>
+          Getting Started
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/getting-started/getting-started-ios.html" class="md-nav__link">
+        Develop via Xcode
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/getting-started/getting-started-android.html" class="md-nav__link">
+        Develop via Android Studio
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/getting-started/getting-started-cross-platform.html" class="md-nav__link">
+        Cross Platform Development
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/print-image.html" class="md-nav__link">
+        Printing Image/PDF
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/print-template.html" class="md-nav__link">
+        Printing with P-touch Template
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/discover-printer.html" class="md-nav__link">
+        Discovering Printers
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
+          API for iOS v.4 +
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3_1">
+          <span class="md-nav__icon md-icon"></span>
+          API for iOS v.4 +
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterdefine.html" class="md-nav__link">
+        BRLMPrinterDefine
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterdriver.html" class="md-nav__link">
+        BRLMPrinterDriver
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmchannel.html" class="md-nav__link">
+        BRLMChannel
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmchannelcredential.html" class="md-nav__link">
+        BRLMChannelCredential
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterdrivergenerator.html" class="md-nav__link">
+        BRLMPrinterDriverGenerator
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterdrivergenerateresult.html" class="md-nav__link">
+        BRLMPrinterDriverGenerateResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmgetprinterstatusresult.html" class="md-nav__link">
+        BRLMGetPrinterStatusResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmerror.html" class="md-nav__link">
+        BRLMError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmopenchannelerror.html" class="md-nav__link">
+        BRLMOpenChannelError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterror.html" class="md-nav__link">
+        BRLMPrintError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintersearcher.html" class="md-nav__link">
+        BRLMPrinterSearcher
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintersearchresult.html" class="md-nav__link">
+        BRLMPrinterSearchResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintersearcherror.html" class="md-nav__link">
+        BRLMPrinterSearchError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmnetworksearchoption.html" class="md-nav__link">
+        BRLMNetworkSearchOption
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmblesearchoption.html" class="md-nav__link">
+        BRLMBLESearchOption
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmgetstatuserror.html" class="md-nav__link">
+        BRLMGetStatusError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterstatus.html" class="md-nav__link">
+        BRLMPrinterStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterbatterystatus.html" class="md-nav__link">
+        BRLMPrinterBatteryStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmrequestprinterinforesult.html" class="md-nav__link">
+        BRLMRequestPrinterInfoResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmrequestprinterinfoerror.html" class="md-nav__link">
+        BRLMRequestPrinterInfoError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmmediainfo.html" class="md-nav__link">
+        BRLMMediaInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmbatteryinfo.html" class="md-nav__link">
+        BRLMBatteryInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmptouchtemplateinfo.html" class="md-nav__link">
+        BRLMPtouchTemplateInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintermodelspec.html" class="md-nav__link">
+        BRLMPrinterModelSpec
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintimagesettings.html" class="md-nav__link">
+        BRLMPrintImageSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintsettingsprotocol.html" class="md-nav__link">
+        BRLMPrintSettingsProtocol
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmpjprintsettings.html" class="md-nav__link">
+        BRLMPJPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmrjprintsettings.html" class="md-nav__link">
+        BRLMRJPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmtdprintsettings.html" class="md-nav__link">
+        BRLMTDPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmptprintsettings.html" class="md-nav__link">
+        BRLMPTPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmqlprintsettings.html" class="md-nav__link">
+        BRLMQLPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmmwprintsettings.html" class="md-nav__link">
+        BRLMMWPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmtemplateobjectreplacer.html" class="md-nav__link">
+        BRLMTemplateObjectReplacer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmtemplateprintsettingsprotocol.html" class="md-nav__link">
+        BRLMTemplatePrintSettingsProtocol
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmpjtemplateprintsettings.html" class="md-nav__link">
+        BRLMPJTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmrjtemplateprintsettings.html" class="md-nav__link">
+        BRLMRJTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmtdtemplateprintsettings.html" class="md-nav__link">
+        BRLMTDTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmpttemplateprintsettings.html" class="md-nav__link">
+        BRLMPTTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmqltemplateprintsettings.html" class="md-nav__link">
+        BRLMQLTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmmwtemplateprintsettings.html" class="md-nav__link">
+        BRLMMWTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterclassifier.html" class="md-nav__link">
+        BRLMPrinterClassifier
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmcustompapersize.html" class="md-nav__link">
+        BRLMCustomPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmpjprintsettingscustompapersize.html" class="md-nav__link">
+        BRLMPJPrintSettingsCustomPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmpjprintsettingspapersize.html" class="md-nav__link">
+        BRLMPJPrintSettingsPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmvalidateprintsettings.html" class="md-nav__link">
+        BRLMValidatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmvalidateprintsettingsreport.html" class="md-nav__link">
+        BRLMValidatePrintSettingsReport
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmvalidateprintsettingsissue.html" class="md-nav__link">
+        BRLMValidatePrintSettingsIssue
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmlog.html" class="md-nav__link">
+        BRLMLog
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmfileanalyzer.html" class="md-nav__link">
+        BRLMFileAnalyzer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmfileanalyzeresult.html" class="md-nav__link">
+        BRLMFileAnalyzeResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmfileanalyzeerror.html" class="md-nav__link">
+        BRLMFileAnalyzeError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmremovetemplateresult.html" class="md-nav__link">
+        BRLMRemoveTemplateResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmtransferresult.html" class="md-nav__link">
+        BRLMTransferResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmptouchdevicedependeddataheader.html" class="md-nav__link">
+        BRLMPtouchDeviceDependedDataHeader
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+          API for Android v.4 +
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3_2">
+          <span class="md-nav__icon md-icon"></span>
+          API for Android v.4 +
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printermodel.html" class="md-nav__link">
+        PrinterModel
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printerdriver.html" class="md-nav__link">
+        PrinterDriver
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/channel.html" class="md-nav__link">
+        Channel
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/channelcredential.html" class="md-nav__link">
+        ChannelCredential
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printerdrivergenerator.html" class="md-nav__link">
+        PrinterDriverGenerator
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printerdrivergenerateresult.html" class="md-nav__link">
+        PrinterDriverGenerateResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/getstatusresult.html" class="md-nav__link">
+        GetStatusResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/openchannelerror.html" class="md-nav__link">
+        OpenChannelError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printerror.html" class="md-nav__link">
+        PrintError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printersearcher.html" class="md-nav__link">
+        PrinterSearcher
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printersearchresult.html" class="md-nav__link">
+        PrinterSearchResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printersearcherror.html" class="md-nav__link">
+        PrinterSearchError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/networksearchoption.html" class="md-nav__link">
+        NetworkSearchOption
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/blesearchoption.html" class="md-nav__link">
+        BLESearchOption
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/getstatuserror.html" class="md-nav__link">
+        GetStatusError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printerstatus.html" class="md-nav__link">
+        PrinterStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printerstatusrawdata.html" class="md-nav__link">
+        PrinterStatusRawData
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printerbatterystatus.html" class="md-nav__link">
+        PrinterBatteryStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/requestprinterinforesult.html" class="md-nav__link">
+        RequestPrinterInfoResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/requestprinterinfoerror.html" class="md-nav__link">
+        RequestPrinterInfoError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/mediainfo.html" class="md-nav__link">
+        MediaInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/ptouchtemplateinfo.html" class="md-nav__link">
+        PtouchTemplateInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printermodelspec.html" class="md-nav__link">
+        PrinterModelSpec
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printimagesettings.html" class="md-nav__link">
+        PrintImageSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/printsettings.html" class="md-nav__link">
+        PrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/pjprintsettings.html" class="md-nav__link">
+        PJPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/rjprintsettings.html" class="md-nav__link">
+        RJPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/tdprintsettings.html" class="md-nav__link">
+        TDPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/ptprintsettings.html" class="md-nav__link">
+        PTPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/qlprintsettings.html" class="md-nav__link">
+        QLPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/mwprintsettings.html" class="md-nav__link">
+        MWPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/templateobjectreplacer.html" class="md-nav__link">
+        TemplateObjectReplacer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/itemplateprintsettings.html" class="md-nav__link">
+        ITemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/pjtemplateprintsettings.html" class="md-nav__link">
+        PJTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/rjtemplateprintsettings.html" class="md-nav__link">
+        RJTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/tdtemplateprintsettings.html" class="md-nav__link">
+        TDTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/pttemplateprintsettings.html" class="md-nav__link">
+        PTTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/qltemplateprintsettings.html" class="md-nav__link">
+        QLTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/mwtemplateprintsettings.html" class="md-nav__link">
+        MWTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/custompapersize.html" class="md-nav__link">
+        CustomPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/pjcustompapersize.html" class="md-nav__link">
+        PJCustomPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/pjpapersize.html" class="md-nav__link">
+        PJPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/validateprintsettings.html" class="md-nav__link">
+        ValidatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/validateprintsettingsreport.html" class="md-nav__link">
+        ValidatePrintSettingsReport
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/validateprintsettingsissue.html" class="md-nav__link">
+        ValidatePrintSettingsIssue
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/log.html" class="md-nav__link">
+        Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/fileanalyzer.html" class="md-nav__link">
+        FileAnalyzer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/fileconverter.html" class="md-nav__link">
+        FileConverter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/transfer.html" class="md-nav__link">
+        Transfer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/ptouchdevicedependeddataheader.html" class="md-nav__link">
+        PtouchDeviceDependedDataHeader
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android_v4/removetemplate.html" class="md-nav__link">
+        RemoveTemplate
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+          API for iOS v.3 +
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_3_3">
+          <span class="md-nav__icon md-icon"></span>
+          API for iOS v.3 +
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchprinter.html" class="md-nav__link">
+        BRPtouchPrinter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          BRPtouchPrintInfo
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="brptouchprintinfo.html" class="md-nav__link md-nav__link--active">
+        BRPtouchPrintInfo
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
+    Properties
+  </a>
+  
+    <nav class="md-nav" aria-label="Properties">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#strpapername" class="md-nav__link">
+    strPaperName
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nprintmode" class="md-nav__link">
+    nPrintMode
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scalevalue" class="md-nav__link">
+    scaleValue
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ndensity" class="md-nav__link">
+    nDensity
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nrotation" class="md-nav__link">
+    nRotation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nhalftone" class="md-nav__link">
+    nHalftone
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nhalftonebinarythreshold" class="md-nav__link">
+    nHalftoneBinaryThreshold
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nhorizontalalign" class="md-nav__link">
+    nHorizontalAlign
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nverticalalign" class="md-nav__link">
+    nVerticalAlign
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#npaperalign" class="md-nav__link">
+    nPaperAlign
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nextflag" class="md-nav__link">
+    nExtFlag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nautocutflag" class="md-nav__link">
+    nAutoCutFlag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nautocutcopies" class="md-nav__link">
+    nAutoCutCopies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bendcut" class="md-nav__link">
+    bEndCut
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bspecialtape" class="md-nav__link">
+    bSpecialTape
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bhalfcut" class="md-nav__link">
+    bHalfCut
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ntopmargin" class="md-nav__link">
+    nTopMargin
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nleftmargin" class="md-nav__link">
+    nLeftMargin
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nspeed" class="md-nav__link">
+    nSpeed
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bbidirection" class="md-nav__link">
+    bBidirection
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ncustomlength" class="md-nav__link">
+    nCustomLength
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ncustomwidth" class="md-nav__link">
+    nCustomWidth
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ncustomfeed" class="md-nav__link">
+    nCustomFeed
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#strsavefilepath" class="md-nav__link">
+    strSaveFilePath
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boverwrite" class="md-nav__link">
+    bOverWrite
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nrollprintercase" class="md-nav__link">
+    nRollPrinterCase
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bpeel" class="md-nav__link">
+    bPeel
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nlabelmargine" class="md-nav__link">
+    nLabelMargine
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#npjpaperkind" class="md-nav__link">
+    nPJPaperKind;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nprintquality" class="md-nav__link">
+    nPrintQuality
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nforcestretchprintablearea" class="md-nav__link">
+    nForceStretchPrintableArea
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bmode9" class="md-nav__link">
+    bMode9
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#brawmode" class="md-nav__link">
+    bRawMode;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#buselegacyhalftoneengine" class="md-nav__link">
+    bUseLegacyHalftoneEngine;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#busecopycommandintemplateprint" class="md-nav__link">
+    bUseCopyCommandInTemplatePrint;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bwaitcompletionofsendingdataandfile" class="md-nav__link">
+    bWaitCompletionOfSendingDataAndFile;
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    Notes
+  </a>
+  
+    <nav class="md-nav" aria-label="Notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#property-compatibility" class="md-nav__link">
+    Property Compatibility
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nbicolorredenhancement" class="md-nav__link">
+    nBiColorRedEnhancement
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nbicolorgreenenhancement" class="md-nav__link">
+    nBiColorGreenEnhancement
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nbicolorblueenhancement" class="md-nav__link">
+    nBiColorBlueEnhancement
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#strcustomrecord" class="md-nav__link">
+    strCustomRecord
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deprecates" class="md-nav__link">
+    Deprecates
+  </a>
+  
+    <nav class="md-nav" aria-label="Deprecates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bbanishmargin" class="md-nav__link">
+    bBanishMargin
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#norientation" class="md-nav__link">
+    nOrientation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#brotate180" class="md-nav__link">
+    bRotate180
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchprinterstatus.html" class="md-nav__link">
+        BRPtouchPrinterStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchtemplateinfo.html" class="md-nav__link">
+        BRPtouchTemplateInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchbatteryinfo.html" class="md-nav__link">
+        BRPtouchBatteryInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchprinterdata.html" class="md-nav__link">
+        BRPtouchPrinterData
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchdeviceinfo.html" class="md-nav__link">
+        BRPtouchDeviceInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchlabelparam.html" class="md-nav__link">
+        BRPtouchLabelParam
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchlabelinfostatus.html" class="md-nav__link">
+        BRPtouchLabelInfoStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchbluetoothmanager.html" class="md-nav__link">
+        BRPtouchBluetoothManager
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchblemanager.html" class="md-nav__link">
+        BRPtouchBLEManager
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brptouchnetworkmanager.html" class="md-nav__link">
+        BRPtouchNetworkManager
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="brcustompaperinfocommand.html" class="md-nav__link">
+        BRCustomPaperInfoCommand
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+          API for Android v.3 +
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3_4">
+          <span class="md-nav__icon md-icon"></span>
+          API for Android v.3 +
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/printer.html" class="md-nav__link">
+        Printer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/printerinfo.html" class="md-nav__link">
+        PrinterInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/printerstatus.html" class="md-nav__link">
+        PrinterStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/netprinter.html" class="md-nav__link">
+        NetPrinter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/bleprinter.html" class="md-nav__link">
+        BLEPrinter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/labelparam.html" class="md-nav__link">
+        LabelParam
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/labelinfo.html" class="md-nav__link">
+        LabelInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/templateinfo.html" class="md-nav__link">
+        TemplateInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/batteryinfo.html" class="md-nav__link">
+        BatteryInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/bluetoothpreference.html" class="md-nav__link">
+        BluetoothPreference
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/custompaperinfo.html" class="md-nav__link">
+        CustomPaperInfo
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+          Appendix
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3_5">
+          <span class="md-nav__icon md-icon"></span>
+          Appendix
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/printer-configurations.html" class="md-nav__link">
+        Printer Configurations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/parameters.html" class="md-nav__link">
+        Parameters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/sample-application.html" class="md-nav__link">
+        Sample Application
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          About
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          About
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/release-notes-manual.html" class="md-nav__link">
+        Release Notes for Manual
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/release-notes-ios.html" class="md-nav__link">
+        Release Notes for iOS
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/release-notes-android.html" class="md-nav__link">
+        Release Notes for Android
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/trademark.html" class="md-nav__link">
+        Trademarks
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/license.html" class="md-nav__link">
+        Licenses
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
+    Properties
+  </a>
+  
+    <nav class="md-nav" aria-label="Properties">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#strpapername" class="md-nav__link">
+    strPaperName
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nprintmode" class="md-nav__link">
+    nPrintMode
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scalevalue" class="md-nav__link">
+    scaleValue
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ndensity" class="md-nav__link">
+    nDensity
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nrotation" class="md-nav__link">
+    nRotation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nhalftone" class="md-nav__link">
+    nHalftone
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nhalftonebinarythreshold" class="md-nav__link">
+    nHalftoneBinaryThreshold
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nhorizontalalign" class="md-nav__link">
+    nHorizontalAlign
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nverticalalign" class="md-nav__link">
+    nVerticalAlign
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#npaperalign" class="md-nav__link">
+    nPaperAlign
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nextflag" class="md-nav__link">
+    nExtFlag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nautocutflag" class="md-nav__link">
+    nAutoCutFlag
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nautocutcopies" class="md-nav__link">
+    nAutoCutCopies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bendcut" class="md-nav__link">
+    bEndCut
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bspecialtape" class="md-nav__link">
+    bSpecialTape
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bhalfcut" class="md-nav__link">
+    bHalfCut
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ntopmargin" class="md-nav__link">
+    nTopMargin
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nleftmargin" class="md-nav__link">
+    nLeftMargin
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nspeed" class="md-nav__link">
+    nSpeed
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bbidirection" class="md-nav__link">
+    bBidirection
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ncustomlength" class="md-nav__link">
+    nCustomLength
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ncustomwidth" class="md-nav__link">
+    nCustomWidth
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ncustomfeed" class="md-nav__link">
+    nCustomFeed
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#strsavefilepath" class="md-nav__link">
+    strSaveFilePath
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boverwrite" class="md-nav__link">
+    bOverWrite
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nrollprintercase" class="md-nav__link">
+    nRollPrinterCase
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bpeel" class="md-nav__link">
+    bPeel
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nlabelmargine" class="md-nav__link">
+    nLabelMargine
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#npjpaperkind" class="md-nav__link">
+    nPJPaperKind;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nprintquality" class="md-nav__link">
+    nPrintQuality
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nforcestretchprintablearea" class="md-nav__link">
+    nForceStretchPrintableArea
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bmode9" class="md-nav__link">
+    bMode9
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#brawmode" class="md-nav__link">
+    bRawMode;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#buselegacyhalftoneengine" class="md-nav__link">
+    bUseLegacyHalftoneEngine;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#busecopycommandintemplateprint" class="md-nav__link">
+    bUseCopyCommandInTemplatePrint;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bwaitcompletionofsendingdataandfile" class="md-nav__link">
+    bWaitCompletionOfSendingDataAndFile;
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    Notes
+  </a>
+  
+    <nav class="md-nav" aria-label="Notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#property-compatibility" class="md-nav__link">
+    Property Compatibility
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nbicolorredenhancement" class="md-nav__link">
+    nBiColorRedEnhancement
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nbicolorgreenenhancement" class="md-nav__link">
+    nBiColorGreenEnhancement
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nbicolorblueenhancement" class="md-nav__link">
+    nBiColorBlueEnhancement
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#strcustomrecord" class="md-nav__link">
+    strCustomRecord
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deprecates" class="md-nav__link">
+    Deprecates
+  </a>
+  
+    <nav class="md-nav" aria-label="Deprecates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bbanishmargin" class="md-nav__link">
+    bBanishMargin
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#norientation" class="md-nav__link">
+    nOrientation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#brotate180" class="md-nav__link">
+    bRotate180
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  <h1>BRPtouchPrintInfo</h1>
+
+<p><code>BRPtouchPrintInfo</code> class provides properties to configure print settings.</p>
+<h2 id="properties">Properties</h2>
+<h3 id="strpapername">strPaperName</h3>
+<p>The paper kind.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">copy</span><span class="p">)</span><span class="w"> </span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="n">strPaperName</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Constants</strong></p>
+<p>RJ, TD series:</p>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@"CUSTOM"</code></td>
+<td>Indicates to use a custom paper. You need to set more information via <code>setCustomPaperFile:</code> or <code>setCustomPaperInfoCommand:</code> of <code>BRPtouchPrinter</code> class.</td>
+</tr>
+</tbody>
+</table>
+<p>PJ, MW series:</p>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@"A7"</code></td>
+<td>A7</td>
+</tr>
+<tr>
+<td><code>@"A6"</code></td>
+<td>A6</td>
+</tr>
+<tr>
+<td><code>@"A4"</code></td>
+<td>A4</td>
+</tr>
+<tr>
+<td><code>@"A5"</code></td>
+<td>A5</td>
+</tr>
+<tr>
+<td><code>@"A5_LANDSCAPE"</code></td>
+<td>A5 Landscape</td>
+</tr>
+<tr>
+<td><code>@"LETTER"</code></td>
+<td>Letter</td>
+</tr>
+<tr>
+<td><code>@"LEGAL"</code></td>
+<td>Legal</td>
+</tr>
+</tbody>
+</table>
+<p>QL series:</p>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@"12mm"</code></td>
+<td>12mm continuous length label</td>
+</tr>
+<tr>
+<td><code>@"29mm"</code></td>
+<td>29mm continuous length label</td>
+</tr>
+<tr>
+<td><code>@"38mm"</code></td>
+<td>38mm continuous length label</td>
+</tr>
+<tr>
+<td><code>@"50mm"</code></td>
+<td>50mm continuous length label</td>
+</tr>
+<tr>
+<td><code>@"54mm"</code></td>
+<td>54mm continuous length label</td>
+</tr>
+<tr>
+<td><code>@"62mm"</code></td>
+<td>62mm continuous length label</td>
+</tr>
+<tr>
+<td><code>@"62mmRB"</code></td>
+<td>62mm continuous length label (red and black)</td>
+</tr>
+<tr>
+<td><code>@"102mm"</code></td>
+<td>102mm continuous length label</td>
+</tr>
+<tr>
+<td><code>@"103mm"</code></td>
+<td>103mm continuous length label</td>
+</tr>
+<tr>
+<td><code>@"17mmx54mm"</code></td>
+<td>17mm x 54mm label</td>
+</tr>
+<tr>
+<td><code>@"17mmx87mm"</code></td>
+<td>17mm x 87mm label</td>
+</tr>
+<tr>
+<td><code>@"23mmx23mm"</code></td>
+<td>23mm x 23mm label</td>
+</tr>
+<tr>
+<td><code>@"29mmx42mm"</code></td>
+<td>29mm x 42mm label</td>
+</tr>
+<tr>
+<td><code>@"29mmx90mm"</code></td>
+<td>29mm x 90mm label</td>
+</tr>
+<tr>
+<td><code>@"38mmx90mm"</code></td>
+<td>38mm x 90mm label</td>
+</tr>
+<tr>
+<td><code>@"39mmx48mm"</code></td>
+<td>39mm x 48mm label</td>
+</tr>
+<tr>
+<td><code>@"52mmx29mm"</code></td>
+<td>52mm x 29mm label</td>
+</tr>
+<tr>
+<td><code>@"54mmx29mm"</code></td>
+<td>54mm x 29mm label</td>
+</tr>
+<tr>
+<td><code>@"60mmx86mm"</code></td>
+<td>60mm x 86mm label</td>
+</tr>
+<tr>
+<td><code>@"62mmx29mm"</code></td>
+<td>62mm x 29mm label</td>
+</tr>
+<tr>
+<td><code>@"62mmx100mm"</code></td>
+<td>62mm x 100mm label</td>
+</tr>
+<tr>
+<td><code>@"102mmx51mm"</code></td>
+<td>102mm x 51mm label</td>
+</tr>
+<tr>
+<td><code>@"102mmx152mm"</code></td>
+<td>102mm x 152mm label</td>
+</tr>
+<tr>
+<td><code>@"103mmx164mm"</code></td>
+<td>103mm x 164mm label</td>
+</tr>
+<tr>
+<td><code>@"12mm Dia"</code></td>
+<td>12mm round label</td>
+</tr>
+<tr>
+<td><code>@"24mm Dia"</code></td>
+<td>24mm round label</td>
+</tr>
+<tr>
+<td><code>@"58mm Dia"</code></td>
+<td>58mm round label</td>
+</tr>
+</tbody>
+</table>
+<p>PT series:</p>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@"3.5mm"</code></td>
+<td>3.5mm continuous length label</td>
+</tr>
+<tr>
+<td><code>@"6mm"</code></td>
+<td>6mm continuous length label</td>
+</tr>
+<tr>
+<td><code>@"9mm"</code></td>
+<td>9mm continuous length label</td>
+</tr>
+<tr>
+<td><code>@"12mm"</code></td>
+<td>12mm continuous length label</td>
+</tr>
+<tr>
+<td><code>@"18mm"</code></td>
+<td>18mm continuous length label</td>
+</tr>
+<tr>
+<td><code>@"24mm"</code></td>
+<td>24mm continuous length label</td>
+</tr>
+<tr>
+<td><code>@"36mm"</code></td>
+<td>36mm continuous length label</td>
+</tr>
+<tr>
+<td><code>@"HS_5.8mm"</code></td>
+<td>5.8mm heat shrink label</td>
+</tr>
+<tr>
+<td><code>@"HS_8.8mm"</code></td>
+<td>8.8mm heat shrink label</td>
+</tr>
+<tr>
+<td><code>@"HS_11.7mm"</code></td>
+<td>11.7mm heat shrink label</td>
+</tr>
+<tr>
+<td><code>@"HS_17.7mm"</code></td>
+<td>17.7mm heat shrink label</td>
+</tr>
+<tr>
+<td><code>@"HS_23.6mm"</code></td>
+<td>23.6mm heat shrink label</td>
+</tr>
+<tr>
+<td><code>@"FL 21mm x 45mm"</code></td>
+<td>21mm x 45mm flag label</td>
+</tr>
+<tr>
+<td><code>@"PVC Dia 2.5mm"</code></td>
+<td>2.5mm PVC label</td>
+</tr>
+<tr>
+<td><code>@"PVC Dia 3.0mm"</code></td>
+<td>3.0mm PVC label</td>
+</tr>
+<tr>
+<td><code>@"PVC Dia 3.5mm"</code></td>
+<td>3.5mm PVC label</td>
+</tr>
+<tr>
+<td><code>@"PVC Dia 4.0mm"</code></td>
+<td>4.0mm PVC label</td>
+</tr>
+<tr>
+<td><code>@"PVC Dia 5.0mm"</code></td>
+<td>5.0mm PVC label</td>
+</tr>
+<tr>
+<td><code>@"PVC Dia 6.0mm"</code></td>
+<td>6.0mm PVC label</td>
+</tr>
+<tr>
+<td><code>@"PVC Dia 6.5mm"</code></td>
+<td>6.5mm PVC label</td>
+</tr>
+</tbody>
+</table>
+<h3 id="nprintmode">nPrintMode</h3>
+<p>The print scale mode.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nPrintMode</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Constants</strong></p>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PRINT_ORIGINAL</code></td>
+<td>No scaling. You need to prepare data less than or equal to the printable area. Refer to the raster command reference for each model to know the area</td>
+</tr>
+<tr>
+<td><code>PRINT_FIT_TO_PAGE</code></td>
+<td>Scale data to fit to the printable area</td>
+</tr>
+<tr>
+<td><code>PRINT_FIT_TO_PAPER</code></td>
+<td>Scale data to fit to the paper. The part that protrudes from printable area is cut off</td>
+</tr>
+<tr>
+<td><code>PRINT_SCALE</code></td>
+<td>Scale data by <code>scaleValue</code></td>
+</tr>
+<tr>
+<td><code>PRINT_FIT</code></td>
+<td>Deprecated. Use <code>PRINT_FIT_TO_PAGE</code> instead</td>
+</tr>
+</tbody>
+</table>
+<h3 id="scalevalue">scaleValue</h3>
+<p>The scale rate used for the case <code>PRINT_SCALE</code> is specified to <code>nPrintMode</code>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">scaleValue</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="ndensity">nDensity</h3>
+<p>The print density. The range of values depends on printers.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nDensity</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Values</strong></p>
+<table>
+<thead>
+<tr>
+<th>Series</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PJ</td>
+<td>0 to 10</td>
+</tr>
+<tr>
+<td>RJ, TD</td>
+<td>-5 to 5</td>
+</tr>
+</tbody>
+</table>
+<h3 id="nrotation">nRotation</h3>
+<p>Image rotation that specifies the angle which your data is placed in the print area.
+Rotation direction is clockwise.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nRotation</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Constants</strong></p>
+<table>
+<thead>
+<tr>
+<th>Constants</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ROTATE_0</code></td>
+<td>No rotation (default)</td>
+</tr>
+<tr>
+<td><code>ROTATE_90</code></td>
+<td>90° rotation clockwise</td>
+</tr>
+<tr>
+<td><code>ROTATE_180</code></td>
+<td>180° rotation clockwise</td>
+</tr>
+<tr>
+<td><code>ROTATE_270</code></td>
+<td>270° rotation clockwise</td>
+</tr>
+</tbody>
+</table>
+<h3 id="nhalftone">nHalftone</h3>
+<p>The binarization algorithm.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nHalftone</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Constants</strong></p>
+<table>
+<thead>
+<tr>
+<th>Constants</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HALFTONE_BINARY</code></td>
+<td>Simple binary (default)</td>
+</tr>
+<tr>
+<td><code>HALFTONE_DITHER</code></td>
+<td>Dither</td>
+</tr>
+<tr>
+<td><code>HALFTONE_ERRORDIF</code></td>
+<td>Error diffusion</td>
+</tr>
+</tbody>
+</table>
+<h3 id="nhalftonebinarythreshold">nHalftoneBinaryThreshold</h3>
+<p>The threshold value used for the case <code>HALFTONE_BINARY</code> is specified to <code>nHalftone</code>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nHalftoneBinaryThreshold</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="nhorizontalalign">nHorizontalAlign</h3>
+<p>The horizontal data alignment. This is effective only if the data width is smaller than the width of the printable area.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nHorizontalAlign</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Constants</strong></p>
+<table>
+<thead>
+<tr>
+<th>Constants</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ALIGN_LEFT</code></td>
+<td>Align left (default)</td>
+</tr>
+<tr>
+<td><code>ALIGN_CENTER</code></td>
+<td>Align center</td>
+</tr>
+<tr>
+<td><code>ALIGN_RIGHT</code></td>
+<td>Align right</td>
+</tr>
+</tbody>
+</table>
+<h3 id="nverticalalign">nVerticalAlign</h3>
+<p>The vertical data alignment. This is effective only if the data height is smaller than the height of the printable area.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nVerticalAlign</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Constants</strong></p>
+<table>
+<thead>
+<tr>
+<th>Constants</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ALIGN_TOP</code></td>
+<td>Align top (default)</td>
+</tr>
+<tr>
+<td><code>ALIGN_MIDDLE</code></td>
+<td>Align middle</td>
+</tr>
+<tr>
+<td><code>ALIGN_BOTTOM</code></td>
+<td>Align bottom</td>
+</tr>
+</tbody>
+</table>
+<h3 id="npaperalign">nPaperAlign</h3>
+<p>The paper alignment of the custom paper on the printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nPaperAlign</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Constants</strong></p>
+<table>
+<thead>
+<tr>
+<th>Constants</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PAPERALIGN_LEFT</code></td>
+<td>Align left (default)</td>
+</tr>
+<tr>
+<td><code>PAPERALIGN_CENTER</code></td>
+<td>Align center</td>
+</tr>
+<tr>
+<td><code>PAPERALIGN_RIGHT</code></td>
+<td>Align right</td>
+</tr>
+</tbody>
+</table>
+<h3 id="nextflag">nExtFlag</h3>
+<p>The extra flag for PJ series printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nExtFlag</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Constants</strong></p>
+<p>These constants can be used not only for PJ673 but also other PJ series.</p>
+<table>
+<thead>
+<tr>
+<th>Constants</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>EXT_PJ673_CARBON</code></td>
+<td>Carbon paper is used</td>
+</tr>
+<tr>
+<td><code>EXT_PJ673_DASHPRINT</code></td>
+<td>If the EXT_PJ673_EOP is set and roll paper is being used, perforations are printed on each page. (Roll)</td>
+</tr>
+<tr>
+<td><code>EXT_PJ673_NFD</code></td>
+<td>The page feed mode is one where feeding is not performed, even if the “new page” command is received. This flag is given priority over EXT_PJ673_EOP and EXT_PJ673_EPR. (Roll)</td>
+</tr>
+<tr>
+<td><code>EXT_PJ673_EOP</code></td>
+<td>The page feed mode is one where feeding is performed until the end of page is detected. This flag is given priority over EXT_PJ673_EPR. (Cut sheet)</td>
+</tr>
+<tr>
+<td><code>EXT_PJ673_EPR</code></td>
+<td>The page feed mode is one where feeding is performed until the end of page is detected. (Roll with black mark). This is valid only when the paper size is Letter.</td>
+</tr>
+<tr>
+<td><code>EXT_PJ700_FP</code></td>
+<td>The page feed mode is one where feeding is performed for the specified paper length. (Roll)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="nautocutflag">nAutoCutFlag</h3>
+<p>Whether or not the label should be automatically cut per page.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nAutoCutFlag</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Constants</strong></p>
+<table>
+<thead>
+<tr>
+<th>Constants</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td>Not cut (default)</td>
+</tr>
+<tr>
+<td><code>OPTION_AUTOCUT</code></td>
+<td>Cut</td>
+</tr>
+</tbody>
+</table>
+<h3 id="nautocutcopies">nAutoCutCopies</h3>
+<p>The page count to cut.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nAutoCutCopies</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="bendcut">bEndCut</h3>
+<p>Whether or not the label should be automatically cut at the end. (Same meaning as "Chain Print is OFF" for the PT series case)</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">BOOL</span><span class="w"> </span><span class="n">bEndCut</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="bspecialtape">bSpecialTape</h3>
+<p>Whether or not the label is special one not suitable for cutting. Cut option is disabled when this is enabled.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">BOOL</span><span class="w"> </span><span class="n">bSpecialTape</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="bhalfcut">bHalfCut</h3>
+<p>Whether or not the label should be cut by half.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">BOOL</span><span class="w"> </span><span class="n">bHalfCut</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="ntopmargin">nTopMargin</h3>
+<p>The top margin by dot. This is effective only if <code>ALIGN_TOP</code> is specified to <code>nVerticalAlign</code>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nTopMargin</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="nleftmargin">nLeftMargin</h3>
+<p>The left margin by dot. This is effective only if <code>ALIGN_LEFT</code> is specified to <code>nHorizontalAlign</code>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nLeftMargin</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="nspeed">nSpeed</h3>
+<p>The print speed.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nSpeed</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Constant</strong></p>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Speed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-1</code></td>
+<td>Use Printer Setting</td>
+</tr>
+<tr>
+<td><code>0</code></td>
+<td>high speed</td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td>medium high speed</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td>medium low speed</td>
+</tr>
+<tr>
+<td><code>3</code></td>
+<td>low speed</td>
+</tr>
+<tr>
+<td><code>4</code></td>
+<td>fast draft quality (*1)</td>
+</tr>
+<tr>
+<td><code>5</code></td>
+<td>fast line conversion (*1)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>(*1) PJ-8xx series only</li>
+</ul>
+<h3 id="bbidirection">bBidirection</h3>
+<p>Whether or not the status should be checked before printing. It will be checked if <code>YES</code>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">BOOL</span><span class="w"> </span><span class="n">bBidirection</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="ncustomlength">nCustomLength</h3>
+<p>The custom paper length for PJ series. The length is by dot within range from <code>200</code> to <code>65535</code>. <code>strPaperName</code> need to be <code>@"CUSTOM"</code>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nCustomLength</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="ncustomwidth">nCustomWidth</h3>
+<p>The custom paper width for PJ series. The width is a multiple of 8 and the maximum value is 2464 dots. <code>strPaperName</code> need to be <code>@"CUSTOM"</code>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nCustomWidth</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="ncustomfeed">nCustomFeed</h3>
+<p>The feed amount after printing for PJ series. The value is by dot. This is effective when <code>EXT_PJ700_FP</code> is specified to <code>nExtFlag</code>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nCustomFeed</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="strsavefilepath">strSaveFilePath</h3>
+<p>The absolute file path to save the print data. The data will be saved into the path without printing if the valid path is specified. The default is <code>nil</code>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="bp">NSString</span><span class="w"> </span><span class="o">*</span><span class="n">strSaveFilePath</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="boverwrite">bOverWrite</h3>
+<p>Whether or not the print data should be overwritten to the file for the case <code>strSaveFilePath</code> is specified.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">BOOL</span><span class="w"> </span><span class="n">bOverWrite</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="nrollprintercase">nRollPrinterCase</h3>
+<p>The printer case type for PJ series.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nRollPrinterCase</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Constants</strong></p>
+<table>
+<thead>
+<tr>
+<th>Constants</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PJROLLCASE_OFF</code></td>
+<td>No case (default)</td>
+</tr>
+<tr>
+<td><code>PJROLLCASE_ON</code></td>
+<td>Use case</td>
+</tr>
+<tr>
+<td><code>PJROLLCASE_WITH_ANTICURL</code></td>
+<td>Use case with anti-curl</td>
+</tr>
+<tr>
+<td><code>PJROLLCASE_SHORT_FEED</code></td>
+<td>Set short feed mode</td>
+</tr>
+<tr>
+<td><code>PJROLLCASE_KEEP_PRINTER_SETTING</code></td>
+<td>Keep printer setting</td>
+</tr>
+</tbody>
+</table>
+<h3 id="bpeel">bPeel</h3>
+<p>Whether or not the peeling mode should be enabled.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">BOOL</span><span class="w"> </span><span class="n">bPeel</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="nlabelmargine">nLabelMargine</h3>
+<p>The additional margin to the minimum margin.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">assign</span><span class="p">,</span><span class="k">nonatomic</span><span class="p">)</span><span class="kt">int</span><span class="w"> </span><span class="n">nLabelMargine</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="npjpaperkind">nPJPaperKind;</h3>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">assign</span><span class="p">,</span><span class="k">nonatomic</span><span class="p">)</span><span class="kt">int</span><span class="w"> </span><span class="n">nPJPaperKind</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Constants</strong></p>
+<table>
+<thead>
+<tr>
+<th>Constants</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PJ_ROLL</code></td>
+<td>Roll paper</td>
+</tr>
+<tr>
+<td><code>PJ_CUT_PAPER</code></td>
+<td>Cut paper</td>
+</tr>
+</tbody>
+</table>
+<h3 id="nprintquality">nPrintQuality</h3>
+<p>The print quality options for PT, QL and TD series. This property is ignored if HS (heat-shrink) or Tube label is set.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nPrintQuality</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Constants</strong></p>
+<table>
+<thead>
+<tr>
+<th>Constant</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PRINTQUALITY_LOW_RESOLUTION</code></td>
+<td>Prints with the half resolution in the print direction.</td>
+</tr>
+<tr>
+<td><code>PRINTQUALITY_NORMAL</code></td>
+<td>Normal.</td>
+</tr>
+<tr>
+<td><code>PRINTQUALITY_DOUBLE_SPEED</code></td>
+<td>Resolution without changing performs printing by raising the printing speed.</td>
+</tr>
+<tr>
+<td><code>PRINTQUALITY_HIGH_RESOLUTION</code></td>
+<td>Prints with the double resolution in the print direction.</td>
+</tr>
+<tr>
+<td><code>PRINTQUALITY_HIGH_RESOLUTION_USING_HR_IMAGE</code></td>
+<td>Prints with the double resolution in the print direction. Images that have double resolution in the print direction are required.</td>
+</tr>
+</tbody>
+</table>
+<p>Supported printers for each enumerator are as below.</p>
+<table>
+<thead>
+<tr>
+<th>Enumerator</th>
+<th>Supported Printer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LOW_RESOLUTION</code></td>
+<td>PT-E850TKW, PT-D800W, PT-E800W, PT-P900W, PT-P950NW</td>
+</tr>
+<tr>
+<td><code>NORMAL</code></td>
+<td>QL series, PT series, TD series</td>
+</tr>
+<tr>
+<td><code>DOUBLE_SPEED</code></td>
+<td>QL series, TD-2XXX series</td>
+</tr>
+<tr>
+<td><code>HIGH_RESOLUTION</code></td>
+<td>QL series (other than QL-11xx series), PT series</td>
+</tr>
+<tr>
+<td><code>PRINTQUALITY_HIGH_RESOLUTION_USING_HR_IMAGE</code></td>
+<td>QL series (QL-7xx/QL-8xx series)<br>PT series (PT-D800W/PT-E800W/PT-E550W/PT-P750NW/PT-P9xx series)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="nforcestretchprintablearea">nForceStretchPrintableArea</h3>
+<p>Extend the printing area in the bottom direction. Default is <code>0</code>. Negative values cannot be set.
+If you use this property, the bottom part of the document may not be printed.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w">   </span><span class="p">(</span><span class="k">assign</span><span class="p">,</span><span class="k">nonatomic</span><span class="p">)</span><span class="kt">int</span><span class="w">       </span><span class="n">nForceStretchPrintableArea</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="bmode9">bMode9</h3>
+<p>Whether or not to compress print data with Mode9.
+This has priority if both this and <a href="#brawmode"><code>bRawMode</code></a> is <code>YES</code>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">nonatomic</span><span class="p">,</span><span class="w"> </span><span class="k">assign</span><span class="p">)</span><span class="w"> </span><span class="kt">BOOL</span><span class="w"> </span><span class="n">bMode9</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="brawmode">bRawMode;</h3>
+<p>Whether or not to compress print data.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">assign</span><span class="p">,</span><span class="k">nonatomic</span><span class="p">)</span><span class="kt">BOOL</span><span class="w"> </span><span class="n">bRawMode</span><span class="p">;</span>
+</code></pre></div>
+
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">assign</span><span class="p">,</span><span class="k">nonatomic</span><span class="p">)</span><span class="kt">BOOL</span><span class="w"> </span><span class="n">bBanishMargin</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="buselegacyhalftoneengine">bUseLegacyHalftoneEngine;</h3>
+<p>If <code>YES</code>, images and PDFs are rasterized with legacy halftone engine. Default is <code>NO</code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Generally, set <code>NO</code> or nothing.
+It is intended for specific use only.</p>
+</div>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">assign</span><span class="p">,</span><span class="k">nonatomic</span><span class="p">)</span><span class="kt">BOOL</span><span class="w"> </span><span class="n">bUseLegacyHalftoneEngine</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="busecopycommandintemplateprint">bUseCopyCommandInTemplatePrint;</h3>
+<p>If <code>YES</code>, printing templates can be expected to be faster when printing multiple copies of the same template.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">assign</span><span class="p">,</span><span class="k">nonatomic</span><span class="p">)</span><span class="kt">BOOL</span><span class="w"> </span><span class="n">bUseCopyCommandInTemplatePrint</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="bwaitcompletionofsendingdataandfile">bWaitCompletionOfSendingDataAndFile;</h3>
+<p>If <code>YES</code>, wait completion of sending data with <a href="brptouchprinter.html#senddata"><code>sendData:</code></a> by getting the printer status. Default is <code>NO</code>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w"> </span><span class="p">(</span><span class="k">assign</span><span class="p">,</span><span class="k">nonatomic</span><span class="p">)</span><span class="kt">BOOL</span><span class="w"> </span><span class="n">bWaitCompletionOfSendingDataAndFile</span><span class="p">;</span>
+</code></pre></div>
+
+<h2 id="notes">Notes</h2>
+<h3 id="property-compatibility">Property Compatibility</h3>
+<p>Some properties of <code>BRPtouchPrintInfo</code> are supported only by specific printers. Refer to <a href="brptouchprintinfo-property-compatibility.html" target="_blank">the compatibility table</a>.</p>
+<h3 id="nbicolorredenhancement">nBiColorRedEnhancement</h3>
+<p>The property for QL-8xx series.  Enhancement red color. 
+Value range is from -20 to 20. Default value is 0.<br />
+This value is effective when paper name is <a href="#strpapername"><code>@"62mmRB"</code></a>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w">   </span><span class="p">(</span><span class="k">assign</span><span class="p">,</span><span class="k">nonatomic</span><span class="p">)</span><span class="kt">int</span><span class="w">       </span><span class="n">nBiColorRedEnhancement</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="nbicolorgreenenhancement">nBiColorGreenEnhancement</h3>
+<p>The property for QL-8xx series.  Enhancement green color. 
+Value range is from -20 to 20. Default value is 0.<br />
+This value is effective when paper name is <a href="#strpapername"><code>@"62mmRB"</code></a>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w">   </span><span class="p">(</span><span class="k">assign</span><span class="p">,</span><span class="k">nonatomic</span><span class="p">)</span><span class="kt">int</span><span class="w">       </span><span class="n">nBiColorGreenEnhancement</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="nbicolorblueenhancement">nBiColorBlueEnhancement</h3>
+<p>The property for QL-8xx series.  Enhancement blue color. 
+Value range is from -20 to 20. Default value is 0.<br />
+This value is effective when paper name is <a href="#strpapername"><code>@"62mmRB"</code></a>.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w">   </span><span class="p">(</span><span class="k">assign</span><span class="p">,</span><span class="k">nonatomic</span><span class="p">)</span><span class="kt">int</span><span class="w">       </span><span class="n">nBiColorBlueEnhancement</span><span class="p">;</span>
+</code></pre></div>
+
+<h3 id="strcustomrecord">strCustomRecord</h3>
+<p>A printer records this value with print job when print function works with no error.</p>
+<div class="admonition caution">
+<p class="admonition-title">The printer must support the custom record function.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Multi-byte characters are not supported. It should be within 64 characters.</p>
+</div>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">@property</span><span class="w">   </span><span class="p">(</span><span class="k">copy</span><span class="p">,</span><span class="k">nonatomic</span><span class="p">)</span><span class="bp">NSString</span><span class="o">*</span><span class="w">   </span><span class="n">strCustomRecord</span><span class="p">;</span>
+</code></pre></div>
+
+<h2 id="deprecates">Deprecates</h2>
+<p><span class="deprecated">Deprecated</span></p>
+<h3 id="bbanishmargin"><del>bBanishMargin</del></h3>
+<h3 id="norientation"><del>nOrientation</del></h3>
+<p>Please use <a href="#nrotation"><code>nRotation</code></a> instead.</p>
+<h3 id="brotate180"><del>bRotate180</del></h3>
+<p>Please use <a href="#nrotation"><code>nRotation</code></a> instead.</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      ©2020 Brother Industries, Ltd. All Rights Reserved.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.b78d2936.min.js"></script>
+      
+    
+  </body>
+</html>

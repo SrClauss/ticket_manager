@@ -1,0 +1,3659 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="printermodel.html">
+      
+      
+        <link rel="next" href="channel.html">
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.1">
+    
+    
+      
+        <title>PrinterDriver - Brother Print SDK Manual</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.402914a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../../css/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="" data-md-color-accent="">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#overview" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Brother Print SDK Manual" class="md-header__button md-logo" aria-label="Brother Print SDK Manual" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Brother Print SDK Manual
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              PrinterDriver
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Brother Print SDK Manual" class="md-nav__button md-logo" aria-label="Brother Print SDK Manual" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Brother Print SDK Manual
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+          Overview
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1">
+          <span class="md-nav__icon md-icon"></span>
+          Overview
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.html" class="md-nav__link">
+        What's Brother Print SDK
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../overview/supported-environment.html" class="md-nav__link">
+        Supported OS
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../overview/supported-printer.html" class="md-nav__link">
+        Supported Printer
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          Guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+          Getting Started
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_2_1">
+          <span class="md-nav__icon md-icon"></span>
+          Getting Started
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/getting-started/getting-started-ios.html" class="md-nav__link">
+        Develop via Xcode
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/getting-started/getting-started-android.html" class="md-nav__link">
+        Develop via Android Studio
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/getting-started/getting-started-cross-platform.html" class="md-nav__link">
+        Cross Platform Development
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/print-image.html" class="md-nav__link">
+        Printing Image/PDF
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/print-template.html" class="md-nav__link">
+        Printing with P-touch Template
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/discover-printer.html" class="md-nav__link">
+        Discovering Printers
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
+          API for iOS v.4 +
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3_1">
+          <span class="md-nav__icon md-icon"></span>
+          API for iOS v.4 +
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterdefine.html" class="md-nav__link">
+        BRLMPrinterDefine
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterdriver.html" class="md-nav__link">
+        BRLMPrinterDriver
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmchannel.html" class="md-nav__link">
+        BRLMChannel
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmchannelcredential.html" class="md-nav__link">
+        BRLMChannelCredential
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterdrivergenerator.html" class="md-nav__link">
+        BRLMPrinterDriverGenerator
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterdrivergenerateresult.html" class="md-nav__link">
+        BRLMPrinterDriverGenerateResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmgetprinterstatusresult.html" class="md-nav__link">
+        BRLMGetPrinterStatusResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmerror.html" class="md-nav__link">
+        BRLMError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmopenchannelerror.html" class="md-nav__link">
+        BRLMOpenChannelError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterror.html" class="md-nav__link">
+        BRLMPrintError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintersearcher.html" class="md-nav__link">
+        BRLMPrinterSearcher
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintersearchresult.html" class="md-nav__link">
+        BRLMPrinterSearchResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintersearcherror.html" class="md-nav__link">
+        BRLMPrinterSearchError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmnetworksearchoption.html" class="md-nav__link">
+        BRLMNetworkSearchOption
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmblesearchoption.html" class="md-nav__link">
+        BRLMBLESearchOption
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmgetstatuserror.html" class="md-nav__link">
+        BRLMGetStatusError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterstatus.html" class="md-nav__link">
+        BRLMPrinterStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterbatterystatus.html" class="md-nav__link">
+        BRLMPrinterBatteryStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmrequestprinterinforesult.html" class="md-nav__link">
+        BRLMRequestPrinterInfoResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmrequestprinterinfoerror.html" class="md-nav__link">
+        BRLMRequestPrinterInfoError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmmediainfo.html" class="md-nav__link">
+        BRLMMediaInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmbatteryinfo.html" class="md-nav__link">
+        BRLMBatteryInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmptouchtemplateinfo.html" class="md-nav__link">
+        BRLMPtouchTemplateInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintermodelspec.html" class="md-nav__link">
+        BRLMPrinterModelSpec
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintimagesettings.html" class="md-nav__link">
+        BRLMPrintImageSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprintsettingsprotocol.html" class="md-nav__link">
+        BRLMPrintSettingsProtocol
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmpjprintsettings.html" class="md-nav__link">
+        BRLMPJPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmrjprintsettings.html" class="md-nav__link">
+        BRLMRJPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmtdprintsettings.html" class="md-nav__link">
+        BRLMTDPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmptprintsettings.html" class="md-nav__link">
+        BRLMPTPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmqlprintsettings.html" class="md-nav__link">
+        BRLMQLPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmmwprintsettings.html" class="md-nav__link">
+        BRLMMWPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmtemplateobjectreplacer.html" class="md-nav__link">
+        BRLMTemplateObjectReplacer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmtemplateprintsettingsprotocol.html" class="md-nav__link">
+        BRLMTemplatePrintSettingsProtocol
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmpjtemplateprintsettings.html" class="md-nav__link">
+        BRLMPJTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmrjtemplateprintsettings.html" class="md-nav__link">
+        BRLMRJTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmtdtemplateprintsettings.html" class="md-nav__link">
+        BRLMTDTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmpttemplateprintsettings.html" class="md-nav__link">
+        BRLMPTTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmqltemplateprintsettings.html" class="md-nav__link">
+        BRLMQLTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmmwtemplateprintsettings.html" class="md-nav__link">
+        BRLMMWTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmprinterclassifier.html" class="md-nav__link">
+        BRLMPrinterClassifier
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmcustompapersize.html" class="md-nav__link">
+        BRLMCustomPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmpjprintsettingscustompapersize.html" class="md-nav__link">
+        BRLMPJPrintSettingsCustomPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmpjprintsettingspapersize.html" class="md-nav__link">
+        BRLMPJPrintSettingsPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmvalidateprintsettings.html" class="md-nav__link">
+        BRLMValidatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmvalidateprintsettingsreport.html" class="md-nav__link">
+        BRLMValidatePrintSettingsReport
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmvalidateprintsettingsissue.html" class="md-nav__link">
+        BRLMValidatePrintSettingsIssue
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmlog.html" class="md-nav__link">
+        BRLMLog
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmfileanalyzer.html" class="md-nav__link">
+        BRLMFileAnalyzer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmfileanalyzeresult.html" class="md-nav__link">
+        BRLMFileAnalyzeResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmfileanalyzeerror.html" class="md-nav__link">
+        BRLMFileAnalyzeError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmremovetemplateresult.html" class="md-nav__link">
+        BRLMRemoveTemplateResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmtransferresult.html" class="md-nav__link">
+        BRLMTransferResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios_v4/brlmptouchdevicedependeddataheader.html" class="md-nav__link">
+        BRLMPtouchDeviceDependedDataHeader
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+          API for Android v.4 +
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_3_2">
+          <span class="md-nav__icon md-icon"></span>
+          API for Android v.4 +
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="printermodel.html" class="md-nav__link">
+        PrinterModel
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          PrinterDriver
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="printerdriver.html" class="md-nav__link md-nav__link--active">
+        PrinterDriver
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#instance-methods" class="md-nav__link">
+    Instance Methods
+  </a>
+  
+    <nav class="md-nav" aria-label="Instance Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#closechannel" class="md-nav__link">
+    closeChannel
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printimage" class="md-nav__link">
+    printImage
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printimage_1" class="md-nav__link">
+    printImage
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printimage_2" class="md-nav__link">
+    printImage
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printpdf" class="md-nav__link">
+    printPDF
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printpdf_1" class="md-nav__link">
+    printPDF
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printpdf_2" class="md-nav__link">
+    printPDF
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printtemplate" class="md-nav__link">
+    printTemplate
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cancelprinting" class="md-nav__link">
+    cancelPrinting
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getprinterstatus" class="md-nav__link">
+    getPrinterStatus
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requestmainfirmversion" class="md-nav__link">
+    requestMainFirmVersion
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requestmediaversion" class="md-nav__link">
+    requestMediaVersion
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requestserialnumber" class="md-nav__link">
+    requestSerialNumber
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requestsystemreport" class="md-nav__link">
+    requestSystemReport
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requestbatteryinfo" class="md-nav__link">
+    requestBatteryInfo
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requesttemplateinfolist" class="md-nav__link">
+    requestTemplateInfoList
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transferfirmwarefiles" class="md-nav__link">
+    transferFirmwareFiles
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transfertemplatefiles" class="md-nav__link">
+    transferTemplateFiles
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transferdatabasefiles" class="md-nav__link">
+    transferDatabaseFiles
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transferbinaryfiles" class="md-nav__link">
+    transferBinaryFiles
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transferbinarydata" class="md-nav__link">
+    transferBinaryData
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transferprinterconfigurationfiles" class="md-nav__link">
+    transferPrinterConfigurationFiles
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interfaces" class="md-nav__link">
+    Interfaces
+  </a>
+  
+    <nav class="md-nav" aria-label="Interfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#transferprogresscallback" class="md-nav__link">
+    TransferProgressCallback
+  </a>
+  
+    <nav class="md-nav" aria-label="TransferProgressCallback">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#onprogress" class="md-nav__link">
+    onProgress
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deprecates" class="md-nav__link">
+    Deprecates
+  </a>
+  
+    <nav class="md-nav" aria-label="Deprecates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sendprnfile" class="md-nav__link">
+    sendPRNFile
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sendrawdata" class="md-nav__link">
+    sendRawData
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="channel.html" class="md-nav__link">
+        Channel
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="channelcredential.html" class="md-nav__link">
+        ChannelCredential
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="printerdrivergenerator.html" class="md-nav__link">
+        PrinterDriverGenerator
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="printerdrivergenerateresult.html" class="md-nav__link">
+        PrinterDriverGenerateResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="getstatusresult.html" class="md-nav__link">
+        GetStatusResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="openchannelerror.html" class="md-nav__link">
+        OpenChannelError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="printerror.html" class="md-nav__link">
+        PrintError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="printersearcher.html" class="md-nav__link">
+        PrinterSearcher
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="printersearchresult.html" class="md-nav__link">
+        PrinterSearchResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="printersearcherror.html" class="md-nav__link">
+        PrinterSearchError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="networksearchoption.html" class="md-nav__link">
+        NetworkSearchOption
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="blesearchoption.html" class="md-nav__link">
+        BLESearchOption
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="getstatuserror.html" class="md-nav__link">
+        GetStatusError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="printerstatus.html" class="md-nav__link">
+        PrinterStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="printerstatusrawdata.html" class="md-nav__link">
+        PrinterStatusRawData
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="printerbatterystatus.html" class="md-nav__link">
+        PrinterBatteryStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="requestprinterinforesult.html" class="md-nav__link">
+        RequestPrinterInfoResult
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="requestprinterinfoerror.html" class="md-nav__link">
+        RequestPrinterInfoError
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="mediainfo.html" class="md-nav__link">
+        MediaInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ptouchtemplateinfo.html" class="md-nav__link">
+        PtouchTemplateInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="printermodelspec.html" class="md-nav__link">
+        PrinterModelSpec
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="printimagesettings.html" class="md-nav__link">
+        PrintImageSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="printsettings.html" class="md-nav__link">
+        PrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="pjprintsettings.html" class="md-nav__link">
+        PJPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="rjprintsettings.html" class="md-nav__link">
+        RJPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tdprintsettings.html" class="md-nav__link">
+        TDPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ptprintsettings.html" class="md-nav__link">
+        PTPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="qlprintsettings.html" class="md-nav__link">
+        QLPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="mwprintsettings.html" class="md-nav__link">
+        MWPrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="templateobjectreplacer.html" class="md-nav__link">
+        TemplateObjectReplacer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="itemplateprintsettings.html" class="md-nav__link">
+        ITemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="pjtemplateprintsettings.html" class="md-nav__link">
+        PJTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="rjtemplateprintsettings.html" class="md-nav__link">
+        RJTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tdtemplateprintsettings.html" class="md-nav__link">
+        TDTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="pttemplateprintsettings.html" class="md-nav__link">
+        PTTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="qltemplateprintsettings.html" class="md-nav__link">
+        QLTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="mwtemplateprintsettings.html" class="md-nav__link">
+        MWTemplatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="custompapersize.html" class="md-nav__link">
+        CustomPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="pjcustompapersize.html" class="md-nav__link">
+        PJCustomPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="pjpapersize.html" class="md-nav__link">
+        PJPaperSize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="validateprintsettings.html" class="md-nav__link">
+        ValidatePrintSettings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="validateprintsettingsreport.html" class="md-nav__link">
+        ValidatePrintSettingsReport
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="validateprintsettingsissue.html" class="md-nav__link">
+        ValidatePrintSettingsIssue
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="log.html" class="md-nav__link">
+        Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="fileanalyzer.html" class="md-nav__link">
+        FileAnalyzer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="fileconverter.html" class="md-nav__link">
+        FileConverter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="transfer.html" class="md-nav__link">
+        Transfer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ptouchdevicedependeddataheader.html" class="md-nav__link">
+        PtouchDeviceDependedDataHeader
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="removetemplate.html" class="md-nav__link">
+        RemoveTemplate
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+          API for iOS v.3 +
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3_3">
+          <span class="md-nav__icon md-icon"></span>
+          API for iOS v.3 +
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios/brptouchprinter.html" class="md-nav__link">
+        BRPtouchPrinter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios/brptouchprintinfo.html" class="md-nav__link">
+        BRPtouchPrintInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios/brptouchprinterstatus.html" class="md-nav__link">
+        BRPtouchPrinterStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios/brptouchtemplateinfo.html" class="md-nav__link">
+        BRPtouchTemplateInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios/brptouchbatteryinfo.html" class="md-nav__link">
+        BRPtouchBatteryInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios/brptouchprinterdata.html" class="md-nav__link">
+        BRPtouchPrinterData
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios/brptouchdeviceinfo.html" class="md-nav__link">
+        BRPtouchDeviceInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios/brptouchlabelparam.html" class="md-nav__link">
+        BRPtouchLabelParam
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios/brptouchlabelinfostatus.html" class="md-nav__link">
+        BRPtouchLabelInfoStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios/brptouchbluetoothmanager.html" class="md-nav__link">
+        BRPtouchBluetoothManager
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios/brptouchblemanager.html" class="md-nav__link">
+        BRPtouchBLEManager
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios/brptouchnetworkmanager.html" class="md-nav__link">
+        BRPtouchNetworkManager
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios/brcustompaperinfocommand.html" class="md-nav__link">
+        BRCustomPaperInfoCommand
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+          API for Android v.3 +
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3_4">
+          <span class="md-nav__icon md-icon"></span>
+          API for Android v.3 +
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/printer.html" class="md-nav__link">
+        Printer
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/printerinfo.html" class="md-nav__link">
+        PrinterInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/printerstatus.html" class="md-nav__link">
+        PrinterStatus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/netprinter.html" class="md-nav__link">
+        NetPrinter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/bleprinter.html" class="md-nav__link">
+        BLEPrinter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/labelparam.html" class="md-nav__link">
+        LabelParam
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/labelinfo.html" class="md-nav__link">
+        LabelInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/templateinfo.html" class="md-nav__link">
+        TemplateInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/batteryinfo.html" class="md-nav__link">
+        BatteryInfo
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/bluetoothpreference.html" class="md-nav__link">
+        BluetoothPreference
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../android/custompaperinfo.html" class="md-nav__link">
+        CustomPaperInfo
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+          Appendix
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3_5">
+          <span class="md-nav__icon md-icon"></span>
+          Appendix
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/printer-configurations.html" class="md-nav__link">
+        Printer Configurations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/parameters.html" class="md-nav__link">
+        Parameters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix/sample-application.html" class="md-nav__link">
+        Sample Application
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          About
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          About
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/release-notes-manual.html" class="md-nav__link">
+        Release Notes for Manual
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/release-notes-ios.html" class="md-nav__link">
+        Release Notes for iOS
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/release-notes-android.html" class="md-nav__link">
+        Release Notes for Android
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/trademark.html" class="md-nav__link">
+        Trademarks
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/license.html" class="md-nav__link">
+        Licenses
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#instance-methods" class="md-nav__link">
+    Instance Methods
+  </a>
+  
+    <nav class="md-nav" aria-label="Instance Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#closechannel" class="md-nav__link">
+    closeChannel
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printimage" class="md-nav__link">
+    printImage
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printimage_1" class="md-nav__link">
+    printImage
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printimage_2" class="md-nav__link">
+    printImage
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printpdf" class="md-nav__link">
+    printPDF
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printpdf_1" class="md-nav__link">
+    printPDF
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printpdf_2" class="md-nav__link">
+    printPDF
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#printtemplate" class="md-nav__link">
+    printTemplate
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cancelprinting" class="md-nav__link">
+    cancelPrinting
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getprinterstatus" class="md-nav__link">
+    getPrinterStatus
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requestmainfirmversion" class="md-nav__link">
+    requestMainFirmVersion
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requestmediaversion" class="md-nav__link">
+    requestMediaVersion
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requestserialnumber" class="md-nav__link">
+    requestSerialNumber
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requestsystemreport" class="md-nav__link">
+    requestSystemReport
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requestbatteryinfo" class="md-nav__link">
+    requestBatteryInfo
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requesttemplateinfolist" class="md-nav__link">
+    requestTemplateInfoList
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transferfirmwarefiles" class="md-nav__link">
+    transferFirmwareFiles
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transfertemplatefiles" class="md-nav__link">
+    transferTemplateFiles
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transferdatabasefiles" class="md-nav__link">
+    transferDatabaseFiles
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transferbinaryfiles" class="md-nav__link">
+    transferBinaryFiles
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transferbinarydata" class="md-nav__link">
+    transferBinaryData
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transferprinterconfigurationfiles" class="md-nav__link">
+    transferPrinterConfigurationFiles
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interfaces" class="md-nav__link">
+    Interfaces
+  </a>
+  
+    <nav class="md-nav" aria-label="Interfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#transferprogresscallback" class="md-nav__link">
+    TransferProgressCallback
+  </a>
+  
+    <nav class="md-nav" aria-label="TransferProgressCallback">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#onprogress" class="md-nav__link">
+    onProgress
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deprecates" class="md-nav__link">
+    Deprecates
+  </a>
+  
+    <nav class="md-nav" aria-label="Deprecates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sendprnfile" class="md-nav__link">
+    sendPRNFile
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sendrawdata" class="md-nav__link">
+    sendRawData
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  <h1>PrinterDriver</h1>
+
+<p>A Brother Label &amp; Mobile printer driver.</p>
+<h2 id="overview">Overview</h2>
+<p>You use this object to print images and PDFs etc. They are converted to binary data with commands that printers can receive in this class. You also use this to send raw data which you created.</p>
+<p>Constructors of this class are unavailable. Instead, you have to use <a href="printerdrivergenerator.html"><code>PrinterDriverGenerator</code></a> to instantiate this class.</p>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>You DO NOT use this class in parallel from multiple threads. Methods in this MUST be called on a single thread.</p>
+</div>
+<h2 id="instance-methods">Instance Methods</h2>
+<h3 id="closechannel">closeChannel</h3>
+<p>Close a session to communicate with the printer. You MUST call this when you finish your operation and connect to other printers.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">closeChannel</span><span class="p">();</span>
+</code></pre></div>
+
+<h3 id="printimage">printImage</h3>
+<p>Print the image using print settings.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">PrintError</span><span class="w"> </span><span class="nf">printImage</span><span class="p">(</span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">PrintSettings</span><span class="w"> </span><span class="n">printSettings</span><span class="p">);</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>path</em></td>
+<td>String</td>
+<td>Filepath to the image.</td>
+</tr>
+<tr>
+<td><em>printSettings</em></td>
+<td>PrintSettings</td>
+<td>Settings to convert the image to binary.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>See <a href="printerror.html"><code>PrintError</code></a>.</p>
+<h3 id="printimage_1">printImage</h3>
+<p>Print the images using print settings. The settings apply to every image.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">PrintError</span><span class="w"> </span><span class="nf">printImage</span><span class="p">(</span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="n">paths</span><span class="p">,</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">PrintSettings</span><span class="w"> </span><span class="n">printSettings</span><span class="p">);</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>paths</em></td>
+<td>String[]</td>
+<td>Array of filepaths to the images.</td>
+</tr>
+<tr>
+<td><em>printSettings</em></td>
+<td>PrintSettings</td>
+<td>Settings to convert the images to binary.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>See <a href="printerror.html"><code>PrintError</code></a>.</p>
+<h3 id="printimage_2">printImage</h3>
+<p>Print the bitmap using print settings.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">PrintError</span><span class="w"> </span><span class="nf">printImage</span><span class="p">(</span><span class="kd">final</span><span class="w"> </span><span class="n">Bitmap</span><span class="w"> </span><span class="n">bitmap</span><span class="p">,</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">PrintSettings</span><span class="w"> </span><span class="n">printSettings</span><span class="p">);</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>bitmap</em></td>
+<td>Bitmap</td>
+<td>A pointer to the bitmap.</td>
+</tr>
+<tr>
+<td><em>printSettings</em></td>
+<td>PrintSettings</td>
+<td>Settings to convert the images to binary.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>See <a href="printerror.html"><code>PrintError</code></a>.</p>
+<h3 id="printpdf">printPDF</h3>
+<p>Print the PDF using print settings. This function prints all pages of the PDF.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">PrintError</span><span class="w"> </span><span class="nf">printPDF</span><span class="p">(</span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">PrintSettings</span><span class="w"> </span><span class="n">printSettings</span><span class="p">);</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>path</em></td>
+<td>String</td>
+<td>Filepath to the PDF.</td>
+</tr>
+<tr>
+<td><em>printSettings</em></td>
+<td>PrintSettings</td>
+<td>Settings to convert the pages to binary.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>See <a href="printerror.html"><code>PrintError</code></a>.</p>
+<h3 id="printpdf_1">printPDF</h3>
+<p>Print the PDFs using print settings. This function prints all pages of each PDF.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">PrintError</span><span class="w"> </span><span class="nf">printPDF</span><span class="p">(</span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="n">paths</span><span class="p">,</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">PrintSettings</span><span class="w"> </span><span class="n">printSettings</span><span class="p">);</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>paths</em></td>
+<td>String[]</td>
+<td>Array of filepaths to the PDFs.</td>
+</tr>
+<tr>
+<td><em>printSettings</em></td>
+<td>PrintSettings</td>
+<td>Settings to convert the images to binary.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>See <a href="printerror.html"><code>PrintError</code></a>.</p>
+<h3 id="printpdf_2">printPDF</h3>
+<p>Print specified pages of the PDF using print settings.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">PrintError</span><span class="w"> </span><span class="nf">printPDF</span><span class="p">(</span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="kt">int</span><span class="o">[]</span><span class="w"> </span><span class="n">pages</span><span class="p">,</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">PrintSettings</span><span class="w"> </span><span class="n">printSettings</span><span class="p">);</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>path</em></td>
+<td>String</td>
+<td>Filepath to the PDF.</td>
+</tr>
+<tr>
+<td><em>pages</em></td>
+<td>int[]</td>
+<td>Page indexes of the PDF.</td>
+</tr>
+<tr>
+<td><em>printSettings</em></td>
+<td>PrintSettings</td>
+<td>Settings to convert the pages to binary.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>See <a href="printerror.html"><code>PrintError</code></a>.</p>
+<h3 id="printtemplate">printTemplate</h3>
+<p>Print installed P-touch Template with specified data.
+This function assumes the default P-touch Template settings.
+Your application may not be able to print if the printer's settings differ from the defaults.
+If necessary, use the P-touch Template Setting Tool to configure the printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">PrintError</span><span class="w"> </span><span class="nf">printTemplate</span><span class="p">(</span><span class="kd">final</span><span class="w"> </span><span class="n">Integer</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">ITemplatePrintSettings</span><span class="w"> </span><span class="n">printSettings</span><span class="p">,</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">TemplateObjectReplacer</span><span class="o">&gt;</span><span class="w"> </span><span class="n">replacers</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>key</em></td>
+<td>Integer</td>
+<td>Key number assigned to the template. The key starts from 1.</td>
+</tr>
+<tr>
+<td><em>printSettings</em></td>
+<td>ITemplatePrintSettings</td>
+<td>Settings to print template.</td>
+</tr>
+<tr>
+<td><em>replacers</em></td>
+<td>ArrayList<TemplateObjectReplacer></td>
+<td>Info to replace the text in an object of P-touch Template.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>See <a href="printerror.html"><code>PrintError</code></a>.</p>
+<h3 id="cancelprinting">cancelPrinting</h3>
+<p>Cancel sending commands and data to a printer. Actually, this only sets a cancel flag.
+The printer driver checks the flag when it finishes converting images and sending one image/page to the printer
+Therefore, it will only cancel the printing if the cancel flag is set before the print driver checks.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">cancelPrinting</span><span class="p">();</span>
+</code></pre></div>
+
+<h3 id="getprinterstatus">getPrinterStatus</h3>
+<p>Get the printer status from the connected printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">GetStatusResult</span><span class="w"> </span><span class="nf">getPrinterStatus</span><span class="p">();</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong></p>
+<p>See <a href="getstatusresult.html"><code>GetStatusResult</code></a>.</p>
+<h3 id="requestmainfirmversion">requestMainFirmVersion</h3>
+<p>Get the firmware version of the connected printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">RequestPrinterInfoResult</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">requestMainFirmVersion</span><span class="p">();</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong></p>
+<p>See <a href="requestprinterinforesult.html"><code>RequestPrinterInfoResult</code></a>.</p>
+<h3 id="requestmediaversion">requestMediaVersion</h3>
+<p>Get the media version in the firmware of the connected printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">RequestPrinterInfoResult</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">requestMediaVersion</span><span class="p">();</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong></p>
+<p>See <a href="requestprinterinforesult.html"><code>RequestPrinterInfoResult</code></a>.</p>
+<h3 id="requestserialnumber">requestSerialNumber</h3>
+<p>Get the serial number of the connected printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">RequestPrinterInfoResult</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">requestSerialNumber</span><span class="p">();</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong></p>
+<p>See <a href="requestprinterinforesult.html"><code>RequestPrinterInfoResult</code></a>.</p>
+<h3 id="requestsystemreport">requestSystemReport</h3>
+<p>Get the system report of the specified printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">RequestPrinterInfoResult</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">requestSystemReport</span><span class="p">();</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong></p>
+<p>See <a href="requestprinterinforesult.html"><code>RequestPrinterInfoResult</code></a>.</p>
+<h3 id="requestbatteryinfo">requestBatteryInfo</h3>
+<p>Get the battery info of the specified printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">RequestPrinterInfoResult</span><span class="o">&lt;</span><span class="n">BatteryInfo</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">requestBatteryInfo</span><span class="p">();</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong></p>
+<p>See <a href="requestprinterinforesult.html"><code>RequestPrinterInfoResult</code></a> and <a href="../android/batteryinfo.html"><code>BatteryInfo</code></a>.</p>
+<h3 id="requesttemplateinfolist">requestTemplateInfoList</h3>
+<p>Get the template list of the specified printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">RequestPrinterInfoResult</span><span class="o">&lt;</span><span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">PtouchTemplateInfo</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="nf">requestTemplateInfoList</span><span class="p">();</span>
+</code></pre></div>
+
+<p><strong>Return Value</strong></p>
+<p>See <a href="requestprinterinforesult.html"><code>RequestPrinterInfoResult</code></a> and <a href="ptouchtemplateinfo.html"><code>PtouchTemplateInfo</code></a>.</p>
+<h3 id="transferfirmwarefiles">transferFirmwareFiles</h3>
+<p>Transfer firmware files to the printer.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When transferring PDZ files, please use the <a href="fileconverter.html"><code>FileConverter</code></a> class to convert them to PD3 files before transferring.</p>
+</div>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">Transfer</span><span class="p">.</span><span class="na">Result</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">transferFirmwareFiles</span><span class="p">(</span><span class="kd">final</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">paths</span><span class="p">,</span><span class="w"> </span><span class="o">[</span><span class="n">TransferProgressCallback</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;]</span><span class="p">(</span><span class="err">#</span><span class="n">transferprogresscallback</span><span class="p">)</span><span class="w"> </span><span class="n">progress</span><span class="p">);</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>paths</em></td>
+<td>List<String></td>
+<td>List of paths to the firmware files.</td>
+</tr>
+<tr>
+<td><em>progress</em></td>
+<td><a href="#transferprogresscallback">TransferProgressCallback<String></a></td>
+<td>Callback for transfer progress.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>See <a href="transfer.html"><code>Transfer.Result</code></a>.</p>
+<h3 id="transfertemplatefiles">transferTemplateFiles</h3>
+<p>Transfer template files to the printer.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When transferring PDZ files, please use the <a href="fileconverter.html"><code>FileConverter</code></a> class to convert them to PD3 files before transferring.</p>
+</div>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">Transfer</span><span class="p">.</span><span class="na">Result</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">transferTemplateFiles</span><span class="p">(</span><span class="kd">final</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">paths</span><span class="p">,</span><span class="w"> </span><span class="o">[</span><span class="n">TransferProgressCallback</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;]</span><span class="p">(</span><span class="err">#</span><span class="n">transferprogresscallback</span><span class="p">)</span><span class="w"> </span><span class="n">progress</span><span class="p">);</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>paths</em></td>
+<td>List<String></td>
+<td>List of paths to the template files.</td>
+</tr>
+<tr>
+<td><em>progress</em></td>
+<td><a href="#transferprogresscallback">TransferProgressCallback<String></a></td>
+<td>Callback for transfer progress.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>See <a href="transfer.html"><code>Transfer.Result</code></a>.</p>
+<h3 id="transferdatabasefiles">transferDatabaseFiles</h3>
+<p>Transfer database files to the printer.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When transferring PDZ files, please use the <a href="fileconverter.html"><code>FileConverter</code></a> class to convert them to PD3 files before transferring.</p>
+</div>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">Transfer</span><span class="p">.</span><span class="na">Result</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">transferDatabaseFiles</span><span class="p">(</span><span class="kd">final</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">paths</span><span class="p">,</span><span class="w"> </span><span class="o">[</span><span class="n">TransferProgressCallback</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;]</span><span class="p">(</span><span class="err">#</span><span class="n">transferprogresscallback</span><span class="p">)</span><span class="w"> </span><span class="n">progress</span><span class="p">);</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>paths</em></td>
+<td>List<String></td>
+<td>List of paths to the database files.</td>
+</tr>
+<tr>
+<td><em>progress</em></td>
+<td><a href="#transferprogresscallback">TransferProgressCallback<String></a></td>
+<td>Callback for transfer progress.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>See <a href="transfer.html"><code>Transfer.Result</code></a>.</p>
+<h3 id="transferbinaryfiles">transferBinaryFiles</h3>
+<p>Transfer binary files to the printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">Transfer</span><span class="p">.</span><span class="na">Result</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">transferBinaryFiles</span><span class="p">(</span><span class="kd">final</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">paths</span><span class="p">,</span><span class="w"> </span><span class="o">[</span><span class="n">TransferProgressCallback</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;]</span><span class="p">(</span><span class="err">#</span><span class="n">transferprogresscallback</span><span class="p">)</span><span class="w"> </span><span class="n">progress</span><span class="p">);</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>paths</em></td>
+<td>List<String></td>
+<td>List of paths to the binary files.</td>
+</tr>
+<tr>
+<td><em>progress</em></td>
+<td><a href="#transferprogresscallback">TransferProgressCallback<String></a></td>
+<td>Callback for transfer progress.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>See <a href="transfer.html"><code>Transfer.Result</code></a>.</p>
+<h3 id="transferbinarydata">transferBinaryData</h3>
+<p>Transfer binary data to the printer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">Transfer</span><span class="p">.</span><span class="na">Result</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">transferBinaryData</span><span class="p">(</span><span class="kd">final</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">ByteBuffer</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="o">[</span><span class="n">TransferProgressCallback</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;]</span><span class="p">(</span><span class="err">#</span><span class="n">transferprogresscallback</span><span class="p">)</span><span class="w"> </span><span class="n">progress</span><span class="p">);</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>data</em></td>
+<td>List<ByteBuffer></td>
+<td>List of binary data buffers.</td>
+</tr>
+<tr>
+<td><em>progress</em></td>
+<td><a href="#transferprogresscallback">TransferProgressCallback<Integer></a></td>
+<td>Callback for transfer progress.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>See <a href="transfer.html"><code>Transfer.Result</code></a>.</p>
+<h3 id="transferprinterconfigurationfiles">transferPrinterConfigurationFiles</h3>
+<p>Transfer printer configuration files to the printer. Only files with the <code>.json</code> or <code>.eldpk</code> extension are supported. These files can be created using the "BRConfiguration Tool" application.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="n">Transfer</span><span class="p">.</span><span class="na">Result</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">transferPrinterConfigurationFiles</span><span class="p">(</span><span class="kd">final</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">paths</span><span class="p">,</span><span class="w"> </span><span class="n">TransferProgressCallback</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">progress</span><span class="p">);</span>
+</code></pre></div>
+
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>paths</em></td>
+<td>List<String></td>
+<td>List of configuration file paths to transfer. Supported extensions: .json, .eldpk. These files can be created using the "BRConfiguration Tool" application.</td>
+</tr>
+<tr>
+<td><em>progress</em></td>
+<td>TransferProgressCallback<String></td>
+<td>Callback for transfer progress.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return Value</strong></p>
+<p>See <a href="transfer.html"><code>Transfer.Result</code></a>.</p>
+<h2 id="interfaces">Interfaces</h2>
+<h3 id="transferprogresscallback">TransferProgressCallback</h3>
+<p>Callback interface for monitoring the progress of a file transfer.</p>
+<p><strong>Declaration</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">TransferProgressCallback</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">onProgress</span><span class="p">(</span><span class="n">T</span><span class="w"> </span><span class="n">sent</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">progressPercentage</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>Methods</strong></p>
+<h4 id="onprogress">onProgress</h4>
+<p>Called to report the progress of the file transfer.</p>
+<p><strong>Parameters</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>sent</em></td>
+<td>T</td>
+<td>The item currently being sent, which matches the type of the transfer argument.</td>
+</tr>
+<tr>
+<td><em>progressPercentage</em></td>
+<td>int</td>
+<td>The percentage of the transfer that has been completed.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="deprecates">Deprecates</h2>
+<p><span class="deprecated">Deprecated</span></p>
+<h3 id="sendprnfile"><del>sendPRNFile</del></h3>
+<p>Please use <a href="#transferbinaryfiles"><code>transferBinaryFiles</code></a> instead.</p>
+<h3 id="sendrawdata"><del>sendRawData</del></h3>
+<p>Please use <a href="#transferbinarydata"><code>transferBinaryData</code></a> instead.</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      ©2020 Brother Industries, Ltd. All Rights Reserved.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.b78d2936.min.js"></script>
+      
+    
+  </body>
+</html>

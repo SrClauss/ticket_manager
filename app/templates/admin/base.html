@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EventMaster Admin{% endblock %}</title>
+    
+    <link rel="stylesheet" href="/static/css/tailwind.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="/static/css/md-dark.css">
+    <link rel="stylesheet" href="/static/css/tailwind-compat.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container container mx-auto px-4 position-fixed top-0 end-0 p-3">
+        {% block toasts %}{% endblock %}
+    </div>
+    
+    <!-- Main Content -->
+    <div class="container content-container mx-auto px-4" style="padding-bottom: 12rem;">
+        {% block content %}{% endblock %}
+    </div>
+    
+    {% block bottom_nav %}
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur-md border-t border-slate-700 h-20 flex justify-around items-center px-4 z-50">
+        <a href="/admin/dashboard" class="nav-link flex flex-col items-center {% if active_page == 'dashboard' %}nav-active{% endif %} px-3 py-1 rounded-full">
+            <span class="material-symbols-outlined">grid_view</span>
+            <span class="text-[11px] font-medium">Início</span>
+        </a>
+        <a href="/admin/eventos" class="nav-link flex flex-col items-center {% if active_page == 'eventos' %}nav-active{% endif %} px-3 py-1 rounded-full">
+            <span class="material-symbols-outlined">calendar_today</span>
+            <span class="text-[11px] font-medium">Eventos</span>
+        </a>
+        <a href="/admin/configuracoes" class="nav-link flex flex-col items-center {% if active_page == 'configuracoes' %}nav-active{% endif %} px-3 py-1 rounded-full">
+            <span class="material-symbols-outlined">settings</span>
+            <span class="text-[11px] font-medium">Config</span>
+        </a>
+        <a href="/admin/logout" class="nav-link flex flex-col items-center text-slate-400 hover:text-red-400 px-3 py-1 rounded-full">
+            <span class="material-symbols-outlined">logout</span>
+            <span class="text-[11px] font-medium">Sair</span>
+        </a>
+    </nav>
+    {% endblock %}
+
+
+    
+    <!-- Initialize Lucide Icons -->
+    <script>
+        lucide.createIcons();
+    </script>
+    
+    <!-- Show simple toasts (no bootstrap dependency) and lightweight modal handler -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.toast').forEach(function(t){
+                t.style.display = 'block';
+                setTimeout(function(){ t.style.display = 'none'; }, 4500);
+            });
+
+            // Modal helpers: support data-bs-toggle and data-bs-dismiss used in templates
+            function showModal(modal){
+                if(!modal) return;
+                // create backdrop
+                const backdrop = document.createElement('div');
+                backdrop.className = 'modal-backdrop';
+                backdrop.addEventListener('click', ()=> hideModal(modal));
+                document.body.appendChild(backdrop);
+                modal.dataset.backdropId = 'modal-backdrop-' + Date.now();
+                modal.classList.add('show');
+                // prevent body scroll
+                document.body.style.overflow = 'hidden';
+            }
+            function hideModal(modal){
+                if(!modal) return;
+                modal.classList.remove('show');
+                // remove any backdrop
+                document.querySelectorAll('.modal-backdrop').forEach(function(b){ b.remove(); });
+                document.body.style.overflow = '';
+            }
+
+            // delegate clicks for toggles and dismiss
+            document.body.addEventListener('click', function(ev){
+                const toggle = ev.target.closest('[data-bs-toggle="modal"]');
+                if(toggle){
+                    ev.preventDefault();
+                    const target = toggle.getAttribute('data-bs-target') || toggle.dataset.bsTarget;
+                    if(target){
+                        const modal = document.querySelector(target);
+                        showModal(modal);
+                    }
+                    return;
+                }
+                const dismiss = ev.target.closest('[data-bs-dismiss="modal"]');
+                if(dismiss){
+                    // find nearest modal ancestor
+                    const modal = ev.target.closest('.modal') || document.querySelector(dismiss.getAttribute('data-bs-target'));
+                    if(modal){ hideModal(modal); }
+                }
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

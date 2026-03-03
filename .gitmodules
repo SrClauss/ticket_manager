@@ -1,0 +1,3 @@
+[submodule "TicketPrinterApp"]
+	path = TicketPrinterApp
+	url = https://github.com/SrClauss/TicketPrinterApp
