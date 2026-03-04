@@ -94,6 +94,24 @@
       </table>
     </div>
   </div>
+
+  {% if total_pages > 1 %}
+  <nav class="mt-4 flex justify-center items-center gap-2 text-sm text-slate-400">
+    {% set base = [] %}
+    {% if busca %}{% set _ = base.append('busca=' ~ busca) %}{% endif %}
+    {% if status %}{% set _ = base.append('status=' ~ status) %}{% endif %}
+    {% if periodo %}{% set _ = base.append('periodo=' ~ periodo) %}{% endif %}
+
+    {% if page > 1 %}
+      <a href="?{{ base | join('&') }}{% if base %}&{% endif %}page={{ page-1 }}" class="px-3 py-1 bg-slate-700 rounded hover:bg-slate-600">Anterior</a>
+    {% endif %}
+    <span>Página {{ page }} de {{ total_pages }}</span>
+    {% if page < total_pages %}
+      <a href="?{{ base | join('&') }}{% if base %}&{% endif %}page={{ page+1 }}" class="px-3 py-1 bg-slate-700 rounded hover:bg-slate-600">Próxima</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+
   {% else %}
   <div class="md-card p-8 text-center border border-slate-700/50">
     <span class="material-symbols-outlined text-6xl text-slate-600 mb-4">event_busy</span>
