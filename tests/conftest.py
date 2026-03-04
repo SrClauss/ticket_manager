@@ -125,6 +125,23 @@ class FakeCollection:
                     if not re.search(pattern, str(doc_value), regex_flags):
                         return False
                     continue
+                # comparison operators (used for date filtering)
+                if "$lt" in value:
+                    if not (doc_value < value["$lt"]):
+                        return False
+                    continue
+                if "$lte" in value:
+                    if not (doc_value <= value["$lte"]):
+                        return False
+                    continue
+                if "$gt" in value:
+                    if not (doc_value > value["$gt"]):
+                        return False
+                    continue
+                if "$gte" in value:
+                    if not (doc_value >= value["$gte"]):
+                        return False
+                    continue
             
             if not self._equals(doc_value, value):
                 return False

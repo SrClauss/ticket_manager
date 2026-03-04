@@ -180,23 +180,34 @@ async def admin_eventos_list(
     elif status == "inativo":
         query["ativo"] = False
     
-    # Determine whether to show future events by default (switcher on)
+    # Determine whether to apply a date filter (future/past).
+    # By default the UI wants to show future events, but this should not
+    # override an explicit search term – if the user typed something we
+    # assume they want to look across all periods unless they also picked one.
+    apply_date = True
     show_futuros = False
+
     if periodo == "futuros":
         show_futuros = True
     elif periodo == "passados":
         show_futuros = False
     else:
-        # if periodo not explicitly set, use futuros_only param if present; default to True
+        # no explicit period chosen
         if futuros_only is None:
+            # default to future only, but if there's a busca we suppress
+            # the automatic filtering so the search spans both past and
+            # future events.
             show_futuros = True
+            if busca:
+                apply_date = False
         else:
             show_futuros = (futuros_only == "on")
 
-    if periodo == "passados":
-        query["data_evento"] = {"$lt": datetime.now(timezone.utc)}
-    elif show_futuros:
-        query["data_evento"] = {"$gte": datetime.now(timezone.utc)}
+    if apply_date:
+        if periodo == "passados":
+            query["data_evento"] = {"$lt": datetime.now(timezone.utc)}
+        elif show_futuros:
+            query["data_evento"] = {"$gte": datetime.now(timezone.utc)}
     
     # Pagination
     total = await db.eventos.count_documents(query)

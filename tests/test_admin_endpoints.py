@@ -136,6 +136,82 @@ class TestEventosAdmin:
         assert exc_info.value.status_code == 404
 
 
+
+
+class TestAdminWebEventosFilter:
+    """Testes para a lógica de filtragem na página de eventos admin."""
+
+    @pytest.mark.asyncio
+    async def test_search_shows_past_events_when_busca_provided(self, fake_db, mock_get_database):
+        """Uma busca por nome não deve ser limitada ao futuro por padrão."""
+        from app.routers import admin_web
+        # bypass auth check
+        admin_web.check_admin_session = lambda r: None
+        req = type("R", (object,), {"cookies": {}})()
+
+        # inserir um evento passado e um futuro
+        from bson import ObjectId
+        from datetime import datetime, timezone
+        fake_db.eventos.docs.append({
+            "_id": ObjectId(),
+            "nome": "evento passado",
+            "descricao": "",
+            "data_evento": datetime(2020, 1, 1, tzinfo=timezone.utc),
+            "data_criacao": datetime.now(timezone.utc),
+            "token_bilheteria": "a",
+            "token_portaria": "b",
+            "layout_ingresso": {}
+        })
+        fake_db.eventos.docs.append({
+            "_id": ObjectId(),
+            "nome": "evento futuro",
+            "descricao": "",
+            "data_evento": datetime(2030, 1, 1, tzinfo=timezone.utc),
+            "data_criacao": datetime.now(timezone.utc),
+            "token_bilheteria": "a",
+            "token_portaria": "b",
+            "layout_ingresso": {}
+        })
+
+        resp = await admin_web.admin_eventos_list(req, busca="passado")
+        nomes = [e["nome"] for e in resp.context["eventos"]]
+        assert "evento passado" in nomes
+
+    @pytest.mark.asyncio
+    async def test_periodo_passados_overrides_search_default(self, fake_db, mock_get_database):
+        """Quando o usuário escolhe período 'passados', apenas eventos passados aparecem."""
+        from app.routers import admin_web
+        admin_web.check_admin_session = lambda r: None
+        req = type("R", (object,), {"cookies": {}})()
+
+        from bson import ObjectId
+        from datetime import datetime, timezone
+        fake_db.eventos.docs.append({
+            "_id": ObjectId(),
+            "nome": "outro passado",
+            "descricao": "",
+            "data_evento": datetime(2019, 1, 1, tzinfo=timezone.utc),
+            "data_criacao": datetime.now(timezone.utc),
+            "token_bilheteria": "x",
+            "token_portaria": "y",
+            "layout_ingresso": {}
+        })
+        fake_db.eventos.docs.append({
+            "_id": ObjectId(),
+            "nome": "outro futuro",
+            "descricao": "",
+            "data_evento": datetime(2035, 1, 1, tzinfo=timezone.utc),
+            "data_criacao": datetime.now(timezone.utc),
+            "token_bilheteria": "x",
+            "token_portaria": "y",
+            "layout_ingresso": {}
+        })
+
+        resp = await admin_web.admin_eventos_list(req, busca="outro", periodo="passados")
+        nomes = [e["nome"] for e in resp.context["eventos"]]
+        assert nomes == ["outro passado"]
+
+
 class TestIlhasAdmin:
     """Testes para endpoints de ilhas/setores."""
     
