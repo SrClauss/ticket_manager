@@ -5,11 +5,13 @@ Aceita tanto o token de bilheteria quanto o token de portaria para autenticaçã
 As rotas server-side consultam o banco diretamente, independente do tipo de token.
 """
 import re
+import logging
 from fastapi import APIRouter, Request, Form, status
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from bson import ObjectId
 from typing import Optional, Tuple
+from datetime import datetime, timezone
 
 import app.config.database as database
 from app.utils.validations import validate_cpf, normalize_participante_data, format_datetime_display
@@ -17,6 +19,7 @@ from app.routers.bilheteria import normalize_bson_types, _detect_search_type
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
+logger = logging.getLogger(__name__)
 
 COOKIE_TOKEN = "evento_token"
 
@@ -415,6 +418,153 @@ async def evento_participante_editar_save(
             "error": error,
         },
     )
+
+
+
+# ── Tipos de Ingresso ──────────────────────────────────────────────────────────
+
+async def _get_tipos_ingresso(db, evento: dict) -> list:
+    """Retorna os tipos de ingresso do evento como lista de dicts {id, descricao}."""
+    tipos = []
+    if evento.get("tipos_ingresso"):
+        for t in evento.get("tipos_ingresso", []):
+            tipos.append({
+                "id": str(t.get("_id") or t.get("id") or t.get("numero", "")),
+                "descricao": t.get("descricao", "Ingresso"),
+            })
+    else:
+        evento_id = _evento_id_str(evento)
+        cursor = db.tipos_ingresso.find({"evento_id": evento_id})
+        async for t in cursor:
+            tipos.append({
+                "id": str(t["_id"]),
+                "descricao": t.get("descricao", "Ingresso"),
+            })
+    return tipos
+
+
+@router.get("/evento/api/tipos-ingresso")
+async def evento_api_tipos_ingresso(request: Request):
+    """Lista os tipos de ingresso do evento (autenticado por cookie)."""
+    session = await _get_evento_from_cookie(request)
+    if not session:
+        return JSONResponse({"detail": "Não autenticado"}, status_code=401)
+    evento, _ = session
+    db = database.get_database()
+    tipos = await _get_tipos_ingresso(db, evento)
+    return JSONResponse({"tipos_ingresso": tipos})
+
+
+@router.get("/evento/participante/novo", response_class=HTMLResponse)
+async def evento_participante_novo_page(request: Request):
+    """Página de cadastro de novo participante."""
+    session = await _get_evento_from_cookie(request)
+    if not session:
+        return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    evento, _ = session
+    db = database.get_database()
+    tipos = await _get_tipos_ingresso(db, evento)
+
+    return templates.TemplateResponse(
+        "evento/participante_novo.html",
+        {
+            "request": request,
+            "tipos_ingresso": tipos,
+            "evento_nome": evento.get("nome", "Evento"),
+            "active_page": "dashboard",
+        },
+    )
+
+
+@router.post("/evento/participante/novo")
+async def evento_participante_novo_save(
+    request: Request,
+    nome: str = Form(...),
+    email: str = Form(...),
+    cpf: str = Form(...),
+    telefone: str = Form(""),
+    empresa: str = Form(""),
+    nacionalidade: str = Form(""),
+    tipo_ingresso_id: str = Form(""),
+):
+    """Cria um novo participante e emite ingresso opcional."""
+    session = await _get_evento_from_cookie(request)
+    if not session:
+        return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    evento, _ = session
+    evento_id = _evento_id_str(evento)
+    db = database.get_database()
+
+    error = None
+    cpf_clean = None
+    try:
+        cpf_clean = validate_cpf(cpf)
+    except Exception as e:
+        error = f"CPF inválido: {e}"
+
+    participante_id = None
+    if not error:
+        participante_dict = {
+            "nome": nome.strip(),
+            "email": email.strip(),
+            "cpf": cpf_clean,
+            "telefone": telefone.strip() or None,
+            "empresa": empresa.strip() or None,
+            "nacionalidade": nacionalidade.strip() or None,
+        }
+        existing = await db.participantes.find_one({"email": participante_dict["email"]})
+        if existing:
+            participante_id = str(existing["_id"])
+        else:
+            result = await db.participantes.insert_one(participante_dict)
+            participante_id = str(result.inserted_id)
+
+    if not error and tipo_ingresso_id.strip() and participante_id:
+        from app.config.auth import generate_qrcode_hash
+        qrcode_hash = generate_qrcode_hash()
+        ingresso_dict = {
+            "evento_id": evento_id,
+            "tipo_ingresso_id": tipo_ingresso_id.strip(),
+            "participante_id": participante_id,
+            "participante_cpf": cpf_clean,
+            "status": "Ativo",
+            "qrcode_hash": qrcode_hash,
+            "data_emissao": datetime.now(timezone.utc).isoformat(),
+        }
+        try:
+            await db.ingressos_emitidos.insert_one(dict(ingresso_dict))
+        except Exception as exc:
+            logger.error("Erro ao inserir ingresso em ingressos_emitidos: %s", exc)
+            error = "Erro ao emitir ingresso. Participante cadastrado, mas ingresso não emitido."
+        if not error:
+            try:
+                await db.participantes.update_one(
+                    {"_id": ObjectId(participante_id)},
+                    {"$push": {"ingressos": ingresso_dict}},
+                )
+            except Exception as exc:
+                logger.error("Erro ao embedar ingresso no participante: %s", exc)
+
+    tipos = await _get_tipos_ingresso(db, evento)
+
+    if error:
+        return templates.TemplateResponse(
+            "evento/participante_novo.html",
+            {
+                "request": request,
+                "tipos_ingresso": tipos,
+                "evento_nome": evento.get("nome", "Evento"),
+                "active_page": "dashboard",
+                "error": error,
+            },
+        )
+
+    if participante_id:
+        return RedirectResponse(
+            url=f"/evento/participante/{participante_id}/editar",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    return RedirectResponse(url="/evento/dashboard", status_code=status.HTTP_303_SEE_OTHER)
 
 
 # ── Internal helpers ───────────────────────────────────────────────────────────
