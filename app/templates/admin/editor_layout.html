@@ -191,7 +191,7 @@
         </section>
 
         <!-- Layers -->
-        <section class="p-3 flex-1 overflow-y-auto">
+        <section class="p-3 flex-1">
           <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Camadas</h2>
 
           <p x-show="elements.length === 0" class="text-xs text-slate-500 italic">Sem elementos. Adicione acima.</p>
@@ -569,12 +569,16 @@
         <section class="p-3 bg-slate-900 shrink-0 border-b border-slate-700">
           <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Pré-visualização para Impressão</h2>
           <div class="min-h-[80px] bg-white rounded border border-slate-600 flex items-center justify-center p-2">
-            <img x-show="printUrl" :src="printUrl"
+            <img x-show="previewUrl && cfg.orientation === 'landscape'" :src="previewUrl"
+                 style="transform: rotate(-90deg); max-width: 160px; max-height: 250px;"
+                 class="object-contain" alt="Prévia para impressão (rotacionada)">
+            <img x-show="previewUrl && cfg.orientation !== 'landscape'" :src="previewUrl"
                  class="max-w-full max-h-[160px] object-contain" alt="Prévia para impressão">
-            <p x-show="!printUrl && !previewLoading"
+            <p x-show="!previewUrl && !previewLoading"
                class="text-[10px] text-slate-400 text-center">
                Clique em <strong>👁 Prévia</strong> no cabeçalho para gerar.
             </p>
+            <p x-show="previewLoading" class="text-xs text-slate-400">Gerando prévia…</p>
           </div>
         </section>
         <!-- Preview panel (always visible at bottom) -->
@@ -643,7 +647,6 @@
       fc: null,           // Fabric.Canvas instance
 
       previewUrl: null,
-      printUrl: null,
       previewLoading: false,
       saving: false,
       toasts: [],
@@ -1088,19 +1091,6 @@
         }
       },
 
-      // return URL for print-oriented preview based on current canvas settings
-      getPrintUrl() {
-        const params = new URLSearchParams({
-          width_mm: this.cfg.width,
-          height_mm: this.cfg.height,
-          dpi: this.cfg.dpi || 300
-        });
-        if (this.cfg.orientation === 'landscape') {
-          params.set('orientation', 'landscape');
-        }
-        return `/api/eventos/labels/print.png?${params.toString()}`;
-      },
-
       async generatePreview() {
         this.previewLoading = true;
         this.previewUrl = null;
@@ -1119,8 +1109,6 @@
         } finally {
           this.previewLoading = false;
         }
-        // also compute print preview URL
-        this.printUrl = this.getPrintUrl();
       },
 
       // ══════════════════════════════════════════════════════════════
