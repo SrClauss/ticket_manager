@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EventMaster — Evento{% endblock %}</title>
+
+    <link rel="stylesheet" href="/static/css/tailwind.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="/static/css/md-dark.css">
+    <link rel="stylesheet" href="/static/css/tailwind-compat.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="container content-container mx-auto px-4" style="padding-bottom: 6rem;">
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block bottom_nav %}
+    {% if evento_nome %}
+    <nav class="bottom-nav fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur-md border-t border-slate-700 h-20 flex justify-around items-center px-4 z-50">
+        <a href="/evento/dashboard" class="nav-link flex flex-col items-center {% if active_page == 'dashboard' %}nav-active{% endif %} px-3 py-1 rounded-full">
+            <span class="material-symbols-outlined">people</span>
+            <span class="text-[11px] font-medium">Participantes</span>
+        </a>
+        <a href="/evento/logout" class="nav-link flex flex-col items-center text-slate-400 hover:text-red-400 px-3 py-1 rounded-full">
+            <span class="material-symbols-outlined">logout</span>
+            <span class="text-[11px] font-medium">Sair</span>
+        </a>
+    </nav>
+    {% endif %}
+    {% endblock %}
+
+    <script>
+        lucide.createIcons();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -8,7 +8,7 @@ from app.config.database import connect_to_mongo, close_mongo_connection
 from app.config.indexes import create_indexes
 from app.config.auth import create_initial_admin
 from app.routers import admin, bilheteria, portaria, admin_web, operational_web, admin_management
-from app.routers import inscricao
+from app.routers import inscricao, evento_web
 from bson import ObjectId
 
 app = FastAPI(
@@ -46,6 +46,7 @@ async def shutdown_db_client():
     await close_mongo_connection()
 
 # Include routers
+app.include_router(evento_web.router, tags=["Evento Web UI"])
 app.include_router(admin_web.router, prefix="/admin", tags=["Admin Web UI"])
 app.include_router(operational_web.router, tags=["Operational Web UI"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Administrativo"])
@@ -92,10 +93,6 @@ async def ingresso_page(request: Request, ingresso_id: str):
     evento_id = ingresso.get("evento_id")
     return templates.TemplateResponse("ingresso_view.html", {"request": request, "evento_id": evento_id, "ingresso_id": str(ingresso.get("_id"))})
 
-
-@app.get("/")
-async def root():
-    return RedirectResponse(url="/admin/login", status_code=302)
 
 
 # Public friendly routes to expose the planilha upload form at /upload/{token}
