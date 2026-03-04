@@ -140,6 +140,8 @@ Cabeçalho obrigatório: `X-Token-Portaria: <token>`
 - Use `X-Token-Bilheteria` para ações de bilheteria (emissão, busca, reimpressão).
 - Use `X-Token-Portaria` para validação de acesso na portaria.
 - Para imagens de ingresso, use `If-None-Match` com o `ETag` retornado para economizar banda.
+- Para gerar imagens de rótulo de visualização (não necessariamente fiéis à impressão), chame GET `/labels/generate.png` com parâmetros `width_mm`, `height_mm`, `dpi` e opcional `orientation=portrait|landscape`.
+- Para obter uma imagem **fiel ao tamanho em milímetros** destinada a impressão (e já girada conforme orientação), use o novo endpoint GET `/labels/print.png` com os mesmos parâmetros; este recurso é usado pelo editor de layout para pré‑visualizar a saída de impressão acima da imagem de exibição.
 - Se preferir login JSON para admins, recomendo adicionar um endpoint POST `/api/admin/login` que retorne um JWT (atualmente o login web seta cookie).
 
 ---

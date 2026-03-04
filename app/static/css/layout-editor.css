@@ -370,6 +370,13 @@
   display: block;
 }
 
+/* print preview is shown above main preview and should be narrower */
+.print-preview {
+  max-width: 250px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
 .preview-watermark {
   position: absolute;
   inset: 0;

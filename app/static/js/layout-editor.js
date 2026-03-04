@@ -382,6 +382,21 @@ document.addEventListener('alpine:init', () => {
       }
     },
     
+    // Compute URL for print-specific preview image (query string only)
+    printPreviewUrl() {
+      // uses the new endpoint created to render an image with accurate millimeter
+      // dimensions and optional rotation.  orientation is included for clarity but
+      // only used when landscape is selected.
+      let params = new URLSearchParams();
+      params.set('width_mm', this.canvas.width);
+      params.set('height_mm', this.canvas.height);
+      params.set('dpi', this.canvas.dpi || 300);
+      if (this.canvas.orientation && this.canvas.orientation.toLowerCase() === 'landscape') {
+        params.set('orientation', 'landscape');
+      }
+      return `/api/eventos/labels/print.png?` + params.toString();
+    },
+
     // Refresh preview
     async refreshPreview() {
       this.previewLoading = true;

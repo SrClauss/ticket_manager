@@ -498,6 +498,85 @@ async def generate_label_png(width_mm: float = 69, height_mm: float = 99, dpi: i
     return StreamingResponse(bio, media_type='image/png', headers=headers)
 
 
+# ------------------------------------------------------------------
+# printing-specific route
+# ------------------------------------------------------------------
+@router.get("/labels/print.png")
+async def print_label_png(
+    width_mm: float = 69,
+    height_mm: float = 99,
+    dpi: int = 300,
+    text: str = "",
+    bg: str = "white",
+    fg: str = "black",
+    orientation: str = "portrait"
+):
+    """Generate a label intended for _printing_.
+
+    This endpoint behaves similarly to ``generate_label_png`` but adds support
+    for rotating the output when ``orientation`` is ``landscape``.  Rotation is
+    applied server-side so the returned PNG matches exactly the requested
+    physical dimensions in millimeters; clients can send the bytes directly to
+    a Brother SDK or other printer without further transformation.
+
+    ``orientation`` accepts "portrait" or "landscape" (case-insensitive).
+    """
+    width_mm = float(width_mm)
+    height_mm = float(height_mm)
+    dpi = int(dpi)
+
+    rotate_ccw = False
+    if orientation.lower() in ("landscape", "l"):
+        width_mm, height_mm = height_mm, width_mm
+        rotate_ccw = True
+
+    width_px = max(1, _mm_to_px(width_mm, dpi))
+    height_px = max(1, _mm_to_px(height_mm, dpi))
+
+    img = Image.new('RGB', (width_px, height_px), color=bg)
+    draw = ImageDraw.Draw(img)
+
+    if text:
+        font_size = max(10, int(min(width_px, height_px) * 0.12))
+        try:
+            font = ImageFont.truetype("DejaVuSans.ttf", font_size)
+        except Exception:
+            try:
+                font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
+            except Exception:
+                font = ImageFont.load_default()
+
+        lines = str(text).split("\n")
+        total_h = 0
+        sizes = []
+        for line in lines:
+            ts = draw.textsize(line, font=font)
+            sizes.append(ts)
+            total_h += ts[1]
+        y = (height_px - total_h) // 2
+        for i, line in enumerate(lines):
+            tw, th = sizes[i]
+            x = (width_px - tw) // 2
+            draw.text((x, y), line, font=font, fill=fg)
+            y += th
+
+    if rotate_ccw:
+        img = img.rotate(90, expand=True)
+
+    bio2 = BytesIO()
+    try:
+        img.save(bio2, format='PNG', dpi=(dpi, dpi))
+    except Exception:
+        img.save(bio2, format='PNG')
+    bio2.seek(0)
+
+    headers2 = {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Content-Disposition": f'inline; filename="print_label_{width_mm}x{height_mm}mm.png"'
+    }
+    return StreamingResponse(bio2, media_type='image/png', headers=headers2)
+
+
 async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Optional[Dict], Optional[Dict]]:
     """Fetch ingresso from database (embedded in participante or standalone).
     

@@ -466,6 +466,15 @@
     <!-- Preview Area -->
     <div class="preview-area">
       <h5 class="text-white mb-3">Preview</h5>
+
+      <!-- Print-specific preview (millimeter-accurate) -->
+      <div class="mb-3">
+        <h6 class="text-white small">Preview para Impressão</h6>
+        <img :src="$store.layoutEditor.printPreviewUrl()" 
+             class="preview-image print-preview" 
+             alt="Print preview">
+        <p class="text-muted small mt-1">Imagem gerada pela rota <code>/api/eventos/labels/print.png</code></p>
+      </div>
       
       <div class="preview-container">
         <template x-if="$store.layoutEditor.previewLoading">
