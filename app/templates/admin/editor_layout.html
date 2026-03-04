@@ -228,7 +228,7 @@
       </main>
 
       <!-- ═══ RIGHT SIDEBAR ══════════════════════════════════════ -->
-      <aside class="w-72 bg-slate-800 border-l border-slate-700 flex flex-col overflow-hidden shrink-0">
+      <aside class="w-72 bg-slate-800 border-l border-slate-700 flex flex-col overflow-y-auto shrink-0">
 
         <!-- ─── PRE-INSERTION FORM ─────────────────────────────── -->
         <section x-show="insertingType" class="p-3 border-b border-slate-700 overflow-y-auto" style="flex:1; min-height:0;">
@@ -565,6 +565,18 @@
           </div>
         </section>
 
+        <!-- Print preview panel inserted above normal preview -->
+        <section class="p-3 bg-slate-900 shrink-0 border-b border-slate-700">
+          <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Pré-visualização para Impressão</h2>
+          <div class="min-h-[80px] bg-white rounded border border-slate-600 flex items-center justify-center p-2">
+            <img x-show="printUrl" :src="printUrl"
+                 class="max-w-full max-h-[160px] object-contain" alt="Prévia para impressão">
+            <p x-show="!printUrl && !previewLoading"
+               class="text-[10px] text-slate-400 text-center">
+               Clique em <strong>👁 Prévia</strong> no cabeçalho para gerar.
+            </p>
+          </div>
+        </section>
         <!-- Preview panel (always visible at bottom) -->
         <section class="p-3 bg-slate-900 shrink-0 border-t border-slate-700">
           <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Pré-visualização real</h2>
@@ -631,6 +643,7 @@
       fc: null,           // Fabric.Canvas instance
 
       previewUrl: null,
+      printUrl: null,
       previewLoading: false,
       saving: false,
       toasts: [],
@@ -1075,6 +1088,19 @@
         }
       },
 
+      // return URL for print-oriented preview based on current canvas settings
+      getPrintUrl() {
+        const params = new URLSearchParams({
+          width_mm: this.cfg.width,
+          height_mm: this.cfg.height,
+          dpi: this.cfg.dpi || 300
+        });
+        if (this.cfg.orientation === 'landscape') {
+          params.set('orientation', 'landscape');
+        }
+        return `/api/eventos/labels/print.png?${params.toString()}`;
+      },
+
       async generatePreview() {
         this.previewLoading = true;
         this.previewUrl = null;
@@ -1093,6 +1119,8 @@
         } finally {
           this.previewLoading = false;
         }
+        // also compute print preview URL
+        this.printUrl = this.getPrintUrl();
       },
 
       // ══════════════════════════════════════════════════════════════

@@ -113,7 +113,6 @@
       </form>
 
       <!-- espaço para pré‑visualizações após emissão -->
-      <div id="imagePreviews" class="mt-4"></div>
     </div>
 
   </div>
@@ -171,53 +170,16 @@ async function cadastrar(){
     if(resp.status === 201){
       const ingresso = body.ingresso || {};
       const ingresso_id = body.ingresso_id || ingresso._id || ingresso.id || ingresso['id'];
-
-      // show previews instead of immediate redirect
-      mostrarPreviews(ingresso_id, ingresso.layout_ingresso);
+      msg.innerHTML = '<div class="message">Inscrição realizada com sucesso. Redirecionando...</div>';
+      setTimeout(()=>{ if(ingresso_id) window.location.href = `/ingresso/${ingresso_id}`; else window.location.href = '/'; }, 800);
       return;
     }
     msg.innerHTML = `<div class="message error">Erro: ${body.detail || JSON.stringify(body)}</div>`;
   }catch(err){ console.error(err); msg.innerHTML = '<div class="message error">Falha ao enviar inscrição.</div>'; }
 }
 
-const eventoId = "{{ evento._id }}";
-
 document.getElementById('cadastroSubmit').addEventListener('click', cadastrar);
 
-// helper to render preview images
-function mostrarPreviews(ingressoId, layout) {
-  const previewDiv = document.getElementById('imagePreviews');
-  previewDiv.innerHTML = '<h5>Pré‑visualização do ingresso</h5>';
-
-  // display normal rendered image
-  const img1 = document.createElement('img');
-  img1.src = `/api/eventos/${eventoId}/ingresso/${ingressoId}/render.jpg`;
-  img1.style.maxWidth = '100%';
-  previewDiv.appendChild(img1);
-
-  // display print-oriented preview if we know dimensions
-  if(layout && layout.canvas) {
-    const w = layout.canvas.width;
-    const h = layout.canvas.height;
-    const dpi = layout.canvas.dpi || 300;
-    const params = new URLSearchParams({ width_mm: w, height_mm: h, dpi });
-    if(layout.canvas.orientation && layout.canvas.orientation.toLowerCase() === 'landscape') {
-      params.set('orientation', 'landscape');
-    }
-    const img2 = document.createElement('img');
-    img2.src = `/api/eventos/labels/print.png?${params.toString()}`;
-    img2.style.maxWidth = '100%';
-    img2.style.marginTop = '0.5rem';
-    previewDiv.appendChild(img2);
-  }
-
-  // add link to ticket page
-  const link = document.createElement('a');
-  link.href = `/ingresso/${ingressoId}`;
-  link.textContent = 'Ver ingresso completo';
-  link.className = 'btn btn-sm btn-primary mt-2';
-  previewDiv.appendChild(link);
-}
 
 </script>
 {% endblock %}
