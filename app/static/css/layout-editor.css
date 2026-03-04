@@ -30,7 +30,7 @@
   
   .editor-sidebar { grid-area: sidebar; }
   .canvas-area { grid-area: canvas; }
-  .preview-area { grid-area: preview; }
+  .preview-area { grid-area: preview; overflow: auto; max-height: 100vh; padding-right: 0.5rem; }
 }
 
 @media (max-width: 1199px) {
