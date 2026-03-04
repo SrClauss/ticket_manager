@@ -158,11 +158,14 @@ async def admin_eventos_list(
     busca: Optional[str] = None,
     status: Optional[str] = None,
     periodo: Optional[str] = None,
-    futuros_only: Optional[str] = None,
     page: int = 1,
     per_page: int = 12
 ):
-    """List eventos with filters and pagination; switcher defaults to showing future events."""
+    """List eventos with filters and pagination.  By default (no filters)
+    **all** events are shown; there is no implicit future-only clause anymore.
+    Periodo filter will restrict to past/future when provided.  Pagination is
+    disabled whenever any filter parameter is set so admins can review
+    filtered results easily."""
     redirect = check_admin_session(request)
     if redirect:
         return redirect
@@ -180,37 +183,30 @@ async def admin_eventos_list(
     elif status == "inativo":
         query["ativo"] = False
     
-    # Determine whether to apply a date filter (future/past).
-    # By default the UI wants to show future events, but this should not
-    # override an explicit search term – if the user typed something we
-    # assume they want to look across all periods unless they also picked one.
-    apply_date = True
-    show_futuros = False
+    # Date filtering: the default page shows *future* events only, but
+    # if the admin has entered any explicit filter (busca or status) we
+    # should respect that and not silently drop past results.  However, if
+    # the user explicitly picks a período, obey it.
+    now = datetime.now(timezone.utc)
 
-    if periodo == "futuros":
-        show_futuros = True
-    elif periodo == "passados":
-        show_futuros = False
-    else:
-        # no explicit period chosen
-        if futuros_only is None:
-            # default to future only, but if there's a busca we suppress
-            # the automatic filtering so the search spans both past and
-            # future events.
-            show_futuros = True
-            if busca:
-                apply_date = False
-        else:
-            show_futuros = (futuros_only == "on")
-
-    if apply_date:
+    if periodo:
         if periodo == "passados":
-            query["data_evento"] = {"$lt": datetime.now(timezone.utc)}
-        elif show_futuros:
-            query["data_evento"] = {"$gte": datetime.now(timezone.utc)}
+            query["data_evento"] = {"$lt": now}
+        elif periodo == "futuros":
+            query["data_evento"] = {"$gte": now}
+    # if no periodo, do not add any date constraint at all; show everything
     
-    # Pagination
+    # Pagination: if any filter parameter is provided we want to show all
+    # matching events on a single page instead of chopping them up.  This
+    # makes it easier for the admin to review filtered results without
+    # precisar navegar por várias páginas.
     total = await db.eventos.count_documents(query)
+
+    if busca or status or periodo:
+        # disable pagination, show all
+        per_page = total or 1
+        page = 1
+    
     total_pages = max(1, math.ceil(total / per_page))
     if page < 1:
         page = 1
@@ -218,6 +214,12 @@ async def admin_eventos_list(
         page = total_pages
 
     eventos = []
+    # determine sort direction: if we explicitly filtered for futuros we
+    # want ascending order, otherwise descending (recent first)
+    show_futuros = False
+    if "data_evento" in query and isinstance(query["data_evento"], dict):
+        if "$gte" in query["data_evento"]:
+            show_futuros = True
     sort_order = 1 if show_futuros else -1
     skip = (page - 1) * per_page
     cursor = db.eventos.find(query).sort("data_evento", sort_order).skip(skip).limit(per_page)
