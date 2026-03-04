@@ -159,7 +159,7 @@ async def admin_eventos_list(
     status: Optional[str] = None,
     periodo: Optional[str] = None,
     page: int = 1,
-    per_page: int = 12
+    per_page: int = 3  # show 3 events per page by default
 ):
     """List eventos with filters and pagination.  By default (no filters)
     **all** events are shown; there is no implicit future-only clause anymore.
@@ -201,12 +201,6 @@ async def admin_eventos_list(
     # makes it easier for the admin to review filtered results without
     # precisar navegar por várias páginas.
     total = await db.eventos.count_documents(query)
-
-    if busca or status or periodo:
-        # disable pagination, show all
-        per_page = total or 1
-        page = 1
-    
     total_pages = max(1, math.ceil(total / per_page))
     if page < 1:
         page = 1

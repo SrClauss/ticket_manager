@@ -181,30 +181,8 @@ class TestAdminWebEventosFilter:
     async def test_periodo_passados_overrides_search_default(self, fake_db, mock_get_database):
         """Quando o usuário escolhe período 'passados', apenas eventos passados aparecem."""
 
-    @pytest.mark.asyncio
-    async def test_filters_return_all_results_on_one_page(self, fake_db, mock_get_database):
-        """Com qualquer filtro em uso, não há divisão em páginas."""
-        from app.routers import admin_web
-        admin_web.check_admin_session = lambda r: None
-        req = type("R", (object,), {"cookies": {}})()
 
-        from bson import ObjectId
-        from datetime import datetime, timezone
-        # add several events
-        for i in range(5):
-            fake_db.eventos.docs.append({
-                "_id": ObjectId(),
-                "nome": f"evento {i}",
-                "descricao": "",
-                "data_evento": datetime(2022, 1, 1, tzinfo=timezone.utc),
-                "data_criacao": datetime.now(timezone.utc),
-                "token_bilheteria": "a",
-                "token_portaria": "b",
-                "layout_ingresso": {}
-            })
-        # filter by nome, expect all 5 returned
-        resp = await admin_web.admin_eventos_list(req, busca="evento")
-        assert len(resp.context["eventos"]) == 5
+    @pytest.mark.asyncio
 
     @pytest.mark.asyncio
     async def test_default_shows_all_events(self, fake_db, mock_get_database):
