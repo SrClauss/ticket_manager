@@ -125,11 +125,10 @@ async def admin_dashboard(request: Request):
     async for result in db.ingressos_emitidos.aggregate(pipeline):
         receita_total = result.get("total", 0)
     
-    # Get upcoming events (today and future)
+    # Get upcoming events (future only, not past)
     proximos_eventos = []
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     cursor = db.eventos.find(
-        {"data_evento": {"$gte": today_start}, "ativo": True}
+        {"data_evento": {"$gte": datetime.now(timezone.utc)}, "ativo": True}
     ).sort("data_evento", 1).limit(5)
     
     async for doc in cursor:
