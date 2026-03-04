@@ -568,7 +568,7 @@
         <!-- Print preview panel -->
         <section class="p-3 bg-slate-900 shrink-0 border-b border-slate-700">
           <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Pré-visualização para Impressão</h2>
-          <div :style="previewBoxStyle()" class="flex items-center justify-center p-2 overflow-hidden">
+          <div :style="printPreviewBoxStyle()" class="flex items-center justify-center p-2 overflow-hidden">
             <img x-show="previewUrl" :src="previewUrl"
                  :style="cfg.orientation==='landscape' ? 'transform: rotate(-90deg);' : ''"
                  class="max-w-full max-h-full object-contain rounded shadow-lg" alt="Prévia para impressão">
@@ -583,9 +583,8 @@
         <!-- Normal preview panel -->
         <section class="p-3 bg-slate-900 shrink-0 border-t border-slate-700">
           <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Pré-visualização Real</h2>
-          <div :style="previewBoxStyle()" class="flex items-center justify-center p-2 overflow-hidden">
+          <div :style="normalPreviewBoxStyle()" class="flex items-center justify-center p-2 overflow-hidden">
             <img x-show="previewUrl" :src="previewUrl"
-                 :style="cfg.orientation==='landscape' ? 'transform: rotate(-90deg);' : ''"
                  class="max-w-full max-h-full object-contain rounded shadow-lg" alt="Prévia do ingresso">
             <p x-show="!previewUrl && !previewLoading"
                class="text-[10px] text-slate-500 text-center">
@@ -649,16 +648,26 @@
       previewUrl: null,
       previewLoading: false,
 
-      // compute a scaled container style based on canvas size
-      previewBoxStyle() {
+      // Print preview (rotated for landscape)
+      printPreviewBoxStyle() {
         if (!this.cfg.width || !this.cfg.height) return '';
-        const scale = 2; // pixels per mm for preview scaling
+        const scale = 3;
         let w = this.cfg.width * scale;
         let h = this.cfg.height * scale;
-        // clamp to reasonable max so panel doesn't explode
-        w = Math.min(w, 200);
-        h = Math.min(h, 200);
+        w = Math.min(w, 280);
+        h = Math.min(h, 280);
         if (this.cfg.orientation === 'landscape') [w, h] = [h, w];
+        return `width:${w}px;height:${h}px;`;
+      },
+
+      // Normal preview (always original orientation)
+      normalPreviewBoxStyle() {
+        if (!this.cfg.width || !this.cfg.height) return '';
+        const scale = 3;
+        let w = this.cfg.width * scale;
+        let h = this.cfg.height * scale;
+        w = Math.min(w, 280);
+        h = Math.min(h, 280);
         return `width:${w}px;height:${h}px;`;
       },
       saving: false,
