@@ -1,0 +1,84 @@
+{% extends "evento/base.html" %}
+
+{% block title %}Novo Participante — {{ evento_nome }}{% endblock %}
+
+{% block content %}
+<header class="p-6 md:px-12 pt-8 flex items-center gap-3">
+  <a href="/evento/dashboard" class="inline-flex items-center gap-1 px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 text-sm">
+    <span class="material-symbols-outlined text-base">arrow_back</span>
+    Voltar
+  </a>
+  <div>
+    <h1 class="text-xl font-semibold text-slate-100">Novo Participante</h1>
+    <p class="text-sm text-slate-400">{{ evento_nome }}</p>
+  </div>
+</header>
+
+<main class="px-4 md:px-12 pb-28">
+
+  {% if error %}
+  <div class="mb-4 p-3 rounded-lg bg-red-900/30 border border-red-800 text-red-300 flex items-center gap-2">
+    <span class="material-symbols-outlined text-base">error</span>
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <section class="md-card p-4">
+    <h2 class="text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-purple-400 text-base">person_add</span>
+      Dados do Participante
+    </h2>
+    <form action="/evento/participante/novo" method="POST" class="space-y-4">
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Nome *</label>
+        <input type="text" name="nome" required
+               class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2.5 px-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">E-mail *</label>
+        <input type="email" name="email" required
+               class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2.5 px-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">CPF *</label>
+        <input type="text" name="cpf" required maxlength="14" placeholder="000.000.000-00"
+               class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2.5 px-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Telefone</label>
+        <input type="text" name="telefone"
+               class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2.5 px-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Empresa</label>
+        <input type="text" name="empresa"
+               class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2.5 px-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Nacionalidade</label>
+        <input type="text" name="nacionalidade"
+               class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2.5 px-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm" />
+      </div>
+
+      {% if tipos_ingresso %}
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Tipo de Ingresso</label>
+        <select name="tipo_ingresso_id"
+                class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2.5 px-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm">
+          <option value="">— Sem ingresso —</option>
+          {% for tipo in tipos_ingresso %}
+          <option value="{{ tipo.id }}">{{ tipo.descricao }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+
+      <button type="submit"
+              class="w-full bg-purple-600 text-white font-semibold py-3 rounded-lg hover:bg-purple-500 transition flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-base">person_add</span>
+        Cadastrar Participante
+      </button>
+    </form>
+  </section>
+</main>
+{% endblock %}

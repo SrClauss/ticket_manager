@@ -26,7 +26,8 @@ router = APIRouter()
 def normalize_bson_types(doc: Dict[str, Any]) -> Dict[str, Any]:
     """
     Normalize BSON types to Python native types for Pydantic compatibility.
-    Converts Int64/Long to string, ObjectId to string, empty strings to None.
+    Converts Int64/Long to string, ObjectId to string, datetime to ISO string,
+    empty strings to None.
     """
     if not doc:
         return doc
@@ -40,6 +41,9 @@ def normalize_bson_types(doc: Dict[str, Any]) -> Dict[str, Any]:
             # Convert BSON Long/Int64 to string
             doc[key] = str(value)
             logger.debug(f"Converted {key}={value} from {type(value).__name__} to string")
+        # Convert datetime to ISO 8601 string for JSON serialization
+        elif isinstance(value, datetime):
+            doc[key] = value.isoformat()
         elif value == '':
             # Convert empty strings to None for Optional fields
             doc[key] = None
@@ -51,7 +55,8 @@ def normalize_bson_types(doc: Dict[str, Any]) -> Dict[str, Any]:
             doc[key] = [
                 normalize_bson_types(item) if isinstance(item, dict) else 
                 str(item) if isinstance(item, ObjectId) else
-                str(item) if type(item).__name__ in ('Int64', 'Long') or isinstance(item, Int64) else 
+                str(item) if type(item).__name__ in ('Int64', 'Long') or isinstance(item, Int64) else
+                item.isoformat() if isinstance(item, datetime) else
                 None if item == '' else
                 item
                 for item in value
