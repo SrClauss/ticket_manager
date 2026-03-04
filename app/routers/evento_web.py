@@ -1,0 +1,464 @@
+"""
+Evento Web UI — Login por evento e painel de gestão de participantes.
+
+Aceita tanto o token de bilheteria quanto o token de portaria para autenticação.
+As rotas server-side consultam o banco diretamente, independente do tipo de token.
+"""
+import re
+from fastapi import APIRouter, Request, Form, status
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+from bson import ObjectId
+from typing import Optional, Tuple
+
+import app.config.database as database
+from app.utils.validations import validate_cpf, normalize_participante_data, format_datetime_display
+from app.routers.bilheteria import normalize_bson_types, _detect_search_type
+
+router = APIRouter()
+templates = Jinja2Templates(directory="app/templates")
+
+COOKIE_TOKEN = "evento_token"
+
+
+# ── Helpers ────────────────────────────────────────────────────────────────────
+
+async def _resolve_token(token: str) -> Optional[dict]:
+    """Verifica se o token é de bilheteria ou portaria e retorna o documento do evento."""
+    db = database.get_database()
+    evento = await db.eventos.find_one({"token_bilheteria": token})
+    if evento:
+        return evento
+    evento = await db.eventos.find_one({"token_portaria": token})
+    return evento
+
+
+async def _get_evento_from_cookie(request: Request) -> Optional[Tuple[dict, str]]:
+    """Lê o cookie de sessão e retorna (evento_doc, token) ou None."""
+    token = request.cookies.get(COOKIE_TOKEN)
+    if not token:
+        return None
+    evento = await _resolve_token(token)
+    if not evento:
+        return None
+    return evento, token
+
+
+def _evento_id_str(evento: dict) -> str:
+    return str(evento["_id"])
+
+
+def _format_evento_data(evento: dict) -> str:
+    try:
+        return format_datetime_display(evento.get("data_evento", ""))
+    except Exception:
+        return str(evento.get("data_evento", ""))
+
+
+# ── Login ──────────────────────────────────────────────────────────────────────
+
+@router.get("/", response_class=HTMLResponse)
+async def evento_login_page(request: Request, error: Optional[str] = None):
+    """Página raiz — login por evento (bilheteria ou portaria)."""
+    # Se já tem sessão válida, redireciona para o dashboard
+    session = await _get_evento_from_cookie(request)
+    if session:
+        return RedirectResponse(url="/evento/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+    return templates.TemplateResponse(
+        "evento/login.html",
+        {"request": request, "error": error}
+    )
+
+
+@router.post("/evento/login")
+async def evento_login(request: Request, token: str = Form(...)):
+    """Processa o login com token de bilheteria ou portaria."""
+    token = token.strip()
+    evento = await _resolve_token(token)
+    if not evento:
+        return templates.TemplateResponse(
+            "evento/login.html",
+            {"request": request, "error": "Token inválido. Verifique o token de acesso do evento."},
+            status_code=status.HTTP_401_UNAUTHORIZED,
+        )
+    response = RedirectResponse(url="/evento/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+    response.set_cookie(
+        key=COOKIE_TOKEN,
+        value=token,
+        httponly=True,
+        max_age=86400,  # 24 horas
+        samesite="lax",
+    )
+    return response
+
+
+@router.get("/evento/logout")
+async def evento_logout():
+    """Encerra a sessão do evento."""
+    response = RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    response.delete_cookie(COOKIE_TOKEN)
+    return response
+
+
+# ── Dashboard ──────────────────────────────────────────────────────────────────
+
+@router.get("/evento/dashboard", response_class=HTMLResponse)
+async def evento_dashboard(request: Request):
+    """Dashboard principal: métricas e lista de participantes."""
+    session = await _get_evento_from_cookie(request)
+    if not session:
+        return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    evento, token = session
+    return templates.TemplateResponse(
+        "evento/dashboard.html",
+        {
+            "request": request,
+            "evento_nome": evento.get("nome", "Evento"),
+            "evento_data": _format_evento_data(evento),
+            "active_page": "dashboard",
+        },
+    )
+
+
+# ── Internal JSON API (cookie-auth, independent of token type) ─────────────────
+
+@router.get("/evento/api/ilhas")
+async def evento_api_ilhas(request: Request):
+    """Lista ilhas do evento (autenticado por cookie)."""
+    session = await _get_evento_from_cookie(request)
+    if not session:
+        return JSONResponse({"detail": "Não autenticado"}, status_code=401)
+    evento, _ = session
+    evento_id = _evento_id_str(evento)
+    db = database.get_database()
+
+    ilhas = []
+    if evento.get("ilhas"):
+        for ilha in evento.get("ilhas", []):
+            ilhas.append({
+                "ilha_id": str(ilha.get("_id") or ilha.get("id")),
+                "nome_setor": ilha.get("nome_setor"),
+                "capacidade_maxima": ilha.get("capacidade_maxima", 0),
+            })
+    else:
+        cursor = db.ilhas.find({"evento_id": evento_id})
+        async for ilha in cursor:
+            ilhas.append({
+                "ilha_id": str(ilha["_id"]),
+                "nome_setor": ilha.get("nome_setor"),
+                "capacidade_maxima": ilha.get("capacidade_maxima", 0),
+            })
+    return JSONResponse({"ilhas": ilhas})
+
+
+@router.get("/evento/api/ilhas/{ilha_id}/stats")
+async def evento_api_ilha_stats(request: Request, ilha_id: str):
+    """Estatísticas de uma ilha (autenticado por cookie)."""
+    session = await _get_evento_from_cookie(request)
+    if not session:
+        return JSONResponse({"detail": "Não autenticado"}, status_code=401)
+    evento, _ = session
+    evento_id = _evento_id_str(evento)
+    db = database.get_database()
+
+    capacidade = None
+    if evento.get("ilhas"):
+        for ilh in evento.get("ilhas", []):
+            if str(ilh.get("_id") or ilh.get("id")) == ilha_id:
+                capacidade = ilh.get("capacidade_maxima", 0)
+                break
+    if capacidade is None:
+        try:
+            ilh = await db.ilhas.find_one({"_id": ObjectId(ilha_id)})
+        except Exception:
+            ilh = None
+        if ilh:
+            capacidade = ilh.get("capacidade_maxima", 0)
+    if capacidade is None:
+        return JSONResponse({"detail": "Ilha não encontrada"}, status_code=404)
+
+    from app.routers.bilheteria import _count_ingressos_affecting_ilha
+    total = await _count_ingressos_affecting_ilha(db, evento_id, ilha_id)
+    return JSONResponse({"ilha_id": ilha_id, "capacidade_maxima": capacidade, "ingressos_emitidos": total})
+
+
+@router.get("/evento/api/participantes")
+async def evento_api_participantes(request: Request, page: int = 1, per_page: int = 20):
+    """Lista paginada de participantes do evento (autenticado por cookie), ordenada por nome."""
+    session = await _get_evento_from_cookie(request)
+    if not session:
+        return JSONResponse({"detail": "Não autenticado"}, status_code=401)
+    evento, _ = session
+    evento_id = _evento_id_str(evento)
+    db = database.get_database()
+
+    per_page = max(1, min(per_page, 100))
+    if page < 1:
+        page = 1
+
+    # Filtra participantes que possuem ingressos neste evento
+    pipeline = [
+        {"$match": {"ingressos.evento_id": evento_id}},
+        {"$sort": {"nome": 1}},
+        {"$facet": {
+            "total": [{"$count": "count"}],
+            "data": [{"$skip": (page - 1) * per_page}, {"$limit": per_page}],
+        }},
+    ]
+    result = await db.participantes.aggregate(pipeline).to_list(length=1)
+    total_count = 0
+    docs = []
+    if result:
+        total_count = (result[0].get("total") or [{}])[0].get("count", 0)
+        docs = result[0].get("data", [])
+
+    # Fallback: se não há ingressos embutidos, lista todos ordenados por nome
+    if total_count == 0:
+        total_count = await db.participantes.count_documents({})
+        total_pages = max(1, (total_count + per_page - 1) // per_page)
+        skip = (page - 1) * per_page
+        cursor = db.participantes.find({}).sort("nome", 1).skip(skip).limit(per_page)
+        docs = await cursor.to_list(length=per_page)
+
+    total_pages = max(1, (total_count + per_page - 1) // per_page)
+
+    participantes = []
+    for p in docs:
+        p["_id"] = str(p.get("_id"))
+        p = normalize_bson_types(p)
+        if p.get("ingressos"):
+            p["ingressos"] = [ing for ing in p["ingressos"] if ing.get("evento_id") == evento_id]
+        participantes.append(p)
+
+    return JSONResponse({
+        "participantes": participantes,
+        "total_count": total_count,
+        "total_pages": total_pages,
+        "current_page": page,
+        "per_page": per_page,
+    })
+
+
+@router.get("/evento/api/participantes/busca-smart")
+async def evento_api_busca_smart(request: Request, q: str = ""):
+    """Busca inteligente de participantes por CPF, nome ou token do ingresso (autenticado por cookie)."""
+    session = await _get_evento_from_cookie(request)
+    if not session:
+        return JSONResponse({"detail": "Não autenticado"}, status_code=401)
+    if not q.strip():
+        return JSONResponse([])
+    evento, _ = session
+    evento_id = _evento_id_str(evento)
+    db = database.get_database()
+
+    tipo = _detect_search_type(q)
+    participantes = []
+
+    if tipo == "cpf":
+        try:
+            cpf_clean = validate_cpf(q)
+            query = {"cpf": cpf_clean}
+        except Exception:
+            digits = re.sub(r"\D", "", q)
+            query = {"cpf": {"$regex": digits, "$options": "i"}}
+        cursor = db.participantes.find(query).limit(20)
+        async for p in cursor:
+            p["_id"] = str(p["_id"])
+            p = normalize_bson_types(p)
+            if p.get("ingressos"):
+                p["ingressos"] = [ing for ing in p["ingressos"] if ing.get("evento_id") == evento_id]
+            participantes.append(p)
+
+    elif tipo == "token":
+        qrcode_hash = q.strip()
+        p_doc = await db.participantes.find_one(
+            {"ingressos.qrcode_hash": qrcode_hash},
+            {"ingressos": {"$elemMatch": {"qrcode_hash": qrcode_hash}}},
+        )
+        if not p_doc:
+            ingresso = await db.ingressos_emitidos.find_one({"qrcode_hash": qrcode_hash, "evento_id": evento_id})
+            if ingresso:
+                pid = ingresso.get("participante_id")
+                try:
+                    p_doc = await db.participantes.find_one({"_id": ObjectId(pid)})
+                except Exception:
+                    p_doc = await db.participantes.find_one({"_id": pid})
+        if p_doc:
+            p_doc["_id"] = str(p_doc["_id"])
+            p_doc = normalize_bson_types(p_doc)
+            if p_doc.get("ingressos"):
+                p_doc["ingressos"] = [ing for ing in p_doc["ingressos"] if ing.get("evento_id") == evento_id]
+            participantes.append(p_doc)
+
+    else:  # nome
+        query = {"nome": {"$regex": q, "$options": "i"}}
+        cursor = db.participantes.find(query).sort("nome", 1).limit(20)
+        async for p in cursor:
+            p["_id"] = str(p["_id"])
+            p = normalize_bson_types(p)
+            if p.get("ingressos"):
+                p["ingressos"] = [ing for ing in p["ingressos"] if ing.get("evento_id") == evento_id]
+            participantes.append(p)
+
+    return JSONResponse(participantes)
+
+
+# ── Participante Edit ──────────────────────────────────────────────────────────
+
+@router.get("/evento/participante/{participante_id}/editar", response_class=HTMLResponse)
+async def evento_participante_editar_page(request: Request, participante_id: str):
+    """Página de edição de dados do participante."""
+    session = await _get_evento_from_cookie(request)
+    if not session:
+        return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    evento, token = session
+    evento_id = _evento_id_str(evento)
+
+    db = database.get_database()
+    try:
+        participante = await db.participantes.find_one({"_id": ObjectId(participante_id)})
+    except Exception:
+        participante = await db.participantes.find_one({"_id": participante_id})
+
+    if not participante:
+        return RedirectResponse(url="/evento/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+
+    participante["_id"] = str(participante["_id"])
+    participante = normalize_bson_types(participante)
+    participante["id"] = participante["_id"]
+
+    ingressos = await _get_participante_ingressos(db, participante_id, evento_id, evento)
+
+    return templates.TemplateResponse(
+        "evento/participante_editar.html",
+        {
+            "request": request,
+            "participante": participante,
+            "ingressos": ingressos,
+            "evento_nome": evento.get("nome", "Evento"),
+            "active_page": "dashboard",
+        },
+    )
+
+
+@router.post("/evento/participante/{participante_id}/editar")
+async def evento_participante_editar_save(
+    request: Request,
+    participante_id: str,
+    nome: str = Form(...),
+    email: str = Form(...),
+    cpf: str = Form(...),
+    telefone: str = Form(""),
+    empresa: str = Form(""),
+    nacionalidade: str = Form(""),
+):
+    """Salva as alterações do participante."""
+    session = await _get_evento_from_cookie(request)
+    if not session:
+        return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    evento, token = session
+    evento_id = _evento_id_str(evento)
+
+    db = database.get_database()
+    error = None
+
+    # Normaliza CPF
+    try:
+        cpf_clean = validate_cpf(cpf)
+    except Exception as e:
+        cpf_clean = None
+        error = f"CPF inválido: {e}"
+
+    if not error:
+        update_data = {
+            "nome": nome.strip(),
+            "email": email.strip(),
+            "cpf": cpf_clean,
+            "telefone": telefone.strip() or None,
+            "empresa": empresa.strip() or None,
+            "nacionalidade": nacionalidade.strip() or None,
+        }
+        # Remove None values
+        update_data = {k: v for k, v in update_data.items() if v is not None}
+        try:
+            await db.participantes.update_one(
+                {"_id": ObjectId(participante_id)},
+                {"$set": update_data},
+            )
+        except Exception as exc:
+            error = f"Erro ao salvar: {exc}"
+
+    # Reload participant for rendering
+    try:
+        participante = await db.participantes.find_one({"_id": ObjectId(participante_id)})
+    except Exception:
+        participante = await db.participantes.find_one({"_id": participante_id})
+
+    if not participante:
+        return RedirectResponse(url="/evento/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+
+    participante["_id"] = str(participante["_id"])
+    participante = normalize_bson_types(participante)
+    participante["id"] = participante["_id"]
+
+    ingressos = await _get_participante_ingressos(db, participante_id, evento_id, evento)
+
+    return templates.TemplateResponse(
+        "evento/participante_editar.html",
+        {
+            "request": request,
+            "participante": participante,
+            "ingressos": ingressos,
+            "evento_nome": evento.get("nome", "Evento"),
+            "active_page": "dashboard",
+            "success": error is None,
+            "error": error,
+        },
+    )
+
+
+# ── Internal helpers ───────────────────────────────────────────────────────────
+
+async def _get_participante_ingressos(db, participante_id: str, evento_id: str, evento: dict) -> list:
+    """Retorna os ingressos do participante para o evento, com descrição do tipo."""
+    ingressos = []
+
+    try:
+        p = await db.participantes.find_one({"_id": ObjectId(participante_id)}, {"ingressos": 1})
+    except Exception:
+        p = await db.participantes.find_one({"_id": participante_id}, {"ingressos": 1})
+
+    embedded = []
+    if p:
+        embedded = [ing for ing in (p.get("ingressos") or []) if str(ing.get("evento_id")) == str(evento_id)]
+
+    for ing in embedded:
+        tipo_descr = _resolve_tipo_descricao(ing.get("tipo_ingresso_id"), evento)
+        ingressos.append({
+            "qrcode_hash": ing.get("qrcode_hash", ""),
+            "status": ing.get("status", ""),
+            "tipo_descricao": tipo_descr,
+        })
+
+    if not ingressos:
+        cursor = db.ingressos_emitidos.find({"participante_id": participante_id, "evento_id": evento_id})
+        async for ing in cursor:
+            tipo_descr = _resolve_tipo_descricao(ing.get("tipo_ingresso_id"), evento)
+            ingressos.append({
+                "qrcode_hash": ing.get("qrcode_hash", ""),
+                "status": ing.get("status", ""),
+                "tipo_descricao": tipo_descr,
+            })
+
+    return ingressos
+
+
+def _resolve_tipo_descricao(tipo_ingresso_id, evento: dict) -> str:
+    """Tenta resolver a descrição do tipo de ingresso a partir dos dados embutidos no evento."""
+    if not tipo_ingresso_id:
+        return "Ingresso"
+    tid = str(tipo_ingresso_id)
+    for t in (evento.get("tipos_ingresso") or []):
+        if str(t.get("_id") or t.get("id") or t.get("numero")) == tid:
+            return t.get("descricao", "Ingresso")
+    return "Ingresso"

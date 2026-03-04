@@ -3,6 +3,7 @@ from fastapi.responses import Response
 from typing import List, Dict, Any
 from datetime import datetime, timezone
 from io import BytesIO
+import re
 from bson import ObjectId
 from bson.errors import InvalidId
 from bson.int64 import Int64
@@ -741,6 +742,106 @@ async def buscar_participantes(
 
 # Capture route function reference so we can provide compatibility wrapper below
 buscar_participantes_route = buscar_participantes
+
+
+def _detect_search_type(q: str) -> str:
+    """Detecta o tipo de busca a partir do termo fornecido.
+
+    Regras:
+    - 11 dígitos (com ou sem máscara de CPF) → 'cpf'
+    - 64 caracteres hexadecimais → 'token' (qrcode_hash SHA-256)
+    - Caso contrário → 'nome'
+    """
+    digits_only = re.sub(r'\D', '', q)
+    if len(digits_only) == 11:
+        return 'cpf'
+    if re.fullmatch(r'[0-9a-fA-F]{64}', q.strip()):
+        return 'token'
+    return 'nome'
+
+
+@router.get("/participantes/busca-smart", response_model=List[Participante])
+async def busca_smart_participantes(
+    q: str,
+    evento_id: str = Depends(verify_token_bilheteria)
+):
+    """Busca inteligente de participantes com um único termo.
+
+    Detecta automaticamente o tipo de busca:
+    - 11 dígitos → busca por CPF
+    - 64 hex chars → busca por token/qrcode_hash do ingresso
+    - Outro texto → busca por nome (regex insensível a maiúsculas)
+
+    Resultados limitados ao evento associado ao token.
+    """
+    db = get_database()
+    tipo = _detect_search_type(q)
+
+    participantes = []
+
+    if tipo == 'cpf':
+        try:
+            cpf_clean = validate_cpf(q)
+            query = {"cpf": cpf_clean}
+        except Exception:
+            digits = re.sub(r'\D', '', q)
+            query = {"cpf": {"$regex": digits, "$options": "i"}}
+        cursor = db.participantes.find(query).limit(20)
+        async for p in cursor:
+            p["_id"] = str(p["_id"])
+            p = normalize_bson_types(p)
+            if p.get("ingressos"):
+                p["ingressos"] = [ing for ing in p["ingressos"] if ing.get("evento_id") == evento_id]
+            try:
+                participantes.append(Participante(**p))
+            except Exception:
+                pass
+
+    elif tipo == 'token':
+        qrcode_hash = q.strip()
+        # Procura primeiro em ingressos embutidos no participante
+        participante_doc = await db.participantes.find_one(
+            {"ingressos.qrcode_hash": qrcode_hash},
+            {"ingressos": {"$elemMatch": {"qrcode_hash": qrcode_hash}}}
+        )
+        if not participante_doc:
+            # Fallback para coleção de ingressos emitidos
+            ingresso = await db.ingressos_emitidos.find_one(
+                {"qrcode_hash": qrcode_hash, "evento_id": evento_id}
+            )
+            if ingresso:
+                pid = ingresso.get("participante_id")
+                try:
+                    participante_doc = await db.participantes.find_one({"_id": ObjectId(pid)})
+                except Exception:
+                    participante_doc = await db.participantes.find_one({"_id": pid})
+        if participante_doc:
+            participante_doc["_id"] = str(participante_doc["_id"])
+            participante_doc = normalize_bson_types(participante_doc)
+            if participante_doc.get("ingressos"):
+                participante_doc["ingressos"] = [
+                    ing for ing in participante_doc["ingressos"]
+                    if ing.get("evento_id") == evento_id
+                ]
+            try:
+                participantes.append(Participante(**participante_doc))
+            except Exception:
+                pass
+
+    else:  # nome
+        query = {"nome": {"$regex": q, "$options": "i"}}
+        cursor = db.participantes.find(query).limit(20)
+        async for p in cursor:
+            p["_id"] = str(p["_id"])
+            p = normalize_bson_types(p)
+            if p.get("ingressos"):
+                p["ingressos"] = [ing for ing in p["ingressos"] if ing.get("evento_id") == evento_id]
+            try:
+                participantes.append(Participante(**p))
+            except Exception:
+                pass
+
+    return participantes
 
 
 @router.get("/ingresso-por-cpf")
