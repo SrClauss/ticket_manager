@@ -1,10 +1,10 @@
-# EventMaster API
+# CredenShow API
 
 Sistema completo de gerenciamento de eventos com controle de acesso e emissão de ingressos usando FastAPI e MongoDB.
 
 ## 📋 Visão Geral
 
-O EventMaster API é uma solução backend para gestão de eventos que oferece:
+O CredenShow API é uma solução backend para gestão de eventos que oferece:
 
 - **Interface Web Administrativa**: Painel moderno com design glassmorphism
 - **Gerenciamento de Eventos**: CRUD completo de eventos com configuração de layout personalizável

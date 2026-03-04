@@ -12,7 +12,7 @@ from app.routers import inscricao, evento_web
 from bson import ObjectId
 
 app = FastAPI(
-    title="EventMaster API",
+    title="CredenShow API",
     description="Sistema de gerenciamento de eventos com controle de acesso e emissão de ingressos",
     version="1.0.0"
 )
@@ -115,5 +115,5 @@ async def public_upload_proxy(token: str, file: UploadFile = File(...), request:
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": "EventMaster API"}
+    return {"status": "healthy", "service": "CredenShow API"}
 

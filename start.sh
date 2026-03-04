@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Script de inicialização do EventMaster Admin
-echo "🚀 Iniciando EventMaster Admin..."
+# Script de inicialização do CredenShow Admin
+echo "🚀 Iniciando CredenShow Admin..."
 
 # Verificar se o .env existe
 if [ ! -f .env ]; then
@@ -27,7 +27,7 @@ docker compose ps
 
 echo ""
 echo "======================================"
-echo "✨ EventMaster Admin está rodando!"
+echo "✨ CredenShow Admin está rodando!"
 echo "======================================"
 echo ""
 echo "📱 Acesse o painel admin em:"

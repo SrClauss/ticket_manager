@@ -1,4 +1,4 @@
-# EventMaster API — Rotas (Resumo para Mobile)
+# CredenShow API — Rotas (Resumo para Mobile)
 
 > Documentação gerada automaticamente a partir do código do backend. Use-a como referência rápida para integração do app mobile.
 

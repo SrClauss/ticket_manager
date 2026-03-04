@@ -1,12 +1,17 @@
 {% extends "admin/base.html" %}
 
-{% block title %}Novo Evento - EventMaster Admin{% endblock %}
+{% block title %}Novo Evento - CredenShow Admin{% endblock %}
 
 {% block content %}
 <header class="p-6 md:px-12 pt-8 flex justify-between items-center">
-  <div>
-    <h1 class="text-2xl font-semibold text-slate-100">Novo Evento</h1>
-    <p class="text-sm text-slate-400">Criar um novo evento</p>
+  <div class="flex items-center">
+    <div class="mr-4">
+      <img src="/static/img/icon.png" class="w-8 h-8" alt="" />
+    </div>
+    <div>
+      <h1 class="text-2xl font-semibold text-slate-100">Novo Evento</h1>
+      <p class="text-sm text-slate-400">Criar um novo evento</p>
+    </div>
   </div>
   <a href="/admin/eventos" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 text-slate-100 rounded-lg hover:bg-slate-600">
     <span class="material-symbols-outlined">arrow_back</span>

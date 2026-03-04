@@ -5,9 +5,14 @@
 {% block content %}
 <header class="p-6 md:px-12 pt-8">
   <div class="flex justify-between items-start">
-    <div>
-      <h1 class="text-2xl font-semibold text-slate-100">{{ evento_nome }}</h1>
-      <p class="text-sm text-slate-400 mt-1">{{ evento_data }}</p>
+    <div class="flex items-center">
+      <div class="mr-4">
+        <img src="/static/img/icon.png" class="w-8 h-8" alt="" />
+      </div>
+      <div>
+        <h1 class="text-2xl font-semibold text-slate-100">{{ evento_nome }}</h1>
+        <p class="text-sm text-slate-400 mt-1">{{ evento_data }}</p>
+      </div>
     </div>
     <a href="/evento/logout" class="inline-flex items-center gap-1 px-3 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 text-sm">
       <span class="material-symbols-outlined text-base">logout</span>
