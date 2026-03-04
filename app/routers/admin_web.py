@@ -125,10 +125,11 @@ async def admin_dashboard(request: Request):
     async for result in db.ingressos_emitidos.aggregate(pipeline):
         receita_total = result.get("total", 0)
     
-    # Get upcoming events
+    # Get upcoming events (today and future)
     proximos_eventos = []
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     cursor = db.eventos.find(
-        {"data_evento": {"$gte": datetime.now(timezone.utc)}, "ativo": True}
+        {"data_evento": {"$gte": today_start}, "ativo": True}
     ).sort("data_evento", 1).limit(5)
     
     async for doc in cursor:
@@ -208,15 +209,9 @@ async def admin_eventos_list(
         page = total_pages
 
     eventos = []
-    # determine sort direction: if we explicitly filtered for futuros we
-    # want ascending order, otherwise descending (recent first)
-    show_futuros = False
-    if "data_evento" in query and isinstance(query["data_evento"], dict):
-        if "$gte" in query["data_evento"]:
-            show_futuros = True
-    sort_order = 1 if show_futuros else -1
+    # Always sort by date ascending (chronological order)
     skip = (page - 1) * per_page
-    cursor = db.eventos.find(query).sort("data_evento", sort_order).skip(skip).limit(per_page)
+    cursor = db.eventos.find(query).sort("data_evento", 1).skip(skip).limit(per_page)
     
     async for doc in cursor:
         doc["_id"] = str(doc["_id"])
@@ -232,7 +227,6 @@ async def admin_eventos_list(
             "busca": busca or "",
             "status": status or "",
             "periodo": periodo or "",
-            "futuros_only": "on" if show_futuros else "",
             "page": page,
             "per_page": per_page,
             "total_pages": total_pages,
