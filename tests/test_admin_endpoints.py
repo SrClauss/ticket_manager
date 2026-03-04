@@ -186,7 +186,7 @@ class TestAdminWebEventosFilter:
 
     @pytest.mark.asyncio
     async def test_default_shows_all_events(self, fake_db, mock_get_database):
-        """Sem filtros, todos os eventos (passados e futuros) aparecem."""
+        """Por padrão (sem filtros), mostra apenas eventos futuros e ativos."""
         from app.routers import admin_web
         admin_web.check_admin_session = lambda r: None
         req = type("R", (object,), {"cookies": {}})()
@@ -197,6 +197,7 @@ class TestAdminWebEventosFilter:
             "_id": ObjectId(),
             "nome": "passado",
             "descricao": "",
+            "ativo": True,
             "data_evento": datetime(2020, 1, 1, tzinfo=timezone.utc),
             "data_criacao": datetime.now(timezone.utc),
             "token_bilheteria": "a",
@@ -207,6 +208,18 @@ class TestAdminWebEventosFilter:
             "_id": ObjectId(),
             "nome": "futuro",
             "descricao": "",
+            "ativo": True,
+            "data_evento": datetime(2030, 1, 1, tzinfo=timezone.utc),
+            "data_criacao": datetime.now(timezone.utc),
+            "token_bilheteria": "a",
+            "token_portaria": "b",
+            "layout_ingresso": {}
+        })
+        fake_db.eventos.docs.append({
+            "_id": ObjectId(),
+            "nome": "futuro_inativo",
+            "descricao": "",
+            "ativo": False,
             "data_evento": datetime(2030, 1, 1, tzinfo=timezone.utc),
             "data_criacao": datetime.now(timezone.utc),
             "token_bilheteria": "a",
@@ -215,7 +228,10 @@ class TestAdminWebEventosFilter:
         })
         resp = await admin_web.admin_eventos_list(req)
         nomes = [e["nome"] for e in resp.context["eventos"]]
-        assert "passado" in nomes and "futuro" in nomes
+        # Deve mostrar apenas evento futuro e ativo
+        assert "futuro" in nomes
+        assert "passado" not in nomes
+        assert "futuro_inativo" not in nomes
 
     @pytest.mark.asyncio
     async def test_status_filter_does_not_exclude_past(self, fake_db, mock_get_database):

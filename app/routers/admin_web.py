@@ -161,11 +161,8 @@ async def admin_eventos_list(
     page: int = 1,
     per_page: int = 3  # show 3 events per page by default
 ):
-    """List eventos with filters and pagination.  By default (no filters)
-    **all** events are shown; there is no implicit future-only clause anymore.
-    Periodo filter will restrict to past/future when provided.  Pagination is
-    disabled whenever any filter parameter is set so admins can review
-    filtered results easily."""
+    """List eventos with filters and pagination. By default (no filters applied),
+    shows only active future events. Filters can override this behavior."""
     redirect = check_admin_session(request)
     if redirect:
         return redirect
@@ -174,32 +171,32 @@ async def admin_eventos_list(
     
     # Build query
     query = {}
-    
-    if busca:
-        query["nome"] = {"$regex": busca, "$options": "i"}
-    
-    if status == "ativo":
-        query["ativo"] = True
-    elif status == "inativo":
-        query["ativo"] = False
-    
-    # Date filtering: the default page shows *future* events only, but
-    # if the admin has entered any explicit filter (busca or status) we
-    # should respect that and not silently drop past results.  However, if
-    # the user explicitly picks a período, obey it.
     now = datetime.now(timezone.utc)
-
-    if periodo:
-        if periodo == "passados":
-            query["data_evento"] = {"$lt": now}
-        elif periodo == "futuros":
-            query["data_evento"] = {"$gte": now}
-    # if no periodo, do not add any date constraint at all; show everything
     
-    # Pagination: if any filter parameter is provided we want to show all
-    # matching events on a single page instead of chopping them up.  This
-    # makes it easier for the admin to review filtered results without
-    # precisar navegar por várias páginas.
+    # Default: show only future and active events when no filters applied
+    if busca is None and status is None and periodo is None:
+        query["ativo"] = True
+        query["data_evento"] = {"$gte": now}
+        # Set default values for template
+        status = "ativo"
+        periodo = "futuros"
+    else:
+        # Apply explicit filters when provided
+        if busca:
+            query["nome"] = {"$regex": busca, "$options": "i"}
+        
+        if status == "ativo":
+            query["ativo"] = True
+        elif status == "inativo":
+            query["ativo"] = False
+        
+        if periodo:
+            if periodo == "passados":
+                query["data_evento"] = {"$lt": now}
+            elif periodo == "futuros":
+                query["data_evento"] = {"$gte": now}
+    
+    # Pagination
     total = await db.eventos.count_documents(query)
     total_pages = max(1, math.ceil(total / per_page))
     if page < 1:
