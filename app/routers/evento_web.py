@@ -119,6 +119,7 @@ async def evento_dashboard(request: Request):
             "evento_nome": evento.get("nome", "Evento"),
             "evento_data": _format_evento_data(evento),
             "active_page": "dashboard",
+            "evento_id": str(evento.get("_id")),
         },
     )
 
@@ -304,13 +305,17 @@ async def evento_api_busca_smart(request: Request, q: str = ""):
         except Exception:
             digits = re.sub(r"\D", "", q)
             query = {"cpf": {"$regex": digits, "$options": "i"}}
+        # only participants with an ingresso for this evento
+        query["ingressos.evento_id"] = evento_id
         cursor = db.participantes.find(query).limit(20)
         async for p in cursor:
             p["_id"] = str(p["_id"])
             p = normalize_bson_types(p)
             if p.get("ingressos"):
                 p["ingressos"] = [ing for ing in p["ingressos"] if ing.get("evento_id") == evento_id]
-            participantes.append(p)
+            # append only if there remains at least one ingresso
+            if p.get("ingressos"):
+                participantes.append(p)
 
     elif tipo == "token":
         qrcode_hash = q.strip()
@@ -343,14 +348,16 @@ async def evento_api_busca_smart(request: Request, q: str = ""):
         or_clauses = [{"nome": regex}, {"email": regex}, {"empresa": regex}]
         if tipo_ids:
             or_clauses.append({"ingressos.tipo_ingresso_id": {"$in": tipo_ids}})
-        query = {"$or": or_clauses}
+        # require at least one ingresso for this evento in the query results
+        query = {"$and": [{"ingressos.evento_id": evento_id}, {"$or": or_clauses}]}
         cursor = db.participantes.find(query).limit(20)
         async for p in cursor:
             p["_id"] = str(p["_id"])
             p = normalize_bson_types(p)
             if p.get("ingressos"):
                 p["ingressos"] = [ing for ing in p["ingressos"] if ing.get("evento_id") == evento_id]
-            participantes.append(p)
+            if p.get("ingressos"):
+                participantes.append(p)
     return JSONResponse(participantes)
     return JSONResponse(participantes)
 

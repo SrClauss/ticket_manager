@@ -15,9 +15,12 @@ class DummyRequest:
 async def test_busca_smart_by_empresa(monkeypatch, fake_db, mock_get_database):
     # prepare fake event and participant
     evento = {"_id": ObjectId(), "nome": "Ev", "ilhas": []}
-    participante = {"_id": ObjectId(), "nome": "Fulano", "empresa": "Acme Ltda", "ingressos": []}
+    # participant must have an ingresso for this event to be considered
+    ingresso = {"_id": ObjectId(), "evento_id": str(evento['_id']), "tipo_ingresso_id": "", "qrcode_hash": "", "impresso": False}
+    participante = {"_id": ObjectId(), "nome": "Fulano", "empresa": "Acme Ltda", "ingressos": [ingresso]}
     fake_db.eventos.docs.append(evento)
     fake_db.participantes.docs.append(participante)
+    fake_db.ingressos_emitidos.docs.append({**ingresso, "participante_id": str(participante['_id'])})
 
     async def fake_get(request):
         return evento, str(evento['_id'])
@@ -60,6 +63,40 @@ async def test_busca_smart_by_tipo(monkeypatch, fake_db, mock_get_database):
         results = resp
     assert len(results) == 1
     assert results[0]['nome'] == 'Zé'
+
+
+@pytest.mark.asyncio
+async def test_busca_smart_excludes_other_event(monkeypatch, fake_db, mock_get_database):
+    # create two events and a participant with ingresso in the other one
+    evento = {"_id": ObjectId(), "nome": "Ev", "ilhas": []}
+    other_event = {"_id": ObjectId(), "nome": "Outro", "ilhas": []}
+    fake_db.eventos.docs.extend([evento, other_event])
+    # ticket type (not really used)
+    tipo = {"_id": ObjectId(), "nome": "Tipo"}
+    fake_db.tipos_ingresso.docs.append(tipo)
+    ingresso = {"_id": ObjectId(),
+               "evento_id": str(other_event['_id']),
+               "tipo_ingresso_id": str(tipo['_id']),
+               "qrcode_hash": "tok",
+               "impresso": False}
+    participante = {"_id": ObjectId(), "nome": "Xpto", "empresa": "Nada", "cpf": "12345678901", "ingressos": [ingresso]}
+    fake_db.participantes.docs.append(participante)
+    fake_db.ingressos_emitidos.docs.append({**ingresso, "participante_id": str(participante['_id'])})
+
+    async def fake_get(request):
+        return evento, str(evento['_id'])
+    monkeypatch.setattr(evento_web, "_get_evento_from_cookie", fake_get)
+
+    # search by name should yield no results
+    resp = await evento_web.evento_api_busca_smart(DummyRequest(), q="Xpto")
+    import json
+    results = resp if isinstance(resp, list) else json.loads(resp.body)
+    assert len(results) == 0
+
+    # search by cpf should also yield none
+    resp2 = await evento_web.evento_api_busca_smart(DummyRequest(), q="12345678901")
+    results2 = resp2 if isinstance(resp2, list) else json.loads(resp2.body)
+    assert len(results2) == 0
 
 
 @pytest.mark.asyncio

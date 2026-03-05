@@ -87,6 +87,8 @@
 
 {% block extra_js %}
 <script>
+  // evento_id disponibilizado pelo servidor para usos futuros
+  const EVENTO_ID = "{{ evento_id }}";
   let currentPage = 1;
 
   // ── Metrics ──────────────────────────────────────────────────
@@ -218,7 +220,8 @@
     const q = document.getElementById('search-input').value.trim();
     if (!q) { loadPage(1); return; }
 
-    const res = await fetch(`/evento/api/participantes/busca-smart?q=${encodeURIComponent(q)}`);
+    // include evento_id param for clarity (backend already uses cookie session)
+    const res = await fetch(`/evento/api/participantes/busca-smart?q=${encodeURIComponent(q)}&evento_id=${encodeURIComponent(EVENTO_ID)}`);
     const list = document.getElementById('participants-list');
     document.getElementById('pagination').innerHTML = '';
     if (!res.ok) {
