@@ -293,6 +293,10 @@ async def evento_api_participantes(request: Request, page: int = 1, per_page: in
             filtered_ingressos = []
             for ing in p["ingressos"]:
                 if ing.get("evento_id") == evento_id:
+                    # DEBUG: Log do valor impresso ANTES da normalização
+                    impresso_original = ing.get("impresso")
+                    print(f"[BACKEND-LOAD] Ingresso {ing.get('_id')}: impresso_original={impresso_original}, tipo={type(impresso_original)}, 'impresso' in ing={('impresso' in ing)}")
+                    
                     # Garante que _id do ingresso é string
                     if ing.get("_id") and not isinstance(ing["_id"], str):
                         ing["_id"] = str(ing["_id"])
@@ -304,6 +308,8 @@ async def evento_api_participantes(request: Request, page: int = 1, per_page: in
                         ing["impresso"] = impresso.lower() in ("true", "1", "yes")
                     else:
                         ing["impresso"] = bool(impresso)
+                    
+                    print(f"[BACKEND-LOAD] Ingresso {ing.get('_id')}: impresso_normalizado={ing['impresso']}")
                     filtered_ingressos.append(ing)
             p["ingressos"] = filtered_ingressos
         participantes.append(p)
@@ -351,6 +357,10 @@ async def evento_api_busca_smart(request: Request, q: str = ""):
                 filtered_ingressos = []
                 for ing in p["ingressos"]:
                     if ing.get("evento_id") == evento_id:
+                        # DEBUG: Log do valor impresso ANTES da normalização
+                        impresso_original = ing.get("impresso")
+                        print(f"[BACKEND-SEARCH-CPF] Ingresso {ing.get('_id')}: impresso_original={impresso_original}, tipo={type(impresso_original)}, 'impresso' in ing={('impresso' in ing)}")
+                        
                         # Normaliza campo impresso como booleano
                         impresso = ing.get("impresso")
                         if impresso is None or impresso == "":
@@ -359,6 +369,8 @@ async def evento_api_busca_smart(request: Request, q: str = ""):
                             ing["impresso"] = impresso.lower() in ("true", "1", "yes")
                         else:
                             ing["impresso"] = bool(impresso)
+                        
+                        print(f"[BACKEND-SEARCH-CPF] Ingresso {ing.get('_id')}: impresso_normalizado={ing['impresso']}")
                         filtered_ingressos.append(ing)
                 p["ingressos"] = filtered_ingressos
             # append only if there remains at least one ingresso
