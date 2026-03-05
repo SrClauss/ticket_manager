@@ -256,7 +256,8 @@
       return;
     }
     
-    const url = `/api/eventos/${eventoId}/ingresso/${ingressoId}/render.jpg?dpi=300`;
+    // Usa rota de impressão com rotação landscape (90°)
+    const url = `/api/eventos/${eventoId}/ingresso/${ingressoId}/print.png?dpi=300&orientation=landscape`;
     console.log('Opening URL:', url);
     
     const w = window.open(url, '_blank', 'width=800,height=600');

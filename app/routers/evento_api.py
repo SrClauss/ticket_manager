@@ -577,6 +577,59 @@ async def print_label_png(
     return StreamingResponse(bio2, media_type='image/png', headers=headers2)
 
 
+@router.get("/{evento_id}/ingresso/{ingresso_id}/print.png")
+async def print_ingresso_png(evento_id: str, ingresso_id: str, dpi: int = 300, orientation: str = "landscape"):
+    """Renderiza o ingresso como PNG otimizado para impressão.
+    
+    Suporta rotação automática:
+    - orientation="landscape": gira 90° para impressoras tipo Brother
+    - orientation="portrait": mantém orientação original
+    """
+    db = get_database()
+    
+    # Fetch ingresso data (with embedded layout)
+    ingresso, participante = await _fetch_ingresso_data(db, evento_id, ingresso_id)
+    
+    if not ingresso:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Ingresso não encontrado para este evento"
+        )
+    
+    # Get evento for logo
+    evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
+    logo_path = evento.get("logo_path") if evento else None
+    logo_blob = evento.get("logo_blob") if evento else None
+    
+    # Get or create embedded layout
+    from_participante = participante is not None
+    layout = await _get_or_create_embedded_layout(
+        db, ingresso, evento_id, from_participante, participante
+    )
+    
+    # Render layout to image
+    img = _render_layout_to_image(layout, dpi, logo_path=logo_path, logo_blob=logo_blob)
+    
+    # Apply rotation for landscape printing
+    rotate_ccw = orientation.lower() in ("landscape", "l")
+    if rotate_ccw:
+        img = img.rotate(90, expand=True)
+    
+    # Serialize to PNG
+    bio = BytesIO()
+    try:
+        img.save(bio, format='PNG', dpi=(dpi, dpi))
+    except Exception:
+        img.save(bio, format='PNG')
+    bio.seek(0)
+    
+    headers = {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Content-Disposition": f'inline; filename="ingresso_{ingresso_id}_print.png"'
+    }
+    return StreamingResponse(bio, media_type='image/png', headers=headers)
+
+
 async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Optional[Dict], Optional[Dict]]:
     """Fetch ingresso from database (embedded in participante or standalone).
     
