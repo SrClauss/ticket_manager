@@ -106,7 +106,7 @@
               </select>
             </div>
             <div>
-              <label class="text-[10px] text-slate-400 block mb-0.5">Altura (mm)</label>
+              <label class="text-[10px] text-slate-400 block mb-0.5">Altura/Comprimento (mm)</label>
               <input type="number" min="10" max="400" step="1"
                      x-model.number="cfg.height" @change="rerender()"
                      class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
@@ -130,6 +130,7 @@
                       :class="cfg.orientation==='landscape'?'bg-blue-600 text-white':'bg-slate-700 text-slate-300 hover:bg-slate-600'"
                       class="flex-1 py-1 text-xs rounded transition">Paisagem</button>
             </div>
+            <p class="text-[9px] text-slate-500 mt-1">💡 Paisagem rotaciona 90° na impressão. Largura = rolo físico.</p>
           </div>
 
           <div>
@@ -767,16 +768,17 @@
       setOrientation(o) {
         if (this.cfg.orientation === o) return;
         this.cfg.orientation = o;
-        const [a, b] = [this.cfg.width, this.cfg.height];
-        if (o === 'portrait')  { this.cfg.width = Math.min(a,b); this.cfg.height = Math.max(a,b); }
-        else                   { this.cfg.width = Math.max(a,b); this.cfg.height = Math.min(a,b); }
+        // NÃO trocar width/height! Para impressoras Brother de rolo:
+        // - width = largura do rolo (sempre fixo: 62mm, 12mm, etc)
+        // - height = comprimento do papel (variável)
+        // - landscape apenas rotaciona visualmente, não troca dimensões físicas
         this.rerender();
       },
       applyPreset(v) {
         if (!v) return;
         const [w, h] = v.split('x').map(Number);
         this.cfg.width = w; this.cfg.height = h;
-        this.cfg.orientation = w < h ? 'portrait' : 'landscape';
+        // NÃO definir orientação automaticamente - deixar o usuário escolher
         this.rerender();
       },
 
