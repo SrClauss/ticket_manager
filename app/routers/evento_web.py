@@ -427,7 +427,7 @@ async def _get_tipos_ingresso(db, evento: dict) -> list:
     """Retorna os tipos de ingresso do evento como lista de dicts {id, descricao}."""
     tipos = []
     # allow calling without a real database (e.g. during unit tests)
-    if not db:
+    if db is None:
         return tipos
 
     if evento.get("tipos_ingresso"):
