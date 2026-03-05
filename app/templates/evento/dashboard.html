@@ -52,7 +52,9 @@
                 'text-red-400': m.total>0 && Math.round((m.printed/m.total)*100)>=90,
                 'text-yellow-400': m.total>0 && Math.round((m.printed/m.total)*100)>=70 && Math.round((m.printed/m.total)*100)<90,
                 'text-green-400': m.total>0 && Math.round((m.printed/m.total)*100)<70
-              }" x-html="m.printed + ' <span class=\"text-sm font-normal text-slate-400\">/ ' + m.total + '</span>'">
+              }">
+            <span x-text="m.printed"></span>
+            <span class="text-sm font-normal text-slate-400">/ <span x-text="m.total"></span></span>
           </div>
           <div class="text-xs text-slate-500 mb-2">impressos / total</div>
           <div class="w-full bg-slate-700 rounded-full h-1.5">
@@ -60,7 +62,7 @@
                   'bg-red-500': m.total>0 && Math.round((m.printed/m.total)*100)>=90,
                   'bg-yellow-500': m.total>0 && Math.round((m.printed/m.total)*100)>=70 && Math.round((m.printed/m.total)*100)<90,
                   'bg-green-500': m.total>0 && Math.round((m.printed/m.total)*100)<70
-                }" :style="`width: ${m.total>0 ? Math.min(Math.round((m.printed/m.total)*100, 100) : 0)}%`">
+                }" :style="'width: ' + (m.total>0 ? Math.min(Math.round((m.printed/m.total)*100), 100) : 0) + '%'">
             </div>
           </div>
         </div>
