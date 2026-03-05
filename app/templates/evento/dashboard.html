@@ -129,28 +129,7 @@
     } catch (e) {
       console.error('Erro ao carregar métricas', e);
     }
-        const c = colorMap[color];
-        return `
-          <div class="md-card p-4">
-            <div class="flex justify-between items-start mb-2">
-              <h3 class="text-slate-100 font-medium text-sm">${ilha.nome_setor || 'Setor'}</h3>
-              <span class="text-xs px-2 py-0.5 rounded-full border ${c.badge} ${c.text}">${pct}%</span>
-            </div>
-            <div class="text-2xl font-bold ${c.text} mb-1">${emitidos} <span class="text-sm font-normal text-slate-400">/ ${capacidade}</span></div>
-            <div class="text-xs text-slate-500 mb-2">ingressos emitidos / capacidade</div>
-            <div class="w-full bg-slate-700 rounded-full h-1.5">
-              <div class="${c.bar} h-1.5 rounded-full transition-all" style="width: ${Math.min(pct, 100)}%"></div>
-            </div>
 
-          </div>`;
-      }).join('');
-    } catch (e) {
-      console.error('Erro ao carregar métricas', e);
-    }
-  }
-
-  // ── Participants List ─────────────────────────────────────────
-  function renderParticipant(p) {
     const ingressos = p.ingressos || [];
     const hasIngresso = ingressos.length > 0;
     const pid = p._id || p.id;
