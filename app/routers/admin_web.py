@@ -837,7 +837,7 @@ async def admin_evento_layout_preview(
         # Embed fake data into layout
         from app.utils.layouts import embed_layout
         fake_participante = {
-            "nome": "Clausemberg Rodrigues de Oliveira Neto",
+            "nome": "Edson Arantes do Nascimento",
             "cpf": "123.456.789-00",
             "email": "teste@example.com",
             "telefone": "+55 11 98765-4321",
