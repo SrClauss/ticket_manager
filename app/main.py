@@ -84,12 +84,30 @@ async def api_uuid_reset(uuid: str):
 @app.get("/ingresso/{ingresso_id}", response_class=HTMLResponse)
 async def ingresso_page(request: Request, ingresso_id: str):
     db = database.get_database()
+    
+    # Buscar ingresso embedded em participante
+    ingresso = None
+    participante = None
+    
     try:
-        ingresso = await db.ingressos_emitidos.find_one({"_id": ObjectId(ingresso_id)})
+        oid = ObjectId(ingresso_id)
+        participante = await db.participantes.find_one(
+            {"ingressos._id": oid},
+            {"ingressos": {"$elemMatch": {"_id": oid}}, "nome": 1, "email": 1, "cpf": 1}
+        )
     except Exception:
-        ingresso = await db.ingressos_emitidos.find_one({"_id": ingresso_id})
+        # ingresso_id não é ObjectId válido, tentar como string
+        participante = await db.participantes.find_one(
+            {"ingressos._id": ingresso_id},
+            {"ingressos": {"$elemMatch": {"_id": ingresso_id}}, "nome": 1, "email": 1, "cpf": 1}
+        )
+    
+    if participante and participante.get("ingressos"):
+        ingresso = participante["ingressos"][0]
+    
     if not ingresso:
         raise HTTPException(status_code=404, detail="Ingresso não encontrado")
+    
     evento_id = ingresso.get("evento_id")
     return templates.TemplateResponse("ingresso_view.html", {"request": request, "evento_id": evento_id, "ingresso_id": str(ingresso.get("_id"))})
 

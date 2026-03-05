@@ -178,7 +178,7 @@ async def get_ingresso_by_qrcode(
     """
     db = get_database()
     
-    # Primeiro tenta localizar ingresso embutido dentro de participantes
+    # Buscar ingresso embutido dentro de participantes
     participante = await db.participantes.find_one(
         {"ingressos.qrcode_hash": qrcode_hash},
         {"ingressos": {"$elemMatch": {"qrcode_hash": qrcode_hash}}, "nome": 1, "email": 1, "telefone": 1}
@@ -189,18 +189,12 @@ async def get_ingresso_by_qrcode(
 
     if participante and participante.get("ingressos"):
         ingresso = participante["ingressos"][0]
-    else:
-        # Fallback para coleção antiga `ingressos_emitidos` (compatibilidade)
-        ingresso = await db.ingressos_emitidos.find_one({"qrcode_hash": qrcode_hash})
-        if not ingresso:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Ingresso não encontrado"
-            )
-        try:
-            participante = await db.participantes.find_one({"_id": ObjectId(ingresso["participante_id"])})
-        except Exception:
-            participante = await db.participantes.find_one({"_id": ingresso.get("participante_id")})
+    
+    if not ingresso:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ingresso não encontrado"
+        )
 
     # Verifica se o ingresso pertence ao evento do token
     if ingresso.get("evento_id") != evento_id:
@@ -266,19 +260,7 @@ async def get_ingresso_completo_by_qrcode(
     ingresso = None
     if participante and participante.get("ingressos"):
         ingresso = participante["ingressos"][0]
-    else:
-        # Fallback para coleção antiga `ingressos_emitidos`
-        ingresso = await db.ingressos_emitidos.find_one({"qrcode_hash": qrcode_hash})
-        if not ingresso:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Ingresso não encontrado"
-            )
-        try:
-            participante = await db.participantes.find_one({"_id": ObjectId(ingresso["participante_id"])})
-        except Exception:
-            participante = await db.participantes.find_one({"_id": ingresso.get("participante_id")})
-
+    
     if not ingresso:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -385,14 +367,6 @@ async def get_ingresso_completo_por_cpf(
                 break
     
     if not ingresso:
-        # Fallback para coleção antiga
-        participante_id = str(participante["_id"])
-        ingresso = await db.ingressos_emitidos.find_one({
-            "participante_id": participante_id,
-            "evento_id": evento_id
-        })
-    
-    if not ingresso:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Ingresso não encontrado para este evento"
@@ -485,14 +459,6 @@ async def get_ingresso_por_participante(
             ingresso = ing
             break
 
-    # Fallback para coleção antiga
-    if not ingresso:
-        participante_id_str = str(participante.get("_id"))
-        ingresso = await db.ingressos_emitidos.find_one({
-            "participante_id": participante_id_str,
-            "evento_id": evento_id
-        })
-
     if not ingresso:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -583,10 +549,7 @@ async def validar_acesso(
     ingresso = None
     if participante and participante.get("ingressos"):
         ingresso = participante["ingressos"][0]
-    else:
-        # Fallback para coleção antiga `ingressos_emitidos`
-        ingresso = await db.ingressos_emitidos.find_one({"qrcode_hash": validacao.qrcode_hash})
-
+    
     if not ingresso:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

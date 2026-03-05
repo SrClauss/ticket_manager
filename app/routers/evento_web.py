@@ -194,13 +194,24 @@ async def evento_api_ingresso_metrics(request: Request):
     tipo_perms = {}
     async for t in db.tipos_ingresso.find({"evento_id": evento_id}):
         tipo_perms[str(t.get("_id"))] = t.get("permissoes", [])
-    # count sold tickets per ilha
+    
+    # count sold tickets per ilha usando ingressos embedded em participantes
     sold = {str(i.get("_id")): 0 for i in ilhas}
-    async for ing in db.ingressos_emitidos.find({"evento_id": evento_id}):
-        tipo_id = str(ing.get("tipo_ingresso_id"))
+    
+    # Agregação para contar ingressos por tipo do evento
+    pipeline = [
+        {"$match": {"ingressos.evento_id": evento_id}},
+        {"$unwind": "$ingressos"},
+        {"$match": {"ingressos.evento_id": evento_id}},
+        {"$group": {"_id": "$ingressos.tipo_ingresso_id", "count": {"$sum": 1}}}
+    ]
+    
+    async for result in db.participantes.aggregate(pipeline):
+        tipo_id = str(result["_id"])
+        count = result["count"]
         for ilha_id in tipo_perms.get(tipo_id, []):
             if ilha_id in sold:
-                sold[ilha_id] += 1
+                sold[ilha_id] += count
     ilha_metrics = []
     for i in ilhas:
         ilha_metrics.append({
@@ -380,17 +391,10 @@ async def evento_api_busca_smart(request: Request, q: str = ""):
     elif tipo == "token":
         qrcode_hash = q.strip()
         p_doc = await db.participantes.find_one(
-            {"ingressos.qrcode_hash": qrcode_hash},
-            {"ingressos": {"$elemMatch": {"qrcode_hash": qrcode_hash}}},
+            {"ingressos.qrcode_hash": qrcode_hash, "ingressos.evento_id": evento_id},
+            {"ingressos": {"$elemMatch": {"qrcode_hash": qrcode_hash, "evento_id": evento_id}}},
         )
-        if not p_doc:
-            ingresso = await db.ingressos_emitidos.find_one({"qrcode_hash": qrcode_hash, "evento_id": evento_id})
-            if ingresso:
-                pid = ingresso.get("participante_id")
-                try:
-                    p_doc = await db.participantes.find_one({"_id": ObjectId(pid)})
-                except Exception:
-                    p_doc = await db.participantes.find_one({"_id": pid})
+        
         if p_doc:
             p_doc["_id"] = str(p_doc["_id"])
             p_doc = normalize_bson_types(p_doc)
@@ -739,16 +743,6 @@ async def _get_participante_ingressos(db, participante_id: str, evento_id: str, 
             "status": ing.get("status", ""),
             "tipo_descricao": tipo_descr,
         })
-
-    if not ingressos:
-        cursor = db.ingressos_emitidos.find({"participante_id": participante_id, "evento_id": evento_id})
-        async for ing in cursor:
-            tipo_descr = _resolve_tipo_descricao(ing.get("tipo_ingresso_id"), evento)
-            ingressos.append({
-                "qrcode_hash": ing.get("qrcode_hash", ""),
-                "status": ing.get("status", ""),
-                "tipo_descricao": tipo_descr,
-            })
 
     return ingressos
 
