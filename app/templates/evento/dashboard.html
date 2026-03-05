@@ -256,7 +256,7 @@
       return;
     }
     
-    const url = `/evento/${eventoId}/ingresso/${ingressoId}/render.jpg?dpi=300`;
+    const url = `/api/eventos/${eventoId}/ingresso/${ingressoId}/render.jpg?dpi=300`;
     console.log('Opening URL:', url);
     
     const w = window.open(url, '_blank', 'width=800,height=600');

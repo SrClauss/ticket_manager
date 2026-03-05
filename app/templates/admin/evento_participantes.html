@@ -117,7 +117,7 @@
 {% block extra_js %}
 <script>
   function printIngresso(eventoId, ingressoId) {
-    const url = `/evento/${eventoId}/ingresso/${ingressoId}/render.jpg?dpi=300`;
+    const url = `/api/eventos/${eventoId}/ingresso/${ingressoId}/render.jpg?dpi=300`;
     const w = window.open(url, '_blank', 'width=800,height=600');
     if (w) {
       w.onload = () => {
