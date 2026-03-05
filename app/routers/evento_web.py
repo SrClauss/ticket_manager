@@ -157,7 +157,12 @@ async def evento_api_ilhas(request: Request):
 
 @router.get("/evento/api/ingressos/metrics")
 async def evento_api_ingresso_metrics(request: Request):
-    """Retorna métricas por tipo de ingresso: total emitidos e impressos."""
+    """Retorna métricas dos ingressos emitidos para o evento.
+
+    O JSON de retorno contém duas listas:
+    - ``tipo_metrics``: agregação por tipo de ingresso (total/impressos)
+    - ``ilha_metrics``: capacidade e ingressos vendidos por ilha/setor
+    """
     session = await _get_evento_from_cookie(request)
     if not session:
         return JSONResponse({"detail": "Não autenticado"}, status_code=401)
@@ -165,6 +170,7 @@ async def evento_api_ingresso_metrics(request: Request):
     evento_id = _evento_id_str(evento)
     db = database.get_database()
 
+    # --- metrics por tipo ---
     pipeline = [
         {"$match": {"evento_id": evento_id}},
         {"$group": {
@@ -173,14 +179,40 @@ async def evento_api_ingresso_metrics(request: Request):
             "printed": {"$sum": {"$cond": [{"$eq": ["$impresso", True]}, 1, 0]}}
         }}
     ]
-    result = await db.ingressos_emitidos.aggregate(pipeline).to_list(length=None)
-    # lookup tipo names
-    for doc in result:
+    tipo_metrics = await db.ingressos_emitidos.aggregate(pipeline).to_list(length=None)
+    # attach names and normalize ids
+    for doc in tipo_metrics:
         tipo = await db.tipos_ingresso.find_one({"_id": ObjectId(doc["_id"])})
         doc["tipo_nome"] = tipo.get("nome") if tipo else None
         doc["tipo_id"] = str(doc["_id"])
         doc.pop("_id", None)
-    return JSONResponse({"metrics": result})
+
+    # --- metrics por ilha ---
+    # gather ilhas for event
+    ilhas = []
+    async for i in db.ilhas.find({"evento_id": evento_id}):
+        ilhas.append(i)
+    # build map of tipo -> permissoes (list of ilha ids)
+    tipo_perms = {}
+    async for t in db.tipos_ingresso.find({"evento_id": evento_id}):
+        tipo_perms[str(t.get("_id"))] = t.get("permissoes", [])
+    # count sold tickets per ilha
+    sold = {str(i.get("_id")): 0 for i in ilhas}
+    async for ing in db.ingressos_emitidos.find({"evento_id": evento_id}):
+        tipo_id = str(ing.get("tipo_ingresso_id"))
+        for ilha_id in tipo_perms.get(tipo_id, []):
+            if ilha_id in sold:
+                sold[ilha_id] += 1
+    ilha_metrics = []
+    for i in ilhas:
+        ilha_metrics.append({
+            "ilha_id": str(i.get("_id")),
+            "nome_setor": i.get("nome_setor"),
+            "capacidade": i.get("capacidade_maxima", 0),
+            "vendidos": sold.get(str(i.get("_id")), 0),
+        })
+
+    return JSONResponse({"tipo_metrics": tipo_metrics, "ilha_metrics": ilha_metrics})
 
 
 @router.get("/evento/api/ilhas/{ilha_id}/stats")

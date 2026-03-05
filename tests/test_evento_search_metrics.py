@@ -112,6 +112,34 @@ async def test_busca_smart_excludes_other_event(monkeypatch, fake_db, mock_get_d
     results3 = resp3 if isinstance(resp3, list) else json.loads(resp3.body)
     assert len(results3) == 0
 
+@pytest.mark.asyncio
+async def test_ilha_capacity_metrics(monkeypatch, fake_db, mock_get_database):
+    evento = {"_id": ObjectId(), "nome": "Ev", "ilhas": []}
+    fake_db.eventos.docs.append(evento)
+    # ilhas
+    ilha1 = {"_id": ObjectId(), "evento_id": str(evento['_id']), "nome_setor": "A", "capacidade_maxima": 100}
+    ilha2 = {"_id": ObjectId(), "evento_id": str(evento['_id']), "nome_setor": "B", "capacidade_maxima": 50}
+    fake_db.ilhas.docs.extend([ilha1, ilha2])
+    # tipos with permissions
+    tipo1 = {"_id": ObjectId(), "evento_id": str(evento['_id']), "nome": "T1", "permissoes": [str(ilha1['_id'])]}
+    tipo2 = {"_id": ObjectId(), "evento_id": str(evento['_id']), "nome": "T2", "permissoes": [str(ilha1['_id']), str(ilha2['_id'])]}
+    fake_db.tipos_ingresso.docs.extend([tipo1, tipo2])
+    # ingressos
+    ing1 = {"_id": ObjectId(), "evento_id": str(evento['_id']), "tipo_ingresso_id": str(tipo1['_id']), "impresso": False}
+    ing2 = {"_id": ObjectId(), "evento_id": str(evento['_id']), "tipo_ingresso_id": str(tipo2['_id']), "impresso": True}
+    fake_db.ingressos_emitidos.docs.extend([ing1, ing2])
+    async def fake_get(request):
+        return evento, str(evento['_id'])
+    monkeypatch.setattr(evento_web, "_get_evento_from_cookie", fake_get)
+    resp = await evento_web.evento_api_ingresso_metrics(DummyRequest())
+    import json
+    body = resp if isinstance(resp, list) else json.loads(resp.body)
+    ilha_metrics = body.get('ilha_metrics', [])
+    # find entries
+    m1 = next(i for i in ilha_metrics if i['ilha_id']==str(ilha1['_id']))
+    assert m1['capacidade']==100 and m1['vendidos']==2
+    m2 = next(i for i in ilha_metrics if i['ilha_id']==str(ilha2['_id']))
+    assert m2['capacidade']==50 and m2['vendidos']==1
 
 @pytest.mark.asyncio
 async def test_ingresso_metrics_and_impresso_toggle(monkeypatch, fake_db, mock_get_database):
@@ -133,16 +161,18 @@ async def test_ingresso_metrics_and_impresso_toggle(monkeypatch, fake_db, mock_g
 
     # metrics
     resp = await evento_web.evento_api_ingresso_metrics(DummyRequest())
-    # toggle impresso via evento_api
-    from app.routers import evento_api
     assert isinstance(resp, list) or hasattr(resp,'body')
     import json
-    metrics = resp if isinstance(resp, list) else json.loads(resp.body)['metrics']
+    body = resp if isinstance(resp, list) else json.loads(resp.body)
+    # old metrics under tipo_metrics
+    metrics = body.get('tipo_metrics', [])
     # find tipo1 entry
     t1 = next(m for m in metrics if m['tipo_nome']=='Publico Geral')
     assert t1['total']==2 and t1['printed']==1
     t2 = next(m for m in metrics if m['tipo_nome']=='VIP')
     assert t2['total']==1 and t2['printed']==0
+    # ilha_metrics should exist (no ilhas defined => empty)
+    assert body.get('ilha_metrics') == []
 
     # toggle impresso endpoint using evento_api
     from app.routers import evento_api
