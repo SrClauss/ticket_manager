@@ -150,6 +150,14 @@ class FakeCollection:
                 return d.get(k)
             doc_value = extract(doc, key)
             
+            # if the document value is a list and the query is a simple scalar,
+            # consider it a match if any element equals the scalar (mimics Mongo $elemMatch behavior).
+            if isinstance(doc_value, list) and not isinstance(value, dict):
+                if any(self._equals(v, value) for v in doc_value):
+                    continue  # treat as match and move to next query key
+                else:
+                    return False
+            
             if isinstance(value, dict):
                 if "$ne" in value:
                     if self._equals(doc_value, value["$ne"]):
