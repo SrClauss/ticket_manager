@@ -608,7 +608,7 @@ async def print_ingresso_png(evento_id: str, ingresso_id: str, dpi: int = 300, o
         # ingresso embedded, update in participante doc
         try:
             result = await db.participantes.update_one(
-                {"_id": ObjectId(participante.get("_id")), "ingressos._id": ingresso.get("_id")},
+                {"_id": ObjectId(participante.get("_id")), "ingressos._id": ingresso.get("_id"), "ingressos.evento_id": evento_id},
                 {"$set": {"ingressos.$.impresso": True}}
             )
             print(f"[PRINT.PNG] Marked embedded ingresso as impresso: matched={result.matched_count}, modified={result.modified_count}")
@@ -663,7 +663,7 @@ async def set_ingresso_impresso(evento_id: str, ingresso_id: str, data: Impresso
     print("[IMPRESSO] Tentando buscar em participantes...")
     try:
         oid = ObjectId(ingresso_id)
-        query = {"ingressos._id": oid}
+        query = {"ingressos._id": oid, "ingressos.evento_id": evento_id}
         print(f"[IMPRESSO] Query com ObjectId: {query}")
         result = await db.participantes.update_one(
             query,
@@ -680,7 +680,7 @@ async def set_ingresso_impresso(evento_id: str, ingresso_id: str, data: Impresso
         logger.debug(f"Tentativa com ObjectId falhou: {e}")
     
     # Try as string
-    query = {"ingressos._id": ingresso_id}
+    query = {"ingressos._id": ingresso_id, "ingressos.evento_id": evento_id}
     print(f"[IMPRESSO] Query com string: {query}")
     result = await db.participantes.update_one(
         query,
@@ -692,7 +692,7 @@ async def set_ingresso_impresso(evento_id: str, ingresso_id: str, data: Impresso
         logger.info(f"Ingresso {ingresso_id} atualizado em participantes (string) (matched: {result.matched_count}, modified: {result.modified_count})")
         print("[IMPRESSO] ✓ Sucesso com string")
     else:
-        logger.warning(f"Nenhum ingresso encontrado com _id={ingresso_id}")
+        logger.warning(f"Nenhum ingresso encontrado com _id={ingresso_id} para evento {evento_id}")
         print(f"[IMPRESSO] ✗ NENHUM INGRESSO ENCONTRADO com _id={ingresso_id}")
     
     return {"success": True}
@@ -725,7 +725,7 @@ async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Op
         print(f"[DEBUG] Searching by ObjectId in participantes.ingressos")
         participante = await db.participantes.find_one(
             {"ingressos._id": oid}, 
-            {"ingressos": {"$elemMatch": {"_id": oid}}, "nome": 1, "email": 1, "cpf": 1}
+            {"ingressos": {"$elemMatch": {"_id": oid, "evento_id": evento_id}}, "nome": 1, "email": 1, "cpf": 1}
         )
         
         if participante and participante.get("ingressos"):
@@ -735,13 +735,13 @@ async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Op
     # If not found by ObjectId or ingresso_id is not a valid ObjectId, try by qrcode_hash
     print(f"[DEBUG] Searching by qrcode_hash in participantes.ingressos")
     
-    # First check if any participante has this qrcode_hash
-    count = await db.participantes.count_documents({"ingressos.qrcode_hash": ingresso_id})
-    print(f"[DEBUG] Found {count} participantes with this qrcode_hash")
+    # First check if any participante has this qrcode_hash for this evento
+    count = await db.participantes.count_documents({"ingressos.qrcode_hash": ingresso_id, "ingressos.evento_id": evento_id})
+    print(f"[DEBUG] Found {count} participantes with this qrcode_hash and evento_id")
     
     participante = await db.participantes.find_one(
         {"ingressos.qrcode_hash": ingresso_id}, 
-        {"ingressos": {"$elemMatch": {"qrcode_hash": ingresso_id}}, "nome": 1, "email": 1, "cpf": 1}
+        {"ingressos": {"$elemMatch": {"qrcode_hash": ingresso_id, "evento_id": evento_id}}, "nome": 1, "email": 1, "cpf": 1}
     )
     
     print(f"[DEBUG] Participante result: {participante is not None}")
