@@ -243,16 +243,20 @@
       },
       async printIngresso(eventoId, ingressoId, p) {
         try {
-          await fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
+          const res = await fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ impresso: true })
           });
-          if (p && p.ingressos && p.ingressos.length) p.ingressos[0].impresso = true;
+          if (res.ok && p && p.ingressos && p.ingressos.length) {
+            p.ingressos[0].impresso = true;
+            // Aguarda um pouco e atualiza métricas
+            await new Promise(resolve => setTimeout(resolve, 100));
+            await this.loadMetrics();
+          }
         } catch (e) {
           console.warn('Falha ao marcar ingresso como impresso', e);
         }
-        this.loadMetrics();
         const url = `/api/eventos/${eventoId}/ingresso/${ingressoId}/print.png?dpi=300&orientation=landscape`;
         const w = window.open(url, '_blank', 'width=800,height=600');
         if (w) {
@@ -270,15 +274,25 @@
           }
         }
         try {
-          await fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
+          const res = await fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ impresso: newVal })
           });
+          if (!res.ok) {
+            console.error('Erro ao atualizar status de impresso');
+            // Reverte o checkbox se falhou
+            p.ingressos[0].impresso = !newVal;
+            return;
+          }
+          // Aguarda um pouco para garantir que o banco foi atualizado
+          await new Promise(resolve => setTimeout(resolve, 100));
+          await this.loadMetrics();
         } catch (e) {
           console.warn('erro updating impresso', e);
+          // Reverte o checkbox em caso de erro
+          p.ingressos[0].impresso = !newVal;
         }
-        this.loadMetrics();
       }
     };
   }
