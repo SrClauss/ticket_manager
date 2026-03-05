@@ -426,6 +426,10 @@ async def evento_participante_editar_save(
 async def _get_tipos_ingresso(db, evento: dict) -> list:
     """Retorna os tipos de ingresso do evento como lista de dicts {id, descricao}."""
     tipos = []
+    # allow calling without a real database (e.g. during unit tests)
+    if not db:
+        return tipos
+
     if evento.get("tipos_ingresso"):
         for t in evento.get("tipos_ingresso", []):
             tipos.append({
@@ -465,6 +469,12 @@ async def evento_participante_novo_page(request: Request):
     db = database.get_database()
     tipos = await _get_tipos_ingresso(db, evento)
 
+    # determine which fields are required according to event settings
+    campos = evento.get("campos_obrigatorios_planilha", []) or []
+    # always include the base fields so form makes sense
+    base = {"Nome", "Email", "CPF"}
+    required_fields = list(set(campos) | base)
+
     return templates.TemplateResponse(
         "evento/participante_novo.html",
         {
@@ -472,6 +482,7 @@ async def evento_participante_novo_page(request: Request):
             "tipos_ingresso": tipos,
             "evento_nome": evento.get("nome", "Evento"),
             "active_page": "dashboard",
+            "required_fields": required_fields,
         },
     )
 

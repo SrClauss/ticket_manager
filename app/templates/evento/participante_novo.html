@@ -49,21 +49,28 @@
         <input type="text" name="cpf" required maxlength="14" placeholder="000.000.000-00"
                class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2.5 px-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm" />
       </div>
+      {% set req = required_fields or [] %}
+      {% if 'Telefone' in req %}
       <div>
-        <label class="block text-xs text-slate-400 mb-1">Telefone</label>
-        <input type="text" name="telefone"
+        <label class="block text-xs text-slate-400 mb-1">Telefone{% if 'Telefone' in req %} *{% endif %}</label>
+        <input type="text" name="telefone" {% if 'Telefone' in req %}required{% endif %}
                class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2.5 px-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm" />
       </div>
+      {% endif %}
+      {% if 'Empresa' in req %}
       <div>
-        <label class="block text-xs text-slate-400 mb-1">Empresa</label>
-        <input type="text" name="empresa"
+        <label class="block text-xs text-slate-400 mb-1">Empresa{% if 'Empresa' in req %} *{% endif %}</label>
+        <input type="text" name="empresa" {% if 'Empresa' in req %}required{% endif %}
                class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2.5 px-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm" />
       </div>
+      {% endif %}
+      {% if 'Nacionalidade' in req %}
       <div>
-        <label class="block text-xs text-slate-400 mb-1">Nacionalidade</label>
-        <input type="text" name="nacionalidade"
+        <label class="block text-xs text-slate-400 mb-1">Nacionalidade{% if 'Nacionalidade' in req %} *{% endif %}</label>
+        <input type="text" name="nacionalidade" {% if 'Nacionalidade' in req %}required{% endif %}
                class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2.5 px-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm" />
       </div>
+      {% endif %}
 
       {% if tipos_ingresso %}
       <div>
