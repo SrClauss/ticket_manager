@@ -289,6 +289,16 @@
     // Usa rota de impressão com rotação landscape (90°)
     const url = `/api/eventos/${eventoId}/ingresso/${ingressoId}/print.png?dpi=300&orientation=landscape`;
     console.log('Opening URL:', url);
+    const w = window.open(url, '_blank', 'width=800,height=600');
+    if (w) {
+      w.onload = () => {
+        setTimeout(() => {
+          w.print();
+        }, 500);
+      };
+    } else {
+      alert('Não foi possível abrir janela de impressão. Verifique se pop-ups estão bloqueados.');
+    }
   }
 
   function toggleImpresso(eventoId, ingressoId, checkbox) {
@@ -306,17 +316,6 @@
     }).catch(e => console.warn('erro updating impresso', e));
   }
     
-    const w = window.open(url, '_blank', 'width=800,height=600');
-    if (w) {
-      w.onload = () => {
-        setTimeout(() => {
-          w.print();
-        }, 500);
-      };
-    } else {
-      alert('Não foi possível abrir janela de impressão. Verifique se pop-ups estão bloqueados.');
-    }
-  }
 
   // ── Key handling ──────────────────────────────────────────────
   const searchInput = document.getElementById('search-input');
