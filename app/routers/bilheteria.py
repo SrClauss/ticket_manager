@@ -1057,10 +1057,11 @@ async def reimprimir_ingresso(
     layout_source = evento.get("layout_ingresso")
 
     # Preenche o layout
+    # use get() with default in case participante document is missing nome field
     layout_preenchido = preencher_layout(
         layout_source,
         {
-            "participante_nome": participante["nome"],
+            "participante_nome": participante.get("nome", "Desconhecido"),
             "qrcode_hash": ingresso["qrcode_hash"],
             "tipo_ingresso": tipo_ingresso["descricao"],
             "evento_nome": evento["nome"],
