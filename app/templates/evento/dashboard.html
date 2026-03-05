@@ -258,20 +258,30 @@
         if (list) list.innerHTML = `<p class="text-red-400 text-sm text-center py-4">${msg}</p>`;
       },
       async printIngresso(eventoId, ingressoId, p) {
+        console.log(`[PRINT] Marcando ingresso ${ingressoId} como impresso...`);
         try {
           const res = await fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ impresso: true })
           });
-          if (res.ok && p && p.ingressos && p.ingressos.length) {
-            p.ingressos[0].impresso = true;
+          console.log(`[PRINT] Resposta do servidor: ${res.status} ${res.statusText}`);
+          if (res.ok) {
+            const data = await res.json();
+            console.log('[PRINT] Resposta JSON:', data);
+            if (p && p.ingressos && p.ingressos.length) {
+              p.ingressos[0].impresso = true;
+              console.log('[PRINT] Modelo atualizado, recarregando métricas...');
+            }
             // Aguarda um pouco e atualiza métricas
             await new Promise(resolve => setTimeout(resolve, 100));
             await this.loadMetrics();
+          } else {
+            const errorText = await res.text();
+            console.error(`[PRINT] Erro ${res.status}: ${errorText}`);
           }
         } catch (e) {
-          console.warn('Falha ao marcar ingresso como impresso', e);
+          console.error('[PRINT] Falha ao marcar ingresso como impresso:', e);
         }
         const url = `/api/eventos/${eventoId}/ingresso/${ingressoId}/print.png?dpi=300&orientation=landscape`;
         const w = window.open(url, '_blank', 'width=800,height=600');
@@ -283,16 +293,19 @@
       },
       async toggleImpresso(eventoId, ingressoId, p, event) {
         const newVal = p.ingressos[0].impresso; // x-model já atualizou este valor
+        console.log(`[TOGGLE] Checkbox alterado para: ${newVal}, ingressoId: ${ingressoId}`);
         
         // Se está desmarcando, pedir confirmação
         if (!newVal) {
           if (!confirm('Deseja realmente desmarcar como impresso?')) {
             // Reverte - x-model vai atualizar o checkbox automaticamente
             p.ingressos[0].impresso = true;
+            console.log('[TOGGLE] Usuário cancelou, revertendo para true');
             return;
           }
         }
         
+        console.log(`[TOGGLE] Enviando PUT para /api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`);
         try {
           const res = await fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
             method: 'PUT',
@@ -300,18 +313,25 @@
             body: JSON.stringify({ impresso: newVal })
           });
           
+          console.log(`[TOGGLE] Resposta: ${res.status} ${res.statusText}`);
+          
           if (!res.ok) {
-            console.error('Erro ao atualizar status de impresso');
+            const errorText = await res.text();
+            console.error(`[TOGGLE] Erro ${res.status}: ${errorText}`);
             // Reverte - x-model vai atualizar o checkbox automaticamente
             p.ingressos[0].impresso = !newVal;
             return;
           }
           
+          const data = await res.json();
+          console.log('[TOGGLE] Resposta JSON:', data);
+          
           // Aguarda um pouco para garantir que o banco foi atualizado
           await new Promise(resolve => setTimeout(resolve, 100));
           await this.loadMetrics();
+          console.log('[TOGGLE] Métricas recarregadas');
         } catch (e) {
-          console.warn('erro updating impresso', e);
+          console.error('[TOGGLE] Erro updating impresso:', e);
           // Reverte - x-model vai atualizar o checkbox automaticamente
           p.ingressos[0].impresso = !newVal;
         }
