@@ -91,11 +91,12 @@
           <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Canvas</h2>
 
           <div class="space-y-2">
+            <!-- LARGURA: dropdown em RETRATO, input livre em PAISAGEM -->
             <div>
               <label class="text-[10px] text-slate-400 block mb-0.5">
-                📏 Largura do Rolo (fixo)
+                📏 Largura (mm) <span x-text="cfg.orientation==='portrait'?'- Rolo Brother':'- Livre'"></span>
               </label>
-              <select x-model.number="cfg.width" @change="rerender()"
+              <select x-show="cfg.orientation==='portrait'" x-model.number="cfg.width" @change="rerender()"
                      class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
                 <option value="12">12mm</option>
                 <option value="29">29mm</option>
@@ -106,16 +107,32 @@
                 <option value="102">102mm</option>
                 <option value="103">103mm</option>
               </select>
-              <div class="text-[9px] text-slate-500 mt-0.5">Tamanho físico do rolo Brother</div>
+              <input x-show="cfg.orientation==='landscape'" type="number" min="10" max="400" step="1"
+                     x-model.number="cfg.width" @change="rerender()"
+                     class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+              <div class="text-[9px] text-slate-500 mt-0.5" x-text="cfg.orientation==='portrait'?'Tamanho do rolo físico':'Comprimento após rotação'"></div>
             </div>
+            
+            <!-- ALTURA: input livre em RETRATO, dropdown em PAISAGEM -->
             <div>
               <label class="text-[10px] text-slate-400 block mb-0.5">
-                📐 Comprimento do Papel (variável)
+                📐 Altura (mm) <span x-text="cfg.orientation==='portrait'?'- Livre':'- Rolo Brother'"></span>
               </label>
-              <input type="number" min="10" max="400" step="1"
+              <input x-show="cfg.orientation==='portrait'" type="number" min="10" max="400" step="1"
                      x-model.number="cfg.height" @change="rerender()"
                      class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
-              <div class="text-[9px] text-slate-500 mt-0.5">Tamanho cortado do papel</div>
+              <select x-show="cfg.orientation==='landscape'" x-model.number="cfg.height" @change="rerender()"
+                     class="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs">
+                <option value="12">12mm</option>
+                <option value="29">29mm</option>
+                <option value="38">38mm</option>
+                <option value="50">50mm</option>
+                <option value="54">54mm</option>
+                <option value="62" selected>62mm (padrão)</option>
+                <option value="102">102mm</option>
+                <option value="103">103mm</option>
+              </select>
+              <div class="text-[9px] text-slate-500 mt-0.5" x-text="cfg.orientation==='portrait'?'Comprimento do papel':'Tamanho do rolo físico'"></div>
             </div>
           </div>
 
@@ -139,15 +156,20 @@
             
             <!-- Dimensões Físicas vs Impressas -->
             <div class="mt-2 p-2 rounded text-[10px]"
-                 :class="cfg.orientation==='landscape'?'bg-orange-900/30 border border-orange-700/50':'bg-slate-700/50 border border-slate-600'">
-              <div class="font-bold mb-1" x-text="cfg.orientation==='landscape'?'⚠️ MODO PAISAGEM ATIVO':'✓ Modo Retrato'"></div>
+                 :class="cfg.orientation==='landscape'?'bg-orange-900/30 border border-orange-700/50':'bg-blue-900/30 border border-blue-700/50'">
+              <div class="font-bold mb-1" x-text="cfg.orientation==='landscape'?'⚠️ PAISAGEM: Rotaciona 90°':'✓ RETRATO: Impressão direta'"></div>
               <div class="space-y-0.5 text-slate-300">
-                <div>📄 <strong>Papel físico:</strong> <span x-text="cfg.width + 'mm × ' + cfg.height + 'mm'"></span></div>
-                <div x-show="cfg.orientation==='landscape'" class="text-orange-300">
-                  🔄 <strong>Após rotação 90°:</strong> <span x-text="cfg.height + 'mm × ' + cfg.width + 'mm'"></span>
+                <div x-show="cfg.orientation==='portrait'">
+                  📄 <strong>Papel:</strong> <span x-text="cfg.width + 'mm (rolo) × ' + cfg.height + 'mm'"></span>
                 </div>
-                <div x-show="cfg.orientation==='portrait'" class="text-slate-400">
-                  → Sem rotação na impressão
+                <div x-show="cfg.orientation==='landscape'">
+                  📄 <strong>Papel:</strong> <span x-text="cfg.width + 'mm × ' + cfg.height + 'mm (rolo)'"></span>
+                </div>
+                <div x-show="cfg.orientation==='landscape'" class="text-orange-300">
+                  🔄 <strong>Visual:</strong> <span x-text="cfg.height + 'mm (largura) × ' + cfg.width + 'mm (altura)'"></span>
+                </div>
+              </div>
+            </div>
                 </div>
               </div>
             </div>
@@ -787,11 +809,20 @@
       // ══════════════════════════════════════════════════════════════
       setOrientation(o) {
         if (this.cfg.orientation === o) return;
+        
+        const oldOrientation = this.cfg.orientation;
         this.cfg.orientation = o;
-        // NÃO trocar width/height! Para impressoras Brother de rolo:
-        // - width = largura do rolo (sempre fixo: 62mm, 12mm, etc)
-        // - height = comprimento do papel (variável)
-        // - landscape apenas rotaciona visualmente, não troca dimensões físicas
+        
+        // Trocar valores ao mudar orientação:
+        // Portrait→Landscape: width (que era dropdown/rolo) vai para height (vira dropdown/rolo)
+        //                     height (que era livre) vai para width (vira livre)
+        // Landscape→Portrait: inverso
+        if (oldOrientation !== o) {
+          const [w, h] = [this.cfg.width, this.cfg.height];
+          this.cfg.width = h;
+          this.cfg.height = w;
+        }
+        
         this.rerender();
       },
       applyPreset(v) {
