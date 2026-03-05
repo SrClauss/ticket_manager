@@ -839,7 +839,10 @@ async def admin_evento_layout_preview(
         fake_participante = {
             "nome": "Clausemberg Rodrigues de Oliveira Neto",
             "cpf": "123.456.789-00",
-            "email": "teste@example.com"
+            "email": "teste@example.com",
+            "telefone": "+55 11 98765-4321",
+            "empresa": "Tech Corp Ltda",
+            "nacionalidade": "Brasil"
         }
         fake_tipo = {
             "descricao": "Pista Premium"
