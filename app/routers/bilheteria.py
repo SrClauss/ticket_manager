@@ -1079,6 +1079,46 @@ async def reimprimir_ingresso(
     }
 
 
+# helper for mobile printing: redirect to the evento API's print.png
+@router.get("/imprimir/{ingresso_id}")
+async def imprimir_por_mobile(
+    ingresso_id: str,
+    evento_id: str = Depends(verify_token_bilheteria)
+):
+    """Endpoint usado pelo app mobile quando só precisa da imagem pronta.
+    Autentica com token de bilheteria e procura o ingresso em participantes.
+    Retorna uma *redirect* para o mesmo recurso que o editor/web usa.
+    """
+    db = get_database()
+    ingresso = None
+    # search by _id inside participantes
+    try:
+        part = await db.participantes.find_one(
+            {"ingressos._id": ObjectId(ingresso_id)},
+            {"ingressos": {"$elemMatch": {"_id": ObjectId(ingresso_id), "evento_id": evento_id}}}
+        )
+        if part and part.get("ingressos"):
+            ingresso = part["ingressos"][0]
+    except Exception:
+        pass
+
+    if not ingresso:
+        part = await db.participantes.find_one(
+            {"ingressos.qrcode_hash": ingresso_id},
+            {"ingressos": {"$elemMatch": {"qrcode_hash": ingresso_id, "evento_id": evento_id}}}
+        )
+        if part and part.get("ingressos"):
+            ingresso = part["ingressos"][0]
+
+    if not ingresso:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Ingresso não encontrado")
+
+    # build url to print.png
+    target = f"/api/eventos/{evento_id}/ingresso/{str(ingresso.get('_id'))}/print.png?dpi=300&orientation=portrait"
+    return RedirectResponse(url=target)
+
+
 # Backwards-compatible wrapper names expected by tests
 async def create_participante(participante: ParticipanteCreate, evento_id: str = None):
     """Compat: English-named alias for criar_participante"""
