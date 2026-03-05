@@ -148,7 +148,19 @@
     const hasIngresso = ingressos.length > 0;
     const pid = p._id || p.id;
     const ingresso = ingressos[0]; // Participante tem apenas 1 ingresso
-    const ingressoId = ingresso ? (ingresso._id || ingresso.id) : null;
+    
+    // Debug: log ingresso data
+    if (ingresso) {
+      console.log('Ingresso data:', {
+        _id: ingresso._id,
+        id: ingresso.id,
+        evento_id: ingresso.evento_id,
+        qrcode_hash: ingresso.qrcode_hash
+      });
+    }
+    
+    // Try multiple ID fields for ingresso
+    const ingressoId = ingresso ? (ingresso._id || ingresso.id || ingresso.qrcode_hash) : null;
     const eventoId = ingresso ? ingresso.evento_id : null;
     
     return `
@@ -237,7 +249,16 @@
 
   // ── Print ingresso ────────────────────────────────────────────
   function printIngresso(eventoId, ingressoId) {
+    console.log('printIngresso called with:', { eventoId, ingressoId });
+    
+    if (!eventoId || !ingressoId) {
+      alert('Erro: ID do evento ou ingresso não encontrado.');
+      return;
+    }
+    
     const url = `/evento/${eventoId}/ingresso/${ingressoId}/render.jpg?dpi=300`;
+    console.log('Opening URL:', url);
+    
     const w = window.open(url, '_blank', 'width=800,height=600');
     if (w) {
       w.onload = () => {

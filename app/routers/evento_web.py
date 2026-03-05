@@ -230,7 +230,15 @@ async def evento_api_participantes(request: Request, page: int = 1, per_page: in
         p["_id"] = str(p.get("_id"))
         p = normalize_bson_types(p)
         if p.get("ingressos"):
-            p["ingressos"] = [ing for ing in p["ingressos"] if ing.get("evento_id") == evento_id]
+            # Filtra ingressos deste evento e normaliza cada ingresso
+            filtered_ingressos = []
+            for ing in p["ingressos"]:
+                if ing.get("evento_id") == evento_id:
+                    # Garante que _id do ingresso é string
+                    if ing.get("_id") and not isinstance(ing["_id"], str):
+                        ing["_id"] = str(ing["_id"])
+                    filtered_ingressos.append(ing)
+            p["ingressos"] = filtered_ingressos
         participantes.append(p)
 
     return JSONResponse({
