@@ -3,6 +3,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+
+
 import app.config.database as database
 from app.config.database import connect_to_mongo, close_mongo_connection
 from app.config.indexes import create_indexes
@@ -88,23 +90,13 @@ async def ingresso_page(request: Request, ingresso_id: str):
     # Buscar ingresso embedded em participante
     ingresso = None
     participante = None
-    
-    # Tenta primeiro como string (formato armazenado nos embedded)
+
+    # search by string _id only
     participante = await db.participantes.find_one(
         {"ingressos._id": ingresso_id},
         {"ingressos": {"$elemMatch": {"_id": ingresso_id}}, "nome": 1, "email": 1, "cpf": 1}
     )
-    
-    # Se não encontrou, tenta converter para ObjectId (caso legado)
-    if not participante:
-        try:
-            oid = ObjectId(ingresso_id)
-            participante = await db.participantes.find_one(
-                {"ingressos._id": oid},
-                {"ingressos": {"$elemMatch": {"_id": oid}}, "nome": 1, "email": 1, "cpf": 1}
-            )
-        except Exception:
-            pass
+
     
     if participante and participante.get("ingressos"):
         ingresso = participante["ingressos"][0]

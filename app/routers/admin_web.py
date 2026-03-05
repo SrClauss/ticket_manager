@@ -1311,24 +1311,7 @@ async def admin_evento_participantes(request: Request, evento_id: str, busca: Op
             # Diagnostics: log how many found; if none, try legacy collection ingressos_emitidos as fallback
             import logging
             logger = logging.getLogger(__name__)
-            logger.info("No participants in participantes collection; checking ingressos_emitidos fallback")
-            pids = set()
-            try:
-                cursor_ing = db.ingressos_emitidos.find({"evento_id": evento["id"]})
-                async for ing in cursor_ing:
-                    pid = ing.get("participante_id")
-                    if pid:
-                        pids.add(pid)
-            except Exception:
-                pass
-            try:
-                cursor_ing = db.ingressos_emitidos.find({"evento_id": ObjectId(evento_id)})
-                async for ing in cursor_ing:
-                    pid = ing.get("participante_id")
-                    if pid:
-                        pids.add(pid)
-            except Exception:
-                pass
+            # legacy fallback removed; participantes collection assumed authoritative
 
             for pid in pids:
                 try:

@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse, RedirectResponse
 from pydantic import BaseModel
 import app.config.database as database
 
+
 def get_database():
     """Runtime indirection to allow tests to monkeypatch `get_database` on this module."""
     return database.get_database()
@@ -710,7 +711,7 @@ async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Op
     """
     print(f"[DEBUG] _fetch_ingresso_data called with evento_id={evento_id}, ingresso_id={ingresso_id}")
     
-    # Try by string _id first (formato dos embedded)
+    # Always lookup by string _id first
     print(f"[DEBUG] Searching by string _id in participantes.ingressos")
     participante = await db.participantes.find_one(
         {"ingressos._id": ingresso_id}, 
@@ -720,22 +721,7 @@ async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Op
     if participante and participante.get("ingressos"):
         print(f"[DEBUG] Found ingresso embedded in participante by string _id")
         return participante["ingressos"][0], participante
-    
-    # Try by ObjectId if string didn't work (casos legados)
-    try:
-        oid = ObjectId(ingresso_id)
-        print(f"[DEBUG] Trying as ObjectId: {oid}")
-        
-        participante = await db.participantes.find_one(
-            {"ingressos._id": oid}, 
-            {"ingressos": {"$elemMatch": {"_id": oid, "evento_id": evento_id}}, "nome": 1, "email": 1, "cpf": 1}
-        )
-        
-        if participante and participante.get("ingressos"):
-            print(f"[DEBUG] Found ingresso embedded in participante by ObjectId")
-            return participante["ingressos"][0], participante
-    except Exception as e:
-        print(f"[DEBUG] Not a valid ObjectId: {e}")
+
     
     # If not found by _id, try by qrcode_hash
     print(f"[DEBUG] Searching by qrcode_hash in participantes.ingressos")

@@ -649,6 +649,8 @@ JWT_SECRET_KEY=your-secret-key-change-in-production-use-openssl-rand-hex-32
 JWT_ALGORITHM=HS256
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES=1440
 
+
+
 # Admin Configuration (CHANGE IN PRODUCTION)
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=change-this-password-in-production
