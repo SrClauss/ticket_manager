@@ -299,13 +299,17 @@ async def evento_api_participantes(request: Request, page: int = 1, per_page: in
                     if ing.get("_id") and not isinstance(ing["_id"], str):
                         ing["_id"] = str(ing["_id"])
                     # Normaliza campo impresso como booleano
-                    impresso = ing.get("impresso")
-                    if impresso is None or impresso == "":
+                    impresso_original = ing.get("impresso")
+                    print(f"[LOAD] Ingresso {ing.get('_id')}: impresso original = {impresso_original} (tipo: {type(impresso_original)})")
+                    
+                    if impresso_original is None or impresso_original == "":
                         ing["impresso"] = False
-                    elif isinstance(impresso, str):
-                        ing["impresso"] = impresso.lower() in ("true", "1", "yes")
+                    elif isinstance(impresso_original, str):
+                        ing["impresso"] = impresso_original.lower() in ("true", "1", "yes")
                     else:
-                        ing["impresso"] = bool(impresso)
+                        ing["impresso"] = bool(impresso_original)
+                    
+                    print(f"[LOAD] Ingresso {ing.get('_id')}: impresso normalizado = {ing['impresso']} (tipo: {type(ing['impresso'])})")
                     filtered_ingressos.append(ing)
             p["ingressos"] = filtered_ingressos
         participantes.append(p)
