@@ -259,13 +259,22 @@
     
     // marca como impresso via API antes de abrir
     try {
-      await fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
+      const res = await fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ impresso: true })
       });
+      
+      if (res.ok) {
+        // Atualiza checkbox na interface
+        const checkboxes = document.querySelectorAll(`input[type="checkbox"][onchange*="${ingressoId}"]`);
+        checkboxes.forEach(cb => cb.checked = true);
+        
+        // Recarrega métricas para atualizar contadores
+        loadMetrics();
+      }
     } catch (e) {
-      console.warn('Falha ao marcar ingressos como impresso', e);
+      console.warn('Falha ao marcar ingresso como impresso', e);
     }
     
     // Usa rota de impressão com rotação landscape (90°)
