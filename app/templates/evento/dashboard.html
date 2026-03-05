@@ -183,13 +183,11 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- alpine.js for lightweight reactivity -->
-<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<!-- define dashboard component globally before Alpine loads -->
 <script>
   // evento_id disponibilizado pelo servidor para usos futuros
   const EVENTO_ID = "{{ evento_id }}";
-
-  function dashboard() {
+  window.dashboard = function() {
     return {
       participants: [],
       tipoMetrics: [],
@@ -264,6 +262,28 @@
       async toggleImpresso(eventoId, ingressoId, p) {
         const newVal = p.ingressos[0].impresso;
         if (!newVal) {
+          if (!confirm('Deseja realmente desmarcar como impresso?')) {
+            p.ingressos[0].impresso = true;
+            return;
+          }
+        }
+        try {
+          await fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ impresso: newVal })
+          });
+        } catch (e) {
+          console.warn('erro updating impresso', e);
+        }
+        this.loadMetrics();
+      }
+    };
+  }
+</script>
+<!-- alpine.js for lightweight reactivity -->
+<script defer src="https://unpkg.com/alpinejs@3/dist/cdn.min.js"></script>
+{% endblock %}        if (!newVal) {
           if (!confirm('Deseja realmente desmarcar como impresso?')) {
             p.ingressos[0].impresso = true;
             return;
