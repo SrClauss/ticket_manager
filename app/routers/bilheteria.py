@@ -599,7 +599,7 @@ def preencher_layout(layout: Dict[str, Any], dados: Dict[str, str]) -> Dict[str,
     return json.loads(layout_str)
 
 
-@router.get("/participante/{participante_id}", response_model=Participante)
+@router.get("/participantes/{participante_id}", response_model=Participante)
 async def get_participante(
     participante_id: str,
     evento_id: str = Depends(verify_token_bilheteria)
