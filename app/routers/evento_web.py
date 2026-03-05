@@ -154,6 +154,34 @@ async def evento_api_ilhas(request: Request):
     return JSONResponse({"ilhas": ilhas})
 
 
+@router.get("/evento/api/ingressos/metrics")
+async def evento_api_ingresso_metrics(request: Request):
+    """Retorna métricas por tipo de ingresso: total emitidos e impressos."""
+    session = await _get_evento_from_cookie(request)
+    if not session:
+        return JSONResponse({"detail": "Não autenticado"}, status_code=401)
+    evento, _ = session
+    evento_id = _evento_id_str(evento)
+    db = database.get_database()
+
+    pipeline = [
+        {"$match": {"evento_id": evento_id}},
+        {"$group": {
+            "_id": "$tipo_ingresso_id",
+            "total": {"$sum": 1},
+            "printed": {"$sum": {"$cond": [{"$eq": ["$impresso", True]}, 1, 0]}}
+        }}
+    ]
+    result = await db.ingressos_emitidos.aggregate(pipeline).to_list(length=None)
+    # lookup tipo names
+    for doc in result:
+        tipo = await db.tipos_ingresso.find_one({"_id": ObjectId(doc["_id"])})
+        doc["tipo_nome"] = tipo.get("nome") if tipo else None
+        doc["tipo_id"] = str(doc["_id"])
+        doc.pop("_id", None)
+    return JSONResponse({"metrics": result})
+
+
 @router.get("/evento/api/ilhas/{ilha_id}/stats")
 async def evento_api_ilha_stats(request: Request, ilha_id: str):
     """Estatísticas de uma ilha (autenticado por cookie)."""
@@ -237,6 +265,8 @@ async def evento_api_participantes(request: Request, page: int = 1, per_page: in
                     # Garante que _id do ingresso é string
                     if ing.get("_id") and not isinstance(ing["_id"], str):
                         ing["_id"] = str(ing["_id"])
+                    # assegura campo impresso default False
+                    ing.setdefault("impresso", False)
                     filtered_ingressos.append(ing)
             p["ingressos"] = filtered_ingressos
         participantes.append(p)
@@ -252,7 +282,9 @@ async def evento_api_participantes(request: Request, page: int = 1, per_page: in
 
 @router.get("/evento/api/participantes/busca-smart")
 async def evento_api_busca_smart(request: Request, q: str = ""):
-    """Busca inteligente de participantes por CPF, nome ou token do ingresso (autenticado por cookie)."""
+    """Busca inteligente de participantes por CPF, nome, empresa, tipo de ingresso ou token.
+
+    Autenticado por cookie (evento)."""
     session = await _get_evento_from_cookie(request)
     if not session:
         return JSONResponse({"detail": "Não autenticado"}, status_code=401)
@@ -293,6 +325,33 @@ async def evento_api_busca_smart(request: Request, q: str = ""):
                 try:
                     p_doc = await db.participantes.find_one({"_id": ObjectId(pid)})
                 except Exception:
+                    p_doc = await db.participantes.find_one({"_id": pid})
+        if p_doc:
+            p_doc["_id"] = str(p_doc["_id"])
+            p_doc = normalize_bson_types(p_doc)
+            if p_doc.get("ingressos"):
+                p_doc["ingressos"] = [ing for ing in p_doc.get("ingressos", []) if ing.get("evento_id") == evento_id]
+            participantes.append(p_doc)
+
+    else:
+        # texto livre: nome/email/empresa ou tipo_ingresso
+        regex = {"$regex": q, "$options": "i"}
+        # buscar tipos que correspondam
+        tipo_ids = []
+        async for t in db.tipos_ingresso.find({"nome": regex}):
+            tipo_ids.append(str(t.get("_id")))
+        or_clauses = [{"nome": regex}, {"email": regex}, {"empresa": regex}]
+        if tipo_ids:
+            or_clauses.append({"ingressos.tipo_ingresso_id": {"$in": tipo_ids}})
+        query = {"$or": or_clauses}
+        cursor = db.participantes.find(query).limit(20)
+        async for p in cursor:
+            p["_id"] = str(p["_id"])
+            p = normalize_bson_types(p)
+            if p.get("ingressos"):
+                p["ingressos"] = [ing for ing in p["ingressos"] if ing.get("evento_id") == evento_id]
+            participantes.append(p)
+    return JSONResponse(participantes)                except Exception:
                     p_doc = await db.participantes.find_one({"_id": pid})
         if p_doc:
             p_doc["_id"] = str(p_doc["_id"])

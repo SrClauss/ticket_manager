@@ -92,32 +92,43 @@
   // ── Metrics ──────────────────────────────────────────────────
   async function loadMetrics() {
     try {
-      const res = await fetch('/evento/api/ilhas');
+      const res = await fetch('/evento/api/ingressos/metrics');
       if (!res.ok) return;
       const data = await res.json();
-      const ilhas = data.ilhas || [];
-      if (!ilhas.length) {
+      const metrics = data.metrics || [];
+      if (!metrics.length) {
         document.getElementById('metrics-grid').innerHTML =
-          '<p class="text-slate-500 text-sm col-span-full">Nenhum setor cadastrado.</p>';
+          '<p class="text-slate-500 text-sm col-span-full">Nenhum tipo de ingresso cadastrado.</p>';
         return;
       }
-      const statsPromises = ilhas.map(ilha =>
-        fetch(`/evento/api/ilhas/${ilha.ilha_id}/stats`).then(r => r.ok ? r.json() : null)
-      );
-      const stats = await Promise.all(statsPromises);
-
       const grid = document.getElementById('metrics-grid');
-      grid.innerHTML = ilhas.map((ilha, i) => {
-        const s = stats[i];
-        const emitidos = s ? s.ingressos_emitidos : 0;
-        const capacidade = ilha.capacidade_maxima || 0;
-        const pct = capacidade > 0 ? Math.round((emitidos / capacidade) * 100) : 0;
+      grid.innerHTML = metrics.map(m => {
+        const printed = m.printed || 0;
+        const total = m.total || 0;
+        const pct = total > 0 ? Math.round((printed / total) * 100) : 0;
         const color = pct >= 90 ? 'red' : pct >= 70 ? 'yellow' : 'green';
         const colorMap = {
           red:    { bar: 'bg-red-500',    text: 'text-red-400',    badge: 'bg-red-900/40 border-red-700' },
           yellow: { bar: 'bg-yellow-500', text: 'text-yellow-400', badge: 'bg-yellow-900/40 border-yellow-700' },
           green:  { bar: 'bg-green-500',  text: 'text-green-400',  badge: 'bg-green-900/40 border-green-700' },
         };
+        const c = colorMap[color];
+        return `
+          <div class="md-card p-4">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="text-slate-100 font-medium text-sm">${m.tipo_nome || 'Tipo'}</h3>
+              <span class="text-xs px-2 py-0.5 rounded-full border ${c.badge} ${c.text}">${pct}%</span>
+            </div>
+            <div class="text-2xl font-bold ${c.text} mb-1">${printed} <span class="text-sm font-normal text-slate-400">/ ${total}</span></div>
+            <div class="text-xs text-slate-500 mb-2">impressos / total</div>
+            <div class="w-full bg-slate-700 rounded-full h-1.5">
+              <div class="${c.bar} h-1.5 rounded-full transition-all" style="width: ${Math.min(pct, 100)}%"></div>
+            </div>
+          </div>`;
+      }).join('');
+    } catch (e) {
+      console.error('Erro ao carregar métricas', e);
+    }
         const c = colorMap[color];
         return `
           <div class="md-card p-4">
@@ -172,6 +183,12 @@
         </div>
         <div class="flex-shrink-0 flex items-center gap-2">
           ${hasIngresso && eventoId && ingressoId
+            ? `<label class="inline-flex items-center">
+                 <input type="checkbox" ${ingresso.impresso ? 'checked' : ''} onchange="event.stopPropagation(); toggleImpresso('${eventoId}','${ingressoId}', this)" class="mr-1" />
+                 <span class="text-xs text-slate-300">Impresso</span>
+               </label>`
+            : ''}
+          ${hasIngresso && eventoId && ingressoId
             ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); printIngresso('${eventoId}', '${ingressoId}');" class="inline-flex items-center px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-500">
                  <span class="material-symbols-outlined text-xs">print</span>
                </button>`
@@ -214,6 +231,7 @@
   }
 
   // ── Smart Search ─────────────────────────────────────────────
+  let searchTimeout;
   async function doSearch() {
     const q = document.getElementById('search-input').value.trim();
     if (!q) { loadPage(1); return; }
@@ -233,6 +251,11 @@
     list.innerHTML = data.map(renderParticipant).join('');
   }
 
+  function handleSearchInput() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(doSearch, 300);
+  }
+
   function clearSearch() {
     document.getElementById('search-input').value = '';
     loadPage(1);
@@ -244,7 +267,7 @@
   }
 
   // ── Print ingresso ────────────────────────────────────────────
-  function printIngresso(eventoId, ingressoId) {
+  async function printIngresso(eventoId, ingressoId) {
     console.log('printIngresso called with:', { eventoId, ingressoId });
     
     if (!eventoId || !ingressoId) {
@@ -252,9 +275,36 @@
       return;
     }
     
+    // marca como impresso via API antes de abrir
+    try {
+      await fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ impresso: true })
+      });
+    } catch (e) {
+      console.warn('Falha ao marcar ingressos como impresso', e);
+    }
+    
     // Usa rota de impressão com rotação landscape (90°)
     const url = `/api/eventos/${eventoId}/ingresso/${ingressoId}/print.png?dpi=300&orientation=landscape`;
     console.log('Opening URL:', url);
+  }
+
+  function toggleImpresso(eventoId, ingressoId, checkbox) {
+    const newVal = checkbox.checked;
+    if (!newVal) {
+      if (!confirm('Deseja realmente desmarcar como impresso?')) {
+        checkbox.checked = true;
+        return;
+      }
+    }
+    fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ impresso: newVal })
+    }).catch(e => console.warn('erro updating impresso', e));
+  }
     
     const w = window.open(url, '_blank', 'width=800,height=600');
     if (w) {
@@ -269,9 +319,11 @@
   }
 
   // ── Key handling ──────────────────────────────────────────────
-  document.getElementById('search-input').addEventListener('keydown', function(e) {
+  const searchInput = document.getElementById('search-input');
+  searchInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') doSearch();
   });
+  searchInput.addEventListener('input', handleSearchInput);
 
   // ── Init ──────────────────────────────────────────────────────
   loadMetrics();
