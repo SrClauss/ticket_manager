@@ -44,6 +44,37 @@
     </template>
   </div>
 
+  <!-- ── Modal de seleção de tag para texto ──────────────── -->
+  <div x-show="showTextTagModal" 
+       x-cloak
+       class="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+       @click.self="showTextTagModal = false">
+    <div class="bg-slate-800 rounded-lg shadow-2xl border border-slate-600 w-full max-w-lg mx-4 p-6"
+         @click.stop>
+      <h2 class="text-lg font-bold text-blue-400 mb-4">✏️ Escolha o tipo de texto</h2>
+      <p class="text-xs text-slate-400 mb-4">Selecione uma tag de dados ou insira texto livre:</p>
+      
+      <div class="grid grid-cols-2 gap-2 mb-4">
+        <template x-for="tag in TAGS" :key="tag">
+          <button @click="insertTextWithValue(tag)"
+                  class="px-3 py-2.5 text-xs font-mono rounded bg-slate-700 hover:bg-blue-600 transition text-left">
+            <span x-text="tag"></span>
+          </button>
+        </template>
+      </div>
+      
+      <button @click="insertTextWithValue('Texto livre')"
+              class="w-full px-4 py-2.5 text-sm font-medium rounded bg-slate-600 hover:bg-slate-500 transition mb-3">
+        📝 Texto livre
+      </button>
+      
+      <button @click="showTextTagModal = false"
+              class="w-full px-4 py-2 text-xs rounded bg-slate-700 hover:bg-slate-600 transition">
+        ✕ Cancelar
+      </button>
+    </div>
+  </div>
+
   <div class="flex flex-col h-screen">
 
     <!-- ── Header ────────────────────────────────────────────── -->
@@ -684,6 +715,7 @@
       // Tags / free text
       showFreeText: false,
       freeTextValue: '',
+      showTextTagModal: false,
 
       fc: null,           // Fabric.Canvas instance
 
@@ -857,16 +889,40 @@
       //  PRE-INSERTION DIALOG
       // ══════════════════════════════════════════════════════════════
       startInsert(type) {
+        if (type === 'text') {
+          // Para texto, mostra o modal de seleção de tag primeiro
+          this.showTextTagModal = true;
+          return;
+        }
+        
         this.insertingType = type;
         this.insertingProps = {
           y: 10,
           horizontal_position: 'center',
           margin_left: 0,
           margin_right: 0,
-          ...(type === 'text'    && { value: '{NOME}', size: 14, font: 'Arial', bold: false, italic: false, wrapText: true }),
           ...(type === 'qrcode' && { size_mm: 30 }),
           ...(type === 'logo'   && { size_mm: 30 }),
           ...(type === 'divider'&& { length_mm: 40, thickness: 2 }),
+        };
+        this.insertingSector = this.section ? 'A' : null;
+        this.selectedIds = [];
+      },
+      
+      insertTextWithValue(value) {
+        this.showTextTagModal = false;
+        this.insertingType = 'text';
+        this.insertingProps = {
+          y: 10,
+          horizontal_position: 'center',
+          margin_left: 0,
+          margin_right: 0,
+          value: value,
+          size: 14,
+          font: 'Arial',
+          bold: false,
+          italic: false,
+          wrapText: true
         };
         this.insertingSector = this.section ? 'A' : null;
         this.selectedIds = [];
