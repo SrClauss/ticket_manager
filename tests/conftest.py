@@ -90,6 +90,32 @@ class FakeCollection:
         query = query or {}
         matching_docs = [doc for doc in self.docs if self._match(doc, query)]
         return FakeCursor(matching_docs, sort)
+
+    def aggregate(self, pipeline):
+        """Implementa subset of aggregation for tests: $match + $group sum/cond."""
+        result = self.docs
+        for stage in pipeline:
+            if "$match" in stage:
+                result = [doc for doc in result if self._match(doc, stage["$match"]) ]
+            elif "$group" in stage:
+                grp = {}
+                spec = stage["$group"]
+                key_field = spec.get("_id")
+                for doc in result:
+                    key = doc.get(key_field.strip("$")) if isinstance(key_field, str) else None
+                    if key not in grp:
+                        grp[key] = {"_id": key, "total": 0, "printed": 0}
+                    grp[key]["total"] += 1
+                    if doc.get("impresso"):
+                        grp[key]["printed"] += 1
+                result = list(grp.values())
+        # return object with to_list method
+        class AggResult:
+            def __init__(self, docs):
+                self.docs = docs
+            async def to_list(self, length=None):
+                return self.docs
+        return AggResult(result)
     
     def _match(self, doc, query):
         """Verifica se documento corresponde ao query."""
@@ -104,7 +130,25 @@ class FakeCollection:
                     return False
                 continue
             
-            doc_value = doc.get(key)
+            # support dot notation
+            def extract(d, k):
+                if "." in k:
+                    top, rest = k.split('.', 1)
+                    sub = d.get(top)
+                    if isinstance(sub, dict):
+                        return extract(sub, rest)
+                    if isinstance(sub, list):
+                        # return list of values for each element
+                        vals = []
+                        for item in sub:
+                            if isinstance(item, dict):
+                                v = extract(item, rest)
+                                if v is not None:
+                                    vals.append(v)
+                        return vals
+                    return None
+                return d.get(k)
+            doc_value = extract(doc, key)
             
             if isinstance(value, dict):
                 if "$ne" in value:
@@ -112,8 +156,13 @@ class FakeCollection:
                         return False
                     continue
                 if "$in" in value:
-                    if not any(self._equals(doc_value, v) for v in value["$in"]):
-                        return False
+                    # doc_value might be list
+                    if isinstance(doc_value, list):
+                        if not any(any(self._equals(v, w) for w in value["$in"]) for v in doc_value):
+                            return False
+                    else:
+                        if not any(self._equals(doc_value, v) for v in value["$in"]):
+                            return False
                     continue
                 if "$regex" in value:
                     import re

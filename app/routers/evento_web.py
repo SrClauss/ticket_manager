@@ -351,25 +351,7 @@ async def evento_api_busca_smart(request: Request, q: str = ""):
             if p.get("ingressos"):
                 p["ingressos"] = [ing for ing in p["ingressos"] if ing.get("evento_id") == evento_id]
             participantes.append(p)
-    return JSONResponse(participantes)                except Exception:
-                    p_doc = await db.participantes.find_one({"_id": pid})
-        if p_doc:
-            p_doc["_id"] = str(p_doc["_id"])
-            p_doc = normalize_bson_types(p_doc)
-            if p_doc.get("ingressos"):
-                p_doc["ingressos"] = [ing for ing in p_doc["ingressos"] if ing.get("evento_id") == evento_id]
-            participantes.append(p_doc)
-
-    else:  # nome
-        query = {"nome": {"$regex": q, "$options": "i"}}
-        cursor = db.participantes.find(query).sort("nome", 1).limit(20)
-        async for p in cursor:
-            p["_id"] = str(p["_id"])
-            p = normalize_bson_types(p)
-            if p.get("ingressos"):
-                p["ingressos"] = [ing for ing in p["ingressos"] if ing.get("evento_id") == evento_id]
-            participantes.append(p)
-
+    return JSONResponse(participantes)
     return JSONResponse(participantes)
 
 

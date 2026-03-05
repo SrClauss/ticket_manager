@@ -82,6 +82,8 @@ async def test_ingresso_metrics_and_impresso_toggle(monkeypatch, fake_db, mock_g
 
     # metrics
     resp = await evento_web.evento_api_ingresso_metrics(DummyRequest())
+    # toggle impresso via evento_api
+    from app.routers import evento_api
     assert isinstance(resp, list) or hasattr(resp,'body')
     import json
     metrics = resp if isinstance(resp, list) else json.loads(resp.body)['metrics']
@@ -91,12 +93,13 @@ async def test_ingresso_metrics_and_impresso_toggle(monkeypatch, fake_db, mock_g
     t2 = next(m for m in metrics if m['tipo_nome']=='VIP')
     assert t2['total']==1 and t2['printed']==0
 
-    # toggle impresso endpoint
-    await evento_web.set_ingresso_impresso(str(evento['_id']), str(ing1['_id']), impresso=True)
+    # toggle impresso endpoint using evento_api
+    from app.routers import evento_api
+    await evento_api.set_ingresso_impresso(str(evento['_id']), str(ing1['_id']), impresso=True)
     # ensure updated in fake_db
     doc = await fake_db.ingressos_emitidos.find_one({"_id": ing1['_id']})
     assert doc.get('impresso') is True
-    await evento_web.set_ingresso_impresso(str(evento['_id']), str(ing2['_id']), impresso=False)
+    await evento_api.set_ingresso_impresso(str(evento['_id']), str(ing2['_id']), impresso=False)
     doc2 = await fake_db.ingressos_emitidos.find_one({"_id": ing2['_id']})
     assert doc2.get('impresso') is False
 

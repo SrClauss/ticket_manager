@@ -62,6 +62,10 @@
             </td>
             <td class="px-3 py-2 text-right flex justify-end gap-2">
               {% if participante.ingressos_count > 0 and participante.ingresso %}
+              <label class="inline-flex items-center mr-2">
+                <input type="checkbox" {% if participante.ingresso.impresso %}checked{% endif %} onchange="toggleImpresso('{{ evento.id }}','{{ participante.ingresso._id or participante.ingresso.id }}', this)" class="mr-1" />
+                <span class="text-xs text-slate-200">Impresso</span>
+              </label>
               <button type="button" onclick="printIngresso('{{ evento.id }}', '{{ participante.ingresso._id or participante.ingresso.id }}')" class="inline-flex items-center gap-2 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-md">
                 <span class="material-symbols-outlined">print</span>
                 Imprimir
@@ -117,6 +121,13 @@
 {% block extra_js %}
 <script>
   function printIngresso(eventoId, ingressoId) {
+    // marca impresso
+    fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ impresso: true })
+    }).catch(console.warn);
+
     // Usa rota de impressão com rotação landscape (90°)
     const url = `/api/eventos/${eventoId}/ingresso/${ingressoId}/print.png?dpi=300&orientation=landscape`;
     const w = window.open(url, '_blank', 'width=800,height=600');
@@ -129,6 +140,21 @@
     } else {
       alert('Não foi possível abrir janela de impressão. Verifique se pop-ups estão bloqueados.');
     }
+  }
+
+  function toggleImpresso(eventoId, ingressoId, checkbox) {
+    const newVal = checkbox.checked;
+    if (!newVal) {
+      if (!confirm('Deseja realmente desmarcar como impresso?')) {
+        checkbox.checked = true;
+        return;
+      }
+    }
+    fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ impresso: newVal })
+    }).catch(e => console.warn('erro updating impresso', e));
   }
 </script>
 {% endblock %}

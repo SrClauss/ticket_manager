@@ -596,6 +596,19 @@ async def print_ingresso_png(evento_id: str, ingresso_id: str, dpi: int = 300, o
             detail="Ingresso não encontrado para este evento"
         )
     
+    # mark as impresso by default when generating print image
+    try:
+        if ingresso.get("_id"):
+            await db.ingressos_emitidos.update_one({"_id": ObjectId(ingresso.get("_id"))}, {"$set": {"impresso": True}})
+    except Exception:
+        pass
+    if participante and ingresso.get("_id") is None:
+        # ingresso embedded, update in participante doc
+        await db.participantes.update_one(
+            {"_id": ObjectId(participante.get("_id")), "ingressos._id": ingresso.get("id")},
+            {"$set": {"ingressos.$.impresso": True}}
+        )
+    
     # Get evento for logo
     evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
     logo_path = evento.get("logo_path") if evento else None
@@ -629,6 +642,30 @@ async def print_ingresso_png(evento_id: str, ingresso_id: str, dpi: int = 300, o
     }
     return StreamingResponse(bio, media_type='image/png', headers=headers)
 
+
+@router.put("/{evento_id}/ingresso/{ingresso_id}/impresso")
+async def set_ingresso_impresso(evento_id: str, ingresso_id: str, impresso: bool = True):
+    """Marca ou desmarca um ingresso como impresso (boolean)."""
+    db = get_database()
+    # try to update in ingressos_emitidos
+    try:
+        oid = ObjectId(ingresso_id)
+        result = await db.ingressos_emitidos.update_one(
+            {"_id": oid, "evento_id": evento_id},
+            {"$set": {"impresso": impresso}}
+        )
+        if result.matched_count:
+            return {"success": True}
+    except Exception:
+        pass
+    # fallback to embedded update
+    # search participante containing this ingresso id or qrcode_hash
+    query = {"ingressos._id": ingresso_id}
+    await db.participantes.update_one(
+        query,
+        {"$set": {"ingressos.$.impresso": impresso}}
+    )
+    return {"success": True}
 
 async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Optional[Dict], Optional[Dict]]:
     """Fetch ingresso from database (embedded in participante or standalone).
