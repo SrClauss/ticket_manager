@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Request, Response, UploadFile, File
 from fastapi.responses import StreamingResponse, RedirectResponse
+from pydantic import BaseModel
 import app.config.database as database
 
 def get_database():
@@ -18,6 +19,12 @@ import hashlib
 from typing import Dict, Any, Tuple, Optional
 
 router = APIRouter()
+
+
+# ==================== PYDANTIC MODELS ====================
+
+class ImpressoUpdate(BaseModel):
+    impresso: bool
 
 
 # ==================== HELPER FUNCTIONS ====================
@@ -644,9 +651,13 @@ async def print_ingresso_png(evento_id: str, ingresso_id: str, dpi: int = 300, o
 
 
 @router.put("/{evento_id}/ingresso/{ingresso_id}/impresso")
-async def set_ingresso_impresso(evento_id: str, ingresso_id: str, impresso: bool = True):
+async def set_ingresso_impresso(evento_id: str, ingresso_id: str, data: ImpressoUpdate):
     """Marca ou desmarca um ingresso como impresso (boolean)."""
     db = get_database()
+    impresso = data.impresso
+    
+    logger.info(f"Atualizando ingresso {ingresso_id} para impresso={impresso}")
+    
     # try to update in ingressos_emitidos
     try:
         oid = ObjectId(ingresso_id)
@@ -655,16 +666,41 @@ async def set_ingresso_impresso(evento_id: str, ingresso_id: str, impresso: bool
             {"$set": {"impresso": impresso}}
         )
         if result.matched_count:
+            logger.info(f"Ingresso {ingresso_id} atualizado em ingressos_emitidos")
             return {"success": True}
-    except Exception:
+    except Exception as e:
+        logger.debug(f"Erro ao atualizar em ingressos_emitidos: {e}")
         pass
+    
     # fallback to embedded update
     # search participante containing this ingresso id or qrcode_hash
+    # Try both string and ObjectId formats
+    try:
+        oid = ObjectId(ingresso_id)
+        query = {"ingressos._id": oid}
+        result = await db.participantes.update_one(
+            query,
+            {"$set": {"ingressos.$.impresso": impresso}}
+        )
+        
+        if result.matched_count:
+            logger.info(f"Ingresso {ingresso_id} atualizado em participantes (ObjectId) (matched: {result.matched_count}, modified: {result.modified_count})")
+            return {"success": True}
+    except Exception as e:
+        logger.debug(f"Tentativa com ObjectId falhou: {e}")
+    
+    # Try as string
     query = {"ingressos._id": ingresso_id}
-    await db.participantes.update_one(
+    result = await db.participantes.update_one(
         query,
         {"$set": {"ingressos.$.impresso": impresso}}
     )
+    
+    if result.matched_count:
+        logger.info(f"Ingresso {ingresso_id} atualizado em participantes (string) (matched: {result.matched_count}, modified: {result.modified_count})")
+    else:
+        logger.warning(f"Nenhum ingresso encontrado com _id={ingresso_id}")
+    
     return {"success": True}
 
 async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Optional[Dict], Optional[Dict]]:
