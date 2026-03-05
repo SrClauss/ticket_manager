@@ -283,25 +283,4 @@
 </script>
 <!-- alpine.js for lightweight reactivity -->
 <script defer src="https://unpkg.com/alpinejs@3/dist/cdn.min.js"></script>
-{% endblock %}        if (!newVal) {
-          if (!confirm('Deseja realmente desmarcar como impresso?')) {
-            p.ingressos[0].impresso = true;
-            return;
-          }
-        }
-        try {
-          await fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ impresso: newVal })
-          });
-        } catch (e) {
-          console.warn('erro updating impresso', e);
-        }
-        this.loadMetrics();
-      }
-    };
-  }
-
-
 {% endblock %}
