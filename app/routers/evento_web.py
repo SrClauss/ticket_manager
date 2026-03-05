@@ -345,7 +345,7 @@ async def evento_api_busca_smart(request: Request, q: str = ""):
         tipo_ids = []
         async for t in db.tipos_ingresso.find({"nome": regex}):
             tipo_ids.append(str(t.get("_id")))
-        or_clauses = [{"nome": regex}, {"email": regex}, {"empresa": regex}]
+        or_clauses = [{"nome": regex}, {"email": regex}, {"empresa": regex}, {"cpf": regex}]
         if tipo_ids:
             or_clauses.append({"ingressos.tipo_ingresso_id": {"$in": tipo_ids}})
         # require at least one ingresso for this evento in the query results

@@ -17,7 +17,7 @@ async def test_busca_smart_by_empresa(monkeypatch, fake_db, mock_get_database):
     evento = {"_id": ObjectId(), "nome": "Ev", "ilhas": []}
     # participant must have an ingresso for this event to be considered
     ingresso = {"_id": ObjectId(), "evento_id": str(evento['_id']), "tipo_ingresso_id": "", "qrcode_hash": "", "impresso": False}
-    participante = {"_id": ObjectId(), "nome": "Fulano", "empresa": "Acme Ltda", "ingressos": [ingresso]}
+    participante = {"_id": ObjectId(), "nome": "Fulano", "empresa": "Acme Ltda", "cpf": "12345678901", "ingressos": [ingresso]}
     fake_db.eventos.docs.append(evento)
     fake_db.participantes.docs.append(participante)
     fake_db.ingressos_emitidos.docs.append({**ingresso, "participante_id": str(participante['_id'])})
@@ -27,6 +27,15 @@ async def test_busca_smart_by_empresa(monkeypatch, fake_db, mock_get_database):
     monkeypatch.setattr(evento_web, "_get_evento_from_cookie", fake_get)
 
     resp = await evento_web.evento_api_busca_smart(DummyRequest(), q="Acme")
+
+    # substring of cpf should also match
+    resp_cpf = await evento_web.evento_api_busca_smart(DummyRequest(), q="123")
+    if not isinstance(resp_cpf, list):
+        import json
+        tmp = json.loads(resp_cpf.body)
+        resp_cpf = tmp
+    assert len(resp_cpf) == 1
+    assert resp_cpf[0]['empresa'] == 'Acme Ltda'
     assert isinstance(resp, list) or hasattr(resp, 'body')
     # Response may be JSONResponse; extract list
     results = resp if isinstance(resp, list) else resp.body
@@ -93,10 +102,15 @@ async def test_busca_smart_excludes_other_event(monkeypatch, fake_db, mock_get_d
     results = resp if isinstance(resp, list) else json.loads(resp.body)
     assert len(results) == 0
 
-    # search by cpf should also yield none
-    resp2 = await evento_web.evento_api_busca_smart(DummyRequest(), q="12345678901")
+    # search by cpf snippet should also yield none (since participant belongs to other event)
+    resp2 = await evento_web.evento_api_busca_smart(DummyRequest(), q="123")
     results2 = resp2 if isinstance(resp2, list) else json.loads(resp2.body)
     assert len(results2) == 0
+
+    # search full 11 digits should also return none
+    resp3 = await evento_web.evento_api_busca_smart(DummyRequest(), q="12345678901")
+    results3 = resp3 if isinstance(resp3, list) else json.loads(resp3.body)
+    assert len(results3) == 0
 
 
 @pytest.mark.asyncio
