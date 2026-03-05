@@ -668,6 +668,14 @@ async def print_ingresso_png(evento_id: str, ingresso_id: str, dpi: int = 300, o
     # Render layout to image
     img = _render_layout_to_image(layout, dpi, logo_path=logo_path, logo_blob=logo_blob)
     
+    # Prioritise the orientation stored in the layout itself if present
+    try:
+        db_orient = layout.get("canvas", {}).get("orientation", "").lower()
+        if db_orient in ("landscape", "portrait"):
+            orientation = db_orient
+    except Exception:
+        pass
+
     # Apply rotation for landscape printing
     rotate_ccw = orientation.lower() in ("landscape", "l")
     if rotate_ccw:

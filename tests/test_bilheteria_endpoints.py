@@ -6,6 +6,7 @@ import pytest
 from datetime import datetime, timezone
 from bson import ObjectId
 from fastapi import HTTPException
+from fastapi.responses import RedirectResponse
 
 from app.routers import bilheteria
 from tests.conftest import FakeDB
@@ -625,6 +626,36 @@ class TestReimpressaoBilheteria:
         assert len(result) >= 1
         assert result[0]["participante"]["nome"] == "João Silva"
         assert "ingressos" in result[0]
+
+    @pytest.mark.asyncio
+    async def test_imprimir_por_mobile_respects_layout_orientation(self, fake_db, mock_get_database,
+                                                                   sample_evento, sample_participante,
+                                                                   mock_verify_bilheteria):
+        """Mesmo que o app passe portrait, o redirecionamento segue o que está
+        gravado no layout do ingresso."""
+        # prepare event and participante with one ingresso
+        fake_db.eventos.docs.append(sample_evento)
+        ing_id = ObjectId()
+        ingresso_record = {
+            "_id": ing_id,
+            "evento_id": str(sample_evento["_id"]),
+            "qrcode_hash": "qrXYZ",
+            # minimal fields used by the lookup
+            "layout_ingresso": {"canvas": {"orientation": "landscape"}}
+        }
+        part_copy = dict(sample_participante)
+        part_copy["ingressos"] = [ingresso_record]
+        fake_db.participantes.docs.append(part_copy)
+
+        response = await bilheteria.imprimir_por_mobile(
+            str(ing_id),
+            evento_id=str(sample_evento["_id"]),
+            orientation="portrait"
+        )
+        assert isinstance(response, RedirectResponse)
+        # fastapi redirect response sets Location header
+        loc = response.headers.get("location", "")
+        assert "orientation=landscape" in loc
     
     @pytest.mark.asyncio
     async def test_reimprimir_ingresso_success(self, fake_db, mock_get_database, sample_evento, 

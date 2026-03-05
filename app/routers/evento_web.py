@@ -21,8 +21,10 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 logger = logging.getLogger(__name__)
 
-# Cookie name for evento session
-COOKIE_TOKEN = "evento_session_token"
+COOKIE_TOKEN = "evento_token"
+
+
+# ── Helpers ────────────────────────────────────────────────────────────────────
 
 async def _resolve_token(token: str) -> Optional[dict]:
     """Verifica se o token é de bilheteria ou portaria e retorna o documento do evento."""
@@ -117,7 +119,6 @@ async def evento_dashboard(request: Request):
             "evento_nome": evento.get("nome", "Evento"),
             "evento_data": _format_evento_data(evento),
             "active_page": "dashboard",
-            "evento_id": str(evento.get("_id")),
         },
     )
 
@@ -151,77 +152,6 @@ async def evento_api_ilhas(request: Request):
                 "capacidade_maxima": ilha.get("capacidade_maxima", 0),
             })
     return JSONResponse({"ilhas": ilhas})
-
-
-@router.get("/evento/api/ingressos/metrics")
-async def evento_api_ingresso_metrics(request: Request):
-    """Retorna métricas dos ingressos emitidos para o evento.
-
-    O JSON de retorno contém duas listas:
-    - ``tipo_metrics``: agregação por tipo de ingresso (total/impressos)
-    - ``ilha_metrics``: capacidade e ingressos vendidos por ilha/setor
-    """
-    session = await _get_evento_from_cookie(request)
-    if not session:
-        return JSONResponse({"detail": "Não autenticado"}, status_code=401)
-    evento, _ = session
-    evento_id = _evento_id_str(evento)
-    db = database.get_database()
-
-    # --- metrics por tipo ---
-    pipeline = [
-        {"$match": {"evento_id": evento_id}},
-        {"$group": {
-            "_id": "$tipo_ingresso_id",
-            "total": {"$sum": 1},
-            "printed": {"$sum": {"$cond": [{"$eq": ["$impresso", True]}, 1, 0]}}
-        }}
-    ]
-    tipo_metrics = await db.ingressos_emitidos.aggregate(pipeline).to_list(length=None)
-    # attach names and normalize ids
-    for doc in tipo_metrics:
-        tipo = await db.tipos_ingresso.find_one({"_id": ObjectId(doc["_id"])})
-        doc["tipo_nome"] = tipo.get("nome") if tipo else None
-        doc["tipo_id"] = str(doc["_id"])
-        doc.pop("_id", None)
-
-    # --- metrics por ilha ---
-    # gather ilhas for event
-    ilhas = []
-    async for i in db.ilhas.find({"evento_id": evento_id}):
-        ilhas.append(i)
-    # build map of tipo -> permissoes (list of ilha ids)
-    tipo_perms = {}
-    async for t in db.tipos_ingresso.find({"evento_id": evento_id}):
-        tipo_perms[str(t.get("_id"))] = t.get("permissoes", [])
-    
-    # count sold tickets per ilha usando ingressos embedded em participantes
-    sold = {str(i.get("_id")): 0 for i in ilhas}
-    
-    # Agregação para contar ingressos por tipo do evento
-    pipeline = [
-        {"$match": {"ingressos.evento_id": evento_id}},
-        {"$unwind": "$ingressos"},
-        {"$match": {"ingressos.evento_id": evento_id}},
-        {"$group": {"_id": "$ingressos.tipo_ingresso_id", "count": {"$sum": 1}}}
-    ]
-    
-    async for result in db.participantes.aggregate(pipeline):
-        tipo_id = str(result["_id"])
-        count = result["count"]
-        for ilha_id in tipo_perms.get(tipo_id, []):
-            if ilha_id in sold:
-                sold[ilha_id] += count
-    ilha_metrics = []
-    for i in ilhas:
-        ilha_metrics.append({
-            "ilha_id": str(i.get("_id")),
-            "nome_setor": i.get("nome_setor"),
-            "capacidade": i.get("capacidade_maxima", 0),
-            "vendidos": sold.get(str(i.get("_id")), 0),
-        })
-
-    return JSONResponse({"tipo_metrics": tipo_metrics, "ilha_metrics": ilha_metrics})
 
 
 @router.get("/evento/api/ilhas/{ilha_id}/stats")
@@ -300,29 +230,7 @@ async def evento_api_participantes(request: Request, page: int = 1, per_page: in
         p["_id"] = str(p.get("_id"))
         p = normalize_bson_types(p)
         if p.get("ingressos"):
-            # Filtra ingressos deste evento e normaliza cada ingresso
-            filtered_ingressos = []
-            for ing in p["ingressos"]:
-                if ing.get("evento_id") == evento_id:
-                    # DEBUG: Log do valor impresso ANTES da normalização
-                    impresso_original = ing.get("impresso")
-                    print(f"[BACKEND-LOAD] Ingresso {ing.get('_id')}: impresso_original={impresso_original}, tipo={type(impresso_original)}, 'impresso' in ing={('impresso' in ing)}")
-                    
-                    # Garante que _id do ingresso é string
-                    if ing.get("_id") and not isinstance(ing["_id"], str):
-                        ing["_id"] = str(ing["_id"])
-                    # Normaliza campo impresso como booleano
-                    impresso = ing.get("impresso")
-                    if impresso is None or impresso == "":
-                        ing["impresso"] = False
-                    elif isinstance(impresso, str):
-                        ing["impresso"] = impresso.lower() in ("true", "1", "yes")
-                    else:
-                        ing["impresso"] = bool(impresso)
-                    
-                    print(f"[BACKEND-LOAD] Ingresso {ing.get('_id')}: impresso_normalizado={ing['impresso']}")
-                    filtered_ingressos.append(ing)
-            p["ingressos"] = filtered_ingressos
+            p["ingressos"] = [ing for ing in p["ingressos"] if ing.get("evento_id") == evento_id]
         participantes.append(p)
 
     return JSONResponse({
@@ -336,9 +244,7 @@ async def evento_api_participantes(request: Request, page: int = 1, per_page: in
 
 @router.get("/evento/api/participantes/busca-smart")
 async def evento_api_busca_smart(request: Request, q: str = ""):
-    """Busca inteligente de participantes por CPF, nome, empresa, tipo de ingresso ou token.
-
-    Autenticado por cookie (evento)."""
+    """Busca inteligente de participantes por CPF, nome ou token do ingresso (autenticado por cookie)."""
     session = await _get_evento_from_cookie(request)
     if not session:
         return JSONResponse({"detail": "Não autenticado"}, status_code=401)
@@ -358,94 +264,45 @@ async def evento_api_busca_smart(request: Request, q: str = ""):
         except Exception:
             digits = re.sub(r"\D", "", q)
             query = {"cpf": {"$regex": digits, "$options": "i"}}
-        # only participants with an ingresso for this evento
-        query["ingressos.evento_id"] = evento_id
         cursor = db.participantes.find(query).limit(20)
         async for p in cursor:
             p["_id"] = str(p["_id"])
             p = normalize_bson_types(p)
             if p.get("ingressos"):
-                filtered_ingressos = []
-                for ing in p["ingressos"]:
-                    if ing.get("evento_id") == evento_id:
-                        # DEBUG: Log do valor impresso ANTES da normalização
-                        impresso_original = ing.get("impresso")
-                        print(f"[BACKEND-SEARCH-CPF] Ingresso {ing.get('_id')}: impresso_original={impresso_original}, tipo={type(impresso_original)}, 'impresso' in ing={('impresso' in ing)}")
-                        
-                        # Normaliza campo impresso como booleano
-                        impresso = ing.get("impresso")
-                        if impresso is None or impresso == "":
-                            ing["impresso"] = False
-                        elif isinstance(impresso, str):
-                            ing["impresso"] = impresso.lower() in ("true", "1", "yes")
-                        else:
-                            ing["impresso"] = bool(impresso)
-                        
-                        print(f"[BACKEND-SEARCH-CPF] Ingresso {ing.get('_id')}: impresso_normalizado={ing['impresso']}")
-                        filtered_ingressos.append(ing)
-                p["ingressos"] = filtered_ingressos
-            # append only if there remains at least one ingresso
-            if p.get("ingressos"):
-                participantes.append(p)
+                p["ingressos"] = [ing for ing in p["ingressos"] if ing.get("evento_id") == evento_id]
+            participantes.append(p)
 
     elif tipo == "token":
         qrcode_hash = q.strip()
         p_doc = await db.participantes.find_one(
-            {"ingressos.qrcode_hash": qrcode_hash, "ingressos.evento_id": evento_id},
-            {"ingressos": {"$elemMatch": {"qrcode_hash": qrcode_hash, "evento_id": evento_id}}},
+            {"ingressos.qrcode_hash": qrcode_hash},
+            {"ingressos": {"$elemMatch": {"qrcode_hash": qrcode_hash}}},
         )
-        
+        if not p_doc:
+            ingresso = await db.ingressos_emitidos.find_one({"qrcode_hash": qrcode_hash, "evento_id": evento_id})
+            if ingresso:
+                pid = ingresso.get("participante_id")
+                try:
+                    p_doc = await db.participantes.find_one({"_id": ObjectId(pid)})
+                except Exception:
+                    p_doc = await db.participantes.find_one({"_id": pid})
         if p_doc:
             p_doc["_id"] = str(p_doc["_id"])
             p_doc = normalize_bson_types(p_doc)
             if p_doc.get("ingressos"):
-                filtered_ingressos = []
-                for ing in p_doc.get("ingressos", []):
-                    if ing.get("evento_id") == evento_id:
-                        # Normaliza campo impresso como booleano
-                        impresso = ing.get("impresso")
-                        if impresso is None or impresso == "":
-                            ing["impresso"] = False
-                        elif isinstance(impresso, str):
-                            ing["impresso"] = impresso.lower() in ("true", "1", "yes")
-                        else:
-                            ing["impresso"] = bool(impresso)
-                        filtered_ingressos.append(ing)
-                p_doc["ingressos"] = filtered_ingressos
+                p_doc["ingressos"] = [ing for ing in p_doc["ingressos"] if ing.get("evento_id") == evento_id]
             participantes.append(p_doc)
 
-    else:
-        # texto livre: nome/email/empresa ou tipo_ingresso
-        regex = {"$regex": q, "$options": "i"}
-        # buscar tipos que correspondam
-        tipo_ids = []
-        async for t in db.tipos_ingresso.find({"nome": regex}):
-            tipo_ids.append(str(t.get("_id")))
-        or_clauses = [{"nome": regex}, {"email": regex}, {"empresa": regex}, {"cpf": regex}]
-        if tipo_ids:
-            or_clauses.append({"ingressos.tipo_ingresso_id": {"$in": tipo_ids}})
-        # require at least one ingresso for this evento in the query results
-        query = {"$and": [{"ingressos.evento_id": evento_id}, {"$or": or_clauses}]}
-        cursor = db.participantes.find(query).limit(20)
+    else:  # nome
+        query = {"nome": {"$regex": q, "$options": "i"}}
+        cursor = db.participantes.find(query).sort("nome", 1).limit(20)
         async for p in cursor:
             p["_id"] = str(p["_id"])
             p = normalize_bson_types(p)
             if p.get("ingressos"):
-                filtered_ingressos = []
-                for ing in p["ingressos"]:
-                    if ing.get("evento_id") == evento_id:
-                        # Normaliza campo impresso como booleano
-                        impresso = ing.get("impresso")
-                        if impresso is None or impresso == "":
-                            ing["impresso"] = False
-                        elif isinstance(impresso, str):
-                            ing["impresso"] = impresso.lower() in ("true", "1", "yes")
-                        else:
-                            ing["impresso"] = bool(impresso)
-                        filtered_ingressos.append(ing)
-                p["ingressos"] = filtered_ingressos
-            if p.get("ingressos"):
-                participantes.append(p)
+                p["ingressos"] = [ing for ing in p["ingressos"] if ing.get("evento_id") == evento_id]
+            participantes.append(p)
+
     return JSONResponse(participantes)
 
 
@@ -743,6 +600,16 @@ async def _get_participante_ingressos(db, participante_id: str, evento_id: str, 
             "status": ing.get("status", ""),
             "tipo_descricao": tipo_descr,
         })
+
+    if not ingressos:
+        cursor = db.ingressos_emitidos.find({"participante_id": participante_id, "evento_id": evento_id})
+        async for ing in cursor:
+            tipo_descr = _resolve_tipo_descricao(ing.get("tipo_ingresso_id"), evento)
+            ingressos.append({
+                "qrcode_hash": ing.get("qrcode_hash", ""),
+                "status": ing.get("status", ""),
+                "tipo_descricao": tipo_descr,
+            })
 
     return ingressos
 

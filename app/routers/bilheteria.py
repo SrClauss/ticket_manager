@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from fastapi.responses import Response
+from fastapi.responses import Response, RedirectResponse
 from typing import List, Dict, Any
 from datetime import datetime, timezone
 from io import BytesIO
@@ -1130,8 +1130,26 @@ async def imprimir_por_mobile(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Ingresso não encontrado")
 
-    # build url to print.png (respect orientation param)
+    # determine orientation to request from print.png
+    # prefer whatever is recorded in the ingresso's embedded layout (it
+    # already contains the canvas.orientation field), otherwise fall back to
+    # the query parameter or portrait default.  this lets the mobile app keep
+    # sending ?orientation=portrait and still receive a rotated image when the
+    # ticket was designed landscape.
     orient = orientation if orientation.lower() in ("landscape","portrait") else "portrait"
+    try:
+        db_orient = (
+            ingresso.get("layout_ingresso", {})
+                   .get("canvas", {})
+                   .get("orientation", "")
+                   .lower()
+        )
+        if db_orient in ("landscape", "portrait"):
+            orient = db_orient
+    except Exception:
+        # ignore if layout structure is unexpected
+        pass
+
     target = f"/api/eventos/{evento_id}/ingresso/{str(ingresso.get('_id'))}/print.png?dpi=300&orientation={orient}"
     return RedirectResponse(url=target)
 

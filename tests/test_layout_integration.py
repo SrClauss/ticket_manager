@@ -177,6 +177,42 @@ async def test_complete_event_to_layout_flow():
 
 
 @pytest.mark.asyncio
+async def test_print_ingresso_png_respects_db_orientation(fake_db, sample_evento, sample_participante, sample_ingresso, mock_get_database, mock_verify_bilheteria):
+    """If the ingresso layout is landscape, the returned PNG should be rotated
+    regardless of the orientation query parameter.
+    """
+    from app.routers import evento_api
+    from PIL import Image
+    import io
+
+    # prepare fake database with participant/ingresso
+    fake_db.eventos.docs.append(sample_evento)
+    # add layout info to ingresso
+    ingresso = dict(sample_ingresso)
+    ingresso["layout_ingresso"] = {"canvas": {"orientation": "landscape"}}
+    part_copy = dict(sample_participante)
+    part_copy["ingressos"] = [ingresso]
+    fake_db.participantes.docs.append(part_copy)
+
+    # stub render function to return known-dimension image
+    def fake_render(layout, dpi, logo_path=None, logo_blob=None):
+        return Image.new('RGB', (80, 60))  # landscape image
+
+    monkeypatch = pytest.MonkeyPatch()
+    monkeypatch.setattr(evento_api, '_render_layout_to_image', fake_render)
+
+    # call endpoint asking portrait
+    resp = await evento_api.print_ingresso_png(str(sample_evento["_id"]), str(ingresso["_id"]), dpi=300, orientation='portrait')
+    # resp is StreamingResponse; get bytes
+    body = b''.join([chunk async for chunk in resp.body_iterator])
+    img = Image.open(io.BytesIO(body))
+    # rotation should have happened -> size swapped
+    assert img.size == (60, 80)
+
+    monkeypatch.undo()
+
+
+@pytest.mark.asyncio
 async def test_event_with_tipo_ingresso_and_layout():
     """
     Test creating event with ticket types and applying layout
