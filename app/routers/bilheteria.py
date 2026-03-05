@@ -1083,11 +1083,19 @@ async def reimprimir_ingresso(
 @router.get("/imprimir/{ingresso_id}")
 async def imprimir_por_mobile(
     ingresso_id: str,
-    evento_id: str = Depends(verify_token_bilheteria)
+    evento_id: str = Depends(verify_token_bilheteria),
+    orientation: str = "portrait"
 ):
     """Endpoint usado pelo app mobile quando só precisa da imagem pronta.
     Autentica com token de bilheteria e procura o ingresso em participantes.
-    Retorna uma *redirect* para o mesmo recurso que o editor/web usa.
+
+    A rota aceita o parâmetro opcional `orientation` que pode ser
+    "portrait" (padrão) ou "landscape".  Quando for landscape, a imagem
+    será girada 90° no sentido anti‑horário antes de ser retornada, igual ao
+    comportamento do endpoint `/print.png`.
+
+    O retorno é uma *redirect* 302 para o mesmo recurso da API de eventos,
+    com o `orientation` passado junto.
     """
     db = get_database()
     ingresso = None
@@ -1114,8 +1122,9 @@ async def imprimir_por_mobile(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Ingresso não encontrado")
 
-    # build url to print.png
-    target = f"/api/eventos/{evento_id}/ingresso/{str(ingresso.get('_id'))}/print.png?dpi=300&orientation=portrait"
+    # build url to print.png (respect orientation param)
+    orient = orientation if orientation.lower() in ("landscape","portrait") else "portrait"
+    target = f"/api/eventos/{evento_id}/ingresso/{str(ingresso.get('_id'))}/print.png?dpi=300&orientation={orient}"
     return RedirectResponse(url=target)
 
 
