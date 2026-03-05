@@ -565,30 +565,24 @@
           </div>
         </section>
 
-        <!-- Print preview panel -->
+        <!-- Combined preview panel with toggle -->
         <section class="p-3 bg-slate-900 shrink-0 border-b border-slate-700">
-          <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Pré-visualização para Impressão</h2>
-          <div :style="printPreviewBoxStyle()" class="flex items-center justify-center p-2 overflow-hidden">
+          <div class="flex justify-between items-center mb-2">
+            <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
+              <span x-text="previewMode === 'print' ? 'Pré-visualização para Impressão' : 'Pré-visualização Real'"></span>
+            </h2>
+            <button @click="togglePreviewMode()"
+                    class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded">
+              <span x-text="previewMode === 'print' ? 'Mostrar Real' : 'Mostrar Impressão'"></span>
+            </button>
+          </div>
+          <div :style="previewMode === 'print' ? printPreviewBoxStyle() : normalPreviewBoxStyle()" class="flex items-center justify-center p-2 overflow-hidden">
             <img x-show="previewUrl" :src="previewUrl"
-                 :style="cfg.orientation==='landscape' ? 'transform: rotate(-90deg);' : ''"
-                 class="max-w-full max-h-full object-contain rounded shadow-lg" alt="Prévia para impressão">
+                 :style="previewMode === 'print' && cfg.orientation==='landscape' ? 'transform: rotate(-90deg);' : ''"
+                 class="max-w-full max-h-full object-contain rounded shadow-lg" alt="Prévia">
             <p x-show="!previewUrl && !previewLoading"
                class="text-[10px] text-slate-500 text-center">
                Clique em <strong>👁 Prévia</strong> no cabeçalho para gerar.
-            </p>
-            <p x-show="previewLoading" class="text-xs text-slate-400">Gerando prévia…</p>
-          </div>
-        </section>
-        
-        <!-- Normal preview panel -->
-        <section class="p-3 bg-slate-900 shrink-0 border-t border-slate-700">
-          <h2 class="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-2">Pré-visualização Real</h2>
-          <div :style="normalPreviewBoxStyle()" class="flex items-center justify-center p-2 overflow-hidden">
-            <img x-show="previewUrl" :src="previewUrl"
-                 class="max-w-full max-h-full object-contain rounded shadow-lg" alt="Prévia do ingresso">
-            <p x-show="!previewUrl && !previewLoading"
-               class="text-[10px] text-slate-500 text-center">
-               Clique em <strong>👁 Prévia</strong> no cabeçalho.
             </p>
             <p x-show="previewLoading" class="text-xs text-slate-400">Gerando prévia…</p>
           </div>
@@ -647,6 +641,10 @@
 
       previewUrl: null,
       previewLoading: false,
+
+      // which preview panel to show: 'print' or 'real'
+      previewMode: 'print',
+      togglePreviewMode() { this.previewMode = this.previewMode === 'print' ? 'real' : 'print'; },
 
       // Print preview (rotated for landscape)
       printPreviewBoxStyle() {
