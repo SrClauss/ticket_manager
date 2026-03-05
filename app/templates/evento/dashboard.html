@@ -142,6 +142,12 @@
     const ingressos = p.ingressos || [];
     const hasIngresso = ingressos.length > 0;
     const pid = p._id || p.id;
+    
+    // Pega o primeiro ingresso se houver
+    const ingresso = hasIngresso ? ingressos[0] : null;
+    const eventoId = ingresso?.evento_id;
+    const ingressoId = ingresso?._id || ingresso?.id;
+    
     return `
       <a href="/evento/participante/${pid}/editar"
          class="md-card p-4 flex items-center gap-3 hover:bg-slate-700/40 transition-colors block rounded-xl no-underline">
@@ -153,7 +159,18 @@
           <p class="text-slate-500 text-xs truncate">${p.email || ''}</p>
           ${p.cpf ? `<p class="text-slate-500 text-xs">${p.cpf}</p>` : ''}
         </div>
-        <div class="flex-shrink-0">
+        <div class="flex-shrink-0 flex items-center gap-2">
+          ${hasIngresso && eventoId && ingressoId
+            ? `<label class="inline-flex items-center">
+                 <input type="checkbox" ${ingresso.impresso ? 'checked' : ''} onchange="event.stopPropagation(); toggleImpresso('${eventoId}','${ingressoId}', this)" class="mr-1" />
+                 <span class="text-xs text-slate-300">Impresso</span>
+               </label>`
+            : ''}
+          ${hasIngresso && eventoId && ingressoId
+            ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); printIngresso('${eventoId}', '${ingressoId}');" class="inline-flex items-center px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-500">
+                 <span class="material-symbols-outlined text-xs">print</span>
+               </button>`
+            : ''}
           ${hasIngresso
             ? `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-900/40 border border-green-700 text-green-400 text-xs">
                  <span class="material-symbols-outlined text-xs">confirmation_number</span>${ingressos.length}
@@ -219,6 +236,71 @@
   function showError(msg) {
     document.getElementById('participants-list').innerHTML =
       `<p class="text-red-400 text-sm text-center py-4">${msg}</p>`;
+  }
+
+  // ── Toggle Impresso ───────────────────────────────────────────
+  function toggleImpresso(eventoId, ingressoId, checkbox) {
+    const newVal = checkbox.checked;
+    if (!newVal) {
+      if (!confirm('Deseja realmente desmarcar como impresso?')) {
+        checkbox.checked = true;
+        return;
+      }
+    }
+    fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ impresso: newVal })
+    }).then(res => {
+      if (res.ok) {
+        loadMetrics(); // Atualiza métricas
+      }
+    }).catch(e => console.warn('erro updating impresso', e));
+  }
+
+  // ── Print ingresso ────────────────────────────────────────────
+  async function printIngresso(eventoId, ingressoId) {
+    console.log('printIngresso called with:', { eventoId, ingressoId });
+    
+    if (!eventoId || !ingressoId) {
+      alert('Erro: ID do evento ou ingresso não encontrado.');
+      return;
+    }
+    
+    // marca como impresso via API antes de abrir
+    try {
+      const res = await fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ impresso: true })
+      });
+      
+      if (res.ok) {
+        // Atualiza checkbox na interface
+        const checkboxes = document.querySelectorAll(`input[type="checkbox"][onchange*="${ingressoId}"]`);
+        checkboxes.forEach(cb => cb.checked = true);
+        
+        // Recarrega métricas para atualizar contadores
+        loadMetrics();
+      }
+    } catch (e) {
+      console.warn('Falha ao marcar ingresso como impresso', e);
+    }
+    
+    // Usa rota de impressão com rotação landscape (90°)
+    const url = `/api/eventos/${eventoId}/ingresso/${ingressoId}/print.png?dpi=300&orientation=landscape`;
+    console.log('Opening URL:', url);
+    
+    const w = window.open(url, '_blank', 'width=800,height=600');
+    if (w) {
+      w.onload = () => {
+        setTimeout(() => {
+          w.print();
+        }, 500);
+      };
+    } else {
+      alert('Não foi possível abrir janela de impressão. Verifique se pop-ups estão bloqueados.');
+    }
   }
 
   // ── Key handling ──────────────────────────────────────────────
