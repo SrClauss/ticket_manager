@@ -21,6 +21,9 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 logger = logging.getLogger(__name__)
 
+# Cookie name for evento session
+COOKIE_TOKEN = "evento_session_token"
+
 async def _resolve_token(token: str) -> Optional[dict]:
     """Verifica se o token é de bilheteria ou portaria e retorna o documento do evento."""
     db = database.get_database()
