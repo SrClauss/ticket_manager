@@ -298,8 +298,14 @@ async def evento_api_participantes(request: Request, page: int = 1, per_page: in
                     # Garante que _id do ingresso é string
                     if ing.get("_id") and not isinstance(ing["_id"], str):
                         ing["_id"] = str(ing["_id"])
-                    # assegura campo impresso default False
-                    ing.setdefault("impresso", False)
+                    # Normaliza campo impresso como booleano
+                    impresso = ing.get("impresso")
+                    if impresso is None or impresso == "":
+                        ing["impresso"] = False
+                    elif isinstance(impresso, str):
+                        ing["impresso"] = impresso.lower() in ("true", "1", "yes")
+                    else:
+                        ing["impresso"] = bool(impresso)
                     filtered_ingressos.append(ing)
             p["ingressos"] = filtered_ingressos
         participantes.append(p)
@@ -344,7 +350,19 @@ async def evento_api_busca_smart(request: Request, q: str = ""):
             p["_id"] = str(p["_id"])
             p = normalize_bson_types(p)
             if p.get("ingressos"):
-                p["ingressos"] = [ing for ing in p["ingressos"] if ing.get("evento_id") == evento_id]
+                filtered_ingressos = []
+                for ing in p["ingressos"]:
+                    if ing.get("evento_id") == evento_id:
+                        # Normaliza campo impresso como booleano
+                        impresso = ing.get("impresso")
+                        if impresso is None or impresso == "":
+                            ing["impresso"] = False
+                        elif isinstance(impresso, str):
+                            ing["impresso"] = impresso.lower() in ("true", "1", "yes")
+                        else:
+                            ing["impresso"] = bool(impresso)
+                        filtered_ingressos.append(ing)
+                p["ingressos"] = filtered_ingressos
             # append only if there remains at least one ingresso
             if p.get("ingressos"):
                 participantes.append(p)
@@ -367,7 +385,19 @@ async def evento_api_busca_smart(request: Request, q: str = ""):
             p_doc["_id"] = str(p_doc["_id"])
             p_doc = normalize_bson_types(p_doc)
             if p_doc.get("ingressos"):
-                p_doc["ingressos"] = [ing for ing in p_doc.get("ingressos", []) if ing.get("evento_id") == evento_id]
+                filtered_ingressos = []
+                for ing in p_doc.get("ingressos", []):
+                    if ing.get("evento_id") == evento_id:
+                        # Normaliza campo impresso como booleano
+                        impresso = ing.get("impresso")
+                        if impresso is None or impresso == "":
+                            ing["impresso"] = False
+                        elif isinstance(impresso, str):
+                            ing["impresso"] = impresso.lower() in ("true", "1", "yes")
+                        else:
+                            ing["impresso"] = bool(impresso)
+                        filtered_ingressos.append(ing)
+                p_doc["ingressos"] = filtered_ingressos
             participantes.append(p_doc)
 
     else:
@@ -387,10 +417,21 @@ async def evento_api_busca_smart(request: Request, q: str = ""):
             p["_id"] = str(p["_id"])
             p = normalize_bson_types(p)
             if p.get("ingressos"):
-                p["ingressos"] = [ing for ing in p["ingressos"] if ing.get("evento_id") == evento_id]
+                filtered_ingressos = []
+                for ing in p["ingressos"]:
+                    if ing.get("evento_id") == evento_id:
+                        # Normaliza campo impresso como booleano
+                        impresso = ing.get("impresso")
+                        if impresso is None or impresso == "":
+                            ing["impresso"] = False
+                        elif isinstance(impresso, str):
+                            ing["impresso"] = impresso.lower() in ("true", "1", "yes")
+                        else:
+                            ing["impresso"] = bool(impresso)
+                        filtered_ingressos.append(ing)
+                p["ingressos"] = filtered_ingressos
             if p.get("ingressos"):
                 participantes.append(p)
-    return JSONResponse(participantes)
     return JSONResponse(participantes)
 
 
