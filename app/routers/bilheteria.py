@@ -766,10 +766,29 @@ async def listar_participantes(
                 
                 # Filter ingressos to only include tickets for current event
                 if participante.get("ingressos"):
-                    participante["ingressos"] = [
-                        ing for ing in participante["ingressos"] 
-                        if ing.get("evento_id") == evento_id
-                    ]
+                    filtered_ingressos = []
+                    for ing in participante["ingressos"]:
+                        if ing.get("evento_id") == evento_id:
+                            # Normalize ObjectIds within ingressos
+                            if "_id" in ing and ing["_id"]:
+                                ing["_id"] = str(ing["_id"])
+                            if "participante_id" in ing and ing["participante_id"]:
+                                try:
+                                    ing["participante_id"] = str(ing["participante_id"])
+                                except:
+                                    pass
+                            if "tipo_ingresso_id" in ing and ing["tipo_ingresso_id"]:
+                                try:
+                                    ing["tipo_ingresso_id"] = str(ing["tipo_ingresso_id"])
+                                except:
+                                    pass
+                            if "ilha_id" in ing and ing["ilha_id"]:
+                                try:
+                                    ing["ilha_id"] = str(ing["ilha_id"])
+                                except:
+                                    pass
+                            filtered_ingressos.append(ing)
+                    participante["ingressos"] = filtered_ingressos
                 
                 # Try to create Participante object - skip if validation fails
                 participantes.append(Participante(**participante))
