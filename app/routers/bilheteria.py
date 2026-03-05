@@ -726,78 +726,71 @@ async def listar_participantes(
     - per_page: itens por página (padrão: 20, máximo: 100)
     - nome: filtro opcional por nome (case insensitive regex)
     """
-    db = get_database()
-    
-    # Validate and clamp per_page to valid range
-    per_page = max(1, min(per_page, 100))
-    
-    # Validate page number
-    if page < 1:
-        page = 1
-    
-    # Build query - inicialmente retorna todos, depois filtra por evento
-    query = {}
-    if nome and nome.strip():
-        query["nome"] = {"$regex": nome, "$options": "i"}
-    
-    # Get total count
-    total_count = await db.participantes.count_documents(query)
-    
-    # Calculate total pages
-    total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
-    
-    # Ensure page is within valid range
-    if page > total_pages and total_pages > 0:
-        page = total_pages
-    
-    # Calculate skip
-    skip = (page - 1) * per_page
-    
-    # Fetch participants with pagination
-    participantes = []
-    cursor = db.participantes.find(query).skip(skip).limit(per_page)
-    async for participante in cursor:
-        # Ensure _id is a string for the Pydantic model
-        participante["_id"] = str(participante.get("_id"))
-        # Normalize BSON types (Long/Int64 -> str) to prevent serialization failures
-        participante = normalize_bson_types(participante)
+    try:
+        db = get_database()
         
-        # Ensure required fields exist with defaults to avoid validation errors
-        if not participante.get("nome"):
-            participante["nome"] = "Nome não informado"
-        if not participante.get("email"):
-            participante["email"] = f"sem-email-{participante['_id']}@placeholder.com"
-        if not participante.get("cpf"):
-            participante["cpf"] = "00000000000"
+        # Validate and clamp per_page to valid range
+        per_page = max(1, min(per_page, 100))
         
-        # IMPORTANT: Filter ingressos to only include tickets for current event
-        # Business rule: A CPF can only have ONE ticket per event
-        if participante.get("ingressos"):
-            participante["ingressos"] = [
-                ing for ing in participante["ingressos"] 
-                if ing.get("evento_id") == evento_id
-            ]
-            # Skip participants without tickets for this event
-            if not participante["ingressos"]:
+        # Validate page number
+        if page < 1:
+            page = 1
+        
+        # Build query - filtra por evento usando ingressos embedded
+        query = {"ingressos.evento_id": evento_id}
+        if nome and nome.strip():
+            query["nome"] = {"$regex": nome, "$options": "i"}
+        
+        # Get total count
+        total_count = await db.participantes.count_documents(query)
+        
+        # Calculate total pages
+        total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
+        
+        # Ensure page is within valid range
+        if page > total_pages and total_pages > 0:
+            page = total_pages
+        
+        # Calculate skip
+        skip = (page - 1) * per_page
+        
+        # Fetch participants with pagination
+        participantes = []
+        cursor = db.participantes.find(query).skip(skip).limit(per_page)
+        async for participante in cursor:
+            try:
+                # Ensure _id is a string for the Pydantic model
+                participante["_id"] = str(participante.get("_id"))
+                # Normalize BSON types (Long/Int64 -> str) to prevent serialization failures
+                participante = normalize_bson_types(participante)
+                
+                # Filter ingressos to only include tickets for current event
+                if participante.get("ingressos"):
+                    participante["ingressos"] = [
+                        ing for ing in participante["ingressos"] 
+                        if ing.get("evento_id") == evento_id
+                    ]
+                
+                # Try to create Participante object - skip if validation fails
+                participantes.append(Participante(**participante))
+            except (ValidationError, ValueError, TypeError) as e:
+                # Skip malformed participant documents instead of raising error
+                logger.warning("Skipping invalid participante document (id=%s): %s", participante.get("_id"), str(e))
                 continue
-        else:
-            # Skip participants without any tickets
-            continue
         
-        try:
-            participantes.append(Participante(**participante))
-        except ValidationError as e:
-            # Skip malformed participant documents instead of raising 500
-            logger.warning("Skipping invalid participante document (id=%s): %s", participante.get("_id"), e)
-            continue
-    
-    return ParticipantesListResponse(
-        participantes=participantes,
-        total_count=total_count,
-        total_pages=total_pages,
-        current_page=page,
-        per_page=per_page
-    )
+        return ParticipantesListResponse(
+            participantes=participantes,
+            total_count=len(participantes),  # ajusta count para refletir apenas válidos
+            total_pages=1 if len(participantes) > 0 else 1,
+            current_page=page,
+            per_page=per_page
+        )
+    except Exception as e:
+        logger.error(f"Erro ao listar participantes: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao listar participantes: {str(e)}"
+        )
 
 
 @router.get("/participantes", response_model=List[Participante])
