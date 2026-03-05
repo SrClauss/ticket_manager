@@ -575,6 +575,36 @@ class TestEmissaoBilheteria:
         assert stats["capacidade_maxima"] == sample_ilha["capacidade_maxima"]
         assert stats["ingressos_emitidos"] == 1
 
+        # now scenario: only embedded ingresso + same doc in collection
+        fake_db.participantes.docs.clear()
+        fake_db.ingressos_emitidos.docs.clear()
+        fake_db.participantes.docs.append({
+            "_id": ObjectId(),
+            "nome": "foo",
+            "ingressos": [{
+                "_id": ObjectId(),
+                "ilha_id": str(sample_ilha["_id"]),
+                "evento_id": str(sample_evento["_id"]),
+                "tipo_ingresso_id": "foo",
+            }]
+        })
+        same_id = fake_db.participantes.docs[-1]["ingressos"][0]["_id"]
+        fake_db.ingressos_emitidos.docs.append({
+            "_id": same_id,
+            "ilha_id": str(sample_ilha["_id"]),
+            "evento_id": str(sample_evento["_id"]),
+            "tipo_ingresso_id": "foo",
+            "participante_id": "x",
+            "qrcode_hash": "dup",
+            "data_emissao": datetime.now(timezone.utc),
+            "status": "Ativo"
+        })
+        stats2 = await bilheteria.ilha_stats(
+            str(sample_ilha["_id"]),
+            evento_id=str(sample_evento["_id"])
+        )
+        assert stats2["ingressos_emitidos"] == 1
+
 
 class TestReimpressaoBilheteria:
     """Testes para reimpressão de ingressos."""

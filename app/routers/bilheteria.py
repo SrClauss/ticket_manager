@@ -274,31 +274,46 @@ async def _count_ingressos_affecting_ilha(db, evento_id: str, ilha_id: str) -> i
     if obj_tipos:
         or_clauses.append({"tipo_ingresso_id": {"$in": obj_tipos}})
 
+    # gather legacy ids so we can dedupe against embedded tickets
+    legacy_ids = set()
     count_legacy = 0
     if or_clauses:
-        count_legacy = await db.ingressos_emitidos.count_documents({"evento_id": evento_id, "$or": or_clauses})
+        cursor = db.ingressos_emitidos.find(
+            {"evento_id": evento_id, "$or": or_clauses}, {"_id": 1}
+        )
+        async for doc in cursor:
+            legacy_ids.add(str(doc.get("_id")))
+        count_legacy = len(legacy_ids)
 
-    # contar ingressos embutidos em participantes
+    # contar ingressos embutidos em participantes, mas ignore os que já
+    # aparecem como documentos na coleção ingressos_emitidos
     count_embedded = 0
     cursor = db.participantes.find({"ingressos": {"$exists": True}})
     async for p in cursor:
         for ing in p.get("ingressos", []):
             if str(ing.get("evento_id")) != str(evento_id):
                 continue
+            # match by ilha or by tipo permission
+            matches = False
             if ing.get("ilha_id") == ilha_id:
-                count_embedded += 1
+                matches = True
+            else:
+                tipo = ing.get("tipo_ingresso_id")
+                if tipo:
+                    if str(tipo) in tipos_ids:
+                        matches = True
+                    else:
+                        try:
+                            if ObjectId(str(tipo)) in obj_tipos:
+                                matches = True
+                        except Exception:
+                            pass
+            if not matches:
                 continue
-            tipo = ing.get("tipo_ingresso_id")
-            if not tipo:
+            # dedupe by document id if available
+            if ing.get("_id") and str(ing.get("_id")) in legacy_ids:
                 continue
-            if str(tipo) in tipos_ids:
-                count_embedded += 1
-                continue
-            try:
-                if ObjectId(str(tipo)) in obj_tipos:
-                    count_embedded += 1
-            except Exception:
-                pass
+            count_embedded += 1
 
     return count_legacy + count_embedded
 
