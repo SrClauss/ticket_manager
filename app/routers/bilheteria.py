@@ -735,10 +735,8 @@ async def listar_participantes(
     if page < 1:
         page = 1
     
-    # Build query - SEMPRE filtrar por evento_id para mostrar apenas participantes do evento atual
-    query = {
-        "ingressos.evento_id": evento_id
-    }
+    # Build query - inicialmente retorna todos, depois filtra por evento
+    query = {}
     if nome and nome.strip():
         query["nome"] = {"$regex": nome, "$options": "i"}
     
@@ -764,6 +762,14 @@ async def listar_participantes(
         # Normalize BSON types (Long/Int64 -> str) to prevent serialization failures
         participante = normalize_bson_types(participante)
         
+        # Ensure required fields exist with defaults to avoid validation errors
+        if not participante.get("nome"):
+            participante["nome"] = "Nome não informado"
+        if not participante.get("email"):
+            participante["email"] = f"sem-email-{participante['_id']}@placeholder.com"
+        if not participante.get("cpf"):
+            participante["cpf"] = "00000000000"
+        
         # IMPORTANT: Filter ingressos to only include tickets for current event
         # Business rule: A CPF can only have ONE ticket per event
         if participante.get("ingressos"):
@@ -771,6 +777,12 @@ async def listar_participantes(
                 ing for ing in participante["ingressos"] 
                 if ing.get("evento_id") == evento_id
             ]
+            # Skip participants without tickets for this event
+            if not participante["ingressos"]:
+                continue
+        else:
+            # Skip participants without any tickets
+            continue
         
         try:
             participantes.append(Participante(**participante))
