@@ -274,21 +274,9 @@ async def _count_ingressos_affecting_ilha(db, evento_id: str, ilha_id: str) -> i
     if obj_tipos:
         or_clauses.append({"tipo_ingresso_id": {"$in": obj_tipos}})
 
-    # gather legacy ids so we can dedupe against embedded tickets
-    legacy_ids = set()
-    count_legacy = 0
-    if or_clauses:
-        cursor = db.ingressos_emitidos.find(
-            {"evento_id": evento_id, "$or": or_clauses}, {"_id": 1}
-        )
-        async for doc in cursor:
-            legacy_ids.add(str(doc.get("_id")))
-        count_legacy = len(legacy_ids)
-
-    # contar ingressos embutidos em participantes, mas ignore os que já
-    # aparecem como documentos na coleção ingressos_emitidos
+    # Contar ingressos embutidos em participantes
     count_embedded = 0
-    cursor = db.participantes.find({"ingressos": {"$exists": True}})
+    cursor = db.participantes.find({"ingressos": {"$exists": True, "$ne": []}})
     async for p in cursor:
         for ing in p.get("ingressos", []):
             if str(ing.get("evento_id")) != str(evento_id):
@@ -308,14 +296,10 @@ async def _count_ingressos_affecting_ilha(db, evento_id: str, ilha_id: str) -> i
                                 matches = True
                         except Exception:
                             pass
-            if not matches:
-                continue
-            # dedupe by document id if available
-            if ing.get("_id") and str(ing.get("_id")) in legacy_ids:
-                continue
-            count_embedded += 1
+            if matches:
+                count_embedded += 1
 
-    return count_legacy + count_embedded
+    return count_embedded
 
 # estatísticas rápidas de cada ilha
 @router.get("/ilhas/{ilha_id}/stats")
@@ -474,17 +458,6 @@ async def emitir_ingresso(
     # Verifica se já existe ingresso para este CPF no evento
     participante_cpf = participante.get("cpf")
     if participante_cpf:
-        # Verifica na coleção de ingressos
-        existing_ingresso = await db.ingressos_emitidos.find_one({
-            "evento_id": evento_id, 
-            "participante_cpf": participante_cpf
-        })
-        if existing_ingresso:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"CPF {participante_cpf} já possui ingresso para este evento"
-            )
-        
         # Verifica em ingressos embutidos
         existing_part = await db.participantes.find_one({
             "ingressos": {"$elemMatch": {"evento_id": evento_id, "participante_cpf": participante_cpf}}
@@ -499,6 +472,7 @@ async def emitir_ingresso(
     qrcode_hash = generate_qrcode_hash()
 
     ingresso_dict = {
+        "_id": str(ObjectId()),  # Gera ID para o ingresso embedded
         "evento_id": evento_id,
         "tipo_ingresso_id": emissao.tipo_ingresso_id,
         "participante_id": emissao.participante_id,
@@ -510,31 +484,25 @@ async def emitir_ingresso(
         "impresso": False
     }
 
-    # Insere primeiro na coleção antiga para compatibilidade e obter _id
+    # Insere primeiro na coleção antiga para compatibilidade (dual write)
     try:
-        res = await db.ingressos_emitidos.insert_one(ingresso_dict)
-        ingresso_dict["_id"] = res.inserted_id
+        ing_copy = dict(ingresso_dict)
+        ing_copy["_id"] = ObjectId(ing_copy["_id"])
+        await db.ingressos_emitidos.insert_one(ing_copy)
     except Exception:
         pass
     
     # Normalizar ingresso antes de embedar (converter ObjectId->str)
     ingresso_dict = normalize_participante_data(ingresso_dict)
 
-    # Também armazena o ingresso embutido dentro do participante (atomic push)
+    # Armazena o ingresso embutido dentro do participante (atomic push)
     try:
         await db.participantes.update_one({"_id": ObjectId(emissao.participante_id)}, {"$push": {"ingressos": ingresso_dict}})
     except Exception:
         # fallback se participante._id é string
         await db.participantes.update_one({"_id": emissao.participante_id}, {"$push": {"ingressos": ingresso_dict}})
 
-    # Recupera representação criada (prioriza documento na coleção antiga para compatibilidade)
-    created_ingresso = None
-    if ingresso_dict.get("_id"):
-        created_ingresso = await db.ingressos_emitidos.find_one({"_id": ingresso_dict.get("_id")})
-        if created_ingresso:
-            created_ingresso["_id"] = str(created_ingresso["_id"])
-    if not created_ingresso:
-        created_ingresso = ingresso_dict
+    created_ingresso = ingresso_dict
     
     # Use always the event layout; tipos não possuem layout anymore
     layout_source = evento.get("layout_ingresso")
@@ -555,8 +523,25 @@ async def emitir_ingresso(
     try:
         from app.utils.layouts import embed_layout
         embedded = embed_layout(layout_source, participante, tipo_ingresso, evento, created_ingresso)
-        # store as layout_ingresso in the ingresso document
-        await db.ingressos_emitidos.update_one({"_id": ObjectId(created_ingresso["_id"])}, {"$set": {"layout_ingresso": embedded}})
+        
+        # Store as layout_ingresso in the embedded ingresso (dentro de participantes)
+        try:
+            await db.participantes.update_one(
+                {"_id": ObjectId(emissao.participante_id), "ingressos._id": created_ingresso["_id"]},
+                {"$set": {"ingressos.$.layout_ingresso": embedded}}
+            )
+        except Exception:
+            await db.participantes.update_one(
+                {"_id": emissao.participante_id, "ingressos._id": created_ingresso["_id"]},
+                {"$set": {"ingressos.$.layout_ingresso": embedded}}
+            )
+        
+        # Update dual-write legacy collection
+        try:
+            await db.ingressos_emitidos.update_one({"_id": ObjectId(created_ingresso["_id"])}, {"$set": {"layout_ingresso": embedded}})
+        except Exception:
+            pass
+        
         # update the returned object to include layout
         created_ingresso["layout_ingresso"] = embedded
     except Exception:
@@ -896,11 +881,13 @@ async def buscar_ingresso_por_cpf(
     
     participante_id = str(participante["_id"])
     
-    # Busca ingresso do participante para este evento
-    ingresso = await db.ingressos_emitidos.find_one({
-        "participante_id": participante_id,
-        "evento_id": evento_id
-    })
+    # Busca ingresso do participante para este evento (embedded)
+    ingresso = None
+    if participante.get("ingressos"):
+        for ing in participante["ingressos"]:
+            if str(ing.get("evento_id")) == str(evento_id):
+                ingresso = ing
+                break
     
     if not ingresso:
         raise HTTPException(
