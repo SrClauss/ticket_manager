@@ -87,17 +87,17 @@
             {% elif key == 'telefone' %}
               <div>
                 <label class="muted small">Telefone {% if true %}*{% endif %}</label>
-                <input id="campo_telefone" name="telefone" class="input" />
+                <input id="campo_telefone" name="telefone" class="input" required />
               </div>
             {% elif key == 'empresa' %}
               <div class="full-width">
                 <label class="muted small">Empresa {% if true %}*{% endif %}</label>
-                <input id="campo_empresa" name="empresa" class="input" />
+                <input id="campo_empresa" name="empresa" class="input" required />
               </div>
             {% elif key == 'nacionalidade' %}
               <div>
                 <label class="muted small">Nacionalidade {% if true %}*{% endif %}</label>
-                <input id="campo_nacionalidade" name="nacionalidade" class="input" />
+                <input id="campo_nacionalidade" name="nacionalidade" class="input" required />
               </div>
             {% endif %}
           {% endfor %}
