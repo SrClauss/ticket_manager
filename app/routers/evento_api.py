@@ -656,50 +656,64 @@ async def set_ingresso_impresso(evento_id: str, ingresso_id: str, data: Impresso
     db = get_database()
     impresso = data.impresso
     
+    print(f"[IMPRESSO] Recebido PUT: evento_id={evento_id}, ingresso_id={ingresso_id}, impresso={impresso}")
     logger.info(f"Atualizando ingresso {ingresso_id} para impresso={impresso}")
     
     # try to update in ingressos_emitidos
     try:
         oid = ObjectId(ingresso_id)
+        print(f"[IMPRESSO] Tentando ObjectId em ingressos_emitidos: {oid}")
         result = await db.ingressos_emitidos.update_one(
             {"_id": oid, "evento_id": evento_id},
             {"$set": {"impresso": impresso}}
         )
+        print(f"[IMPRESSO] ingressos_emitidos: matched={result.matched_count}, modified={result.modified_count}")
         if result.matched_count:
             logger.info(f"Ingresso {ingresso_id} atualizado em ingressos_emitidos")
+            print("[IMPRESSO] ✓ Sucesso em ingressos_emitidos")
             return {"success": True}
     except Exception as e:
+        print(f"[IMPRESSO] Erro ao atualizar em ingressos_emitidos: {e}")
         logger.debug(f"Erro ao atualizar em ingressos_emitidos: {e}")
         pass
     
     # fallback to embedded update
     # search participante containing this ingresso id or qrcode_hash
     # Try both string and ObjectId formats
+    print("[IMPRESSO] Tentando buscar em participantes...")
     try:
         oid = ObjectId(ingresso_id)
         query = {"ingressos._id": oid}
+        print(f"[IMPRESSO] Query com ObjectId: {query}")
         result = await db.participantes.update_one(
             query,
             {"$set": {"ingressos.$.impresso": impresso}}
         )
+        print(f"[IMPRESSO] Resultado ObjectId: matched={result.matched_count}, modified={result.modified_count}")
         
         if result.matched_count:
             logger.info(f"Ingresso {ingresso_id} atualizado em participantes (ObjectId) (matched: {result.matched_count}, modified: {result.modified_count})")
+            print("[IMPRESSO] ✓ Sucesso com ObjectId")
             return {"success": True}
     except Exception as e:
+        print(f"[IMPRESSO] Tentativa com ObjectId falhou: {e}")
         logger.debug(f"Tentativa com ObjectId falhou: {e}")
     
     # Try as string
     query = {"ingressos._id": ingresso_id}
+    print(f"[IMPRESSO] Query com string: {query}")
     result = await db.participantes.update_one(
         query,
         {"$set": {"ingressos.$.impresso": impresso}}
     )
+    print(f"[IMPRESSO] Resultado string: matched={result.matched_count}, modified={result.modified_count}")
     
     if result.matched_count:
         logger.info(f"Ingresso {ingresso_id} atualizado em participantes (string) (matched: {result.matched_count}, modified: {result.modified_count})")
+        print("[IMPRESSO] ✓ Sucesso com string")
     else:
         logger.warning(f"Nenhum ingresso encontrado com _id={ingresso_id}")
+        print(f"[IMPRESSO] ✗ NENHUM INGRESSO ENCONTRADO com _id={ingresso_id}")
     
     return {"success": True}
 
