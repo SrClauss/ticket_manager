@@ -710,19 +710,22 @@ async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Op
     """
     print(f"[DEBUG] _fetch_ingresso_data called with evento_id={evento_id}, ingresso_id={ingresso_id}")
     
-    # Try to find ingresso embedded in participante first
+    # Try by string _id first (formato dos embedded)
+    print(f"[DEBUG] Searching by string _id in participantes.ingressos")
+    participante = await db.participantes.find_one(
+        {"ingressos._id": ingresso_id}, 
+        {"ingressos": {"$elemMatch": {"_id": ingresso_id, "evento_id": evento_id}}, "nome": 1, "email": 1, "cpf": 1}
+    )
+    
+    if participante and participante.get("ingressos"):
+        print(f"[DEBUG] Found ingresso embedded in participante by string _id")
+        return participante["ingressos"][0], participante
+    
+    # Try by ObjectId if string didn't work (casos legados)
     try:
         oid = ObjectId(ingresso_id)
-        use_oid = True
-        print(f"[DEBUG] ingresso_id is valid ObjectId: {oid}")
-    except Exception as e:
-        oid = ingresso_id
-        use_oid = False
-        print(f"[DEBUG] ingresso_id is not ObjectId (will use as qrcode_hash): {e}")
-    
-    # Try by ObjectId first if valid
-    if use_oid:
-        print(f"[DEBUG] Searching by ObjectId in participantes.ingressos")
+        print(f"[DEBUG] Trying as ObjectId: {oid}")
+        
         participante = await db.participantes.find_one(
             {"ingressos._id": oid}, 
             {"ingressos": {"$elemMatch": {"_id": oid, "evento_id": evento_id}}, "nome": 1, "email": 1, "cpf": 1}
@@ -731,8 +734,10 @@ async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Op
         if participante and participante.get("ingressos"):
             print(f"[DEBUG] Found ingresso embedded in participante by ObjectId")
             return participante["ingressos"][0], participante
+    except Exception as e:
+        print(f"[DEBUG] Not a valid ObjectId: {e}")
     
-    # If not found by ObjectId or ingresso_id is not a valid ObjectId, try by qrcode_hash
+    # If not found by _id, try by qrcode_hash
     print(f"[DEBUG] Searching by qrcode_hash in participantes.ingressos")
     
     # First check if any participante has this qrcode_hash for this evento
