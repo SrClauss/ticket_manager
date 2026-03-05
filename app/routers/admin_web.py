@@ -1293,15 +1293,19 @@ async def admin_evento_participantes(request: Request, evento_id: str, busca: Op
 
             async for doc in cursor:
                 ingressos_count = 0
+                primeiro_ingresso = None
                 for ing in doc.get("ingressos", []):
                     if ing.get("evento_id") == evento["id"] or ing.get("evento_id") == ObjectId(evento_id):
                         ingressos_count += 1
+                        if not primeiro_ingresso:
+                            primeiro_ingresso = ing
                 participantes.append({
                     "id": str(doc["_id"]),
                     "nome": doc.get("nome", ""),
                     "email": doc.get("email", ""),
                     "cpf": doc.get("cpf", ""),
-                    "ingressos_count": ingressos_count
+                    "ingressos_count": ingressos_count,
+                    "ingresso": primeiro_ingresso
                 })
         else:
             # Diagnostics: log how many found; if none, try legacy collection ingressos_emitidos as fallback
@@ -1334,15 +1338,19 @@ async def admin_evento_participantes(request: Request, evento_id: str, busca: Op
                 if not part_doc:
                     continue
                 ingressos_count = 0
+                primeiro_ingresso = None
                 for ing in part_doc.get("ingressos", []):
                     if ing.get("evento_id") == evento["id"] or ing.get("evento_id") == ObjectId(evento_id):
                         ingressos_count += 1
+                        if not primeiro_ingresso:
+                            primeiro_ingresso = ing
                 participantes.append({
                     "id": str(part_doc["_id"]),
                     "nome": part_doc.get("nome", ""),
                     "email": part_doc.get("email", ""),
                     "cpf": part_doc.get("cpf", ""),
-                    "ingressos_count": ingressos_count
+                    "ingressos_count": ingressos_count,
+                    "ingresso": primeiro_ingresso
                 })
             logger.info(f"admin_evento_participantes: fallback added {len(participantes)} participants from ingressos_emitidos")
 

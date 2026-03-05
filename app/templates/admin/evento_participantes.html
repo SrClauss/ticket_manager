@@ -61,8 +61,8 @@
               {% endif %}
             </td>
             <td class="px-3 py-2 text-right flex justify-end gap-2">
-              {% if participante.ingressos_count > 0 %}
-              <button type="button" onclick="printParticipant('{{ participante.id }}','{{ participante.nome|e('js') }}')" class="inline-flex items-center gap-2 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-md">
+              {% if participante.ingressos_count > 0 and participante.ingresso %}
+              <button type="button" onclick="printIngresso('{{ evento.id }}', '{{ participante.ingresso._id or participante.ingresso.id }}')" class="inline-flex items-center gap-2 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-md">
                 <span class="material-symbols-outlined">print</span>
                 Imprimir
               </button>
@@ -116,17 +116,18 @@
 </main>
 {% block extra_js %}
 <script>
-  function printParticipant(participantId, name) {
-    const params = new URLSearchParams({
-      width_mm: 69,
-      height_mm: 99,
-      dpi: 300,
-      text: name
-    });
-    const url = `/labels/print.png?${params.toString()}`;
-    const w = window.open(url);
-    if (w) { w.onload = () => w.print(); }
-    else { alert('Não foi possível abrir janela de impressão.'); }
+  function printIngresso(eventoId, ingressoId) {
+    const url = `/evento/${eventoId}/ingresso/${ingressoId}/render.jpg?dpi=300`;
+    const w = window.open(url, '_blank', 'width=800,height=600');
+    if (w) {
+      w.onload = () => {
+        setTimeout(() => {
+          w.print();
+        }, 500);
+      };
+    } else {
+      alert('Não foi possível abrir janela de impressão. Verifique se pop-ups estão bloqueados.');
+    }
   }
 </script>
 {% endblock %}

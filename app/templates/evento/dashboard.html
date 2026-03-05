@@ -147,6 +147,10 @@
     const ingressos = p.ingressos || [];
     const hasIngresso = ingressos.length > 0;
     const pid = p._id || p.id;
+    const ingresso = ingressos[0]; // Participante tem apenas 1 ingresso
+    const ingressoId = ingresso ? (ingresso._id || ingresso.id) : null;
+    const eventoId = ingresso ? ingresso.evento_id : null;
+    
     return `
       <a href="/evento/participante/${pid}/editar"
          class="md-card p-4 flex items-center gap-3 hover:bg-slate-700/40 transition-colors block rounded-xl no-underline">
@@ -159,14 +163,14 @@
           ${p.cpf ? `<p class="text-slate-500 text-xs">${p.cpf}</p>` : ''}
         </div>
         <div class="flex-shrink-0 flex items-center gap-2">
-          ${hasIngresso
-            ? `<button type="button" onclick="printParticipant('${pid}','${p.nome.replace(/'/g, "\\'")}' )" class="inline-flex items-center px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-500">
+          ${hasIngresso && eventoId && ingressoId
+            ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); printIngresso('${eventoId}', '${ingressoId}');" class="inline-flex items-center px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-500">
                  <span class="material-symbols-outlined text-xs">print</span>
                </button>`
             : ''}
           ${hasIngresso
             ? `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-900/40 border border-green-700 text-green-400 text-xs">
-                 <span class="material-symbols-outlined text-xs">confirmation_number</span>${ingressos.length}
+                 <span class="material-symbols-outlined text-xs">confirmation_number</span>
                </span>`
             : `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-700 text-slate-400 text-xs">
                  <span class="material-symbols-outlined text-xs">block</span>sem ingresso
@@ -229,6 +233,21 @@
   function showError(msg) {
     document.getElementById('participants-list').innerHTML =
       `<p class="text-red-400 text-sm text-center py-4">${msg}</p>`;
+  }
+
+  // ── Print ingresso ────────────────────────────────────────────
+  function printIngresso(eventoId, ingressoId) {
+    const url = `/evento/${eventoId}/ingresso/${ingressoId}/render.jpg?dpi=300`;
+    const w = window.open(url, '_blank', 'width=800,height=600');
+    if (w) {
+      w.onload = () => {
+        setTimeout(() => {
+          w.print();
+        }, 500);
+      };
+    } else {
+      alert('Não foi possível abrir janela de impressão. Verifique se pop-ups estão bloqueados.');
+    }
   }
 
   // ── Key handling ──────────────────────────────────────────────
