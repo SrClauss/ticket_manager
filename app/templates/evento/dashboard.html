@@ -150,8 +150,12 @@
           </div>
           <div class="flex-shrink-0 flex items-center gap-2">
             <template x-if="p.ingressos && p.ingressos.length">
-              <label class="inline-flex items-center">
-                <input type="checkbox" x-model="p.ingressos[0].impresso" @change="toggleImpresso(EVENTO_ID, p.ingressos[0]._id, p)" class="mr-1" />
+              <label @click.stop class="inline-flex items-center cursor-pointer">
+                <input type="checkbox" 
+                       x-model="p.ingressos[0].impresso" 
+                       @click.stop
+                       @change="toggleImpresso(EVENTO_ID, p.ingressos[0]._id, p, $event)" 
+                       class="mr-1 cursor-pointer" />
                 <span class="text-xs text-slate-300">Impresso</span>
               </label>
             </template>
@@ -219,6 +223,12 @@
         const data = await res.json();
         this.participants = data.participantes || [];
         this.totalPages = data.total_pages || 1;
+        // Debug: log dos dados
+        console.log('Participantes carregados:', this.participants.map(p => ({
+          nome: p.nome,
+          impresso: p.ingressos?.[0]?.impresso,
+          tipo_impresso: typeof p.ingressos?.[0]?.impresso
+        })));
       },
       async doSearch() {
         const q = this.searchQuery.trim();
@@ -228,6 +238,12 @@
         const data = await res.json();
         this.participants = data || [];
         this.totalPages = 1;
+        // Debug: log dos dados
+        console.log('Busca retornou:', this.participants.map(p => ({
+          nome: p.nome,
+          impresso: p.ingressos?.[0]?.impresso,
+          tipo_impresso: typeof p.ingressos?.[0]?.impresso
+        })));
       },
       handleSearchInput() {
         this.doSearch();
@@ -265,32 +281,38 @@
           alert('Não foi possível abrir janela de impressão. Verifique se pop-ups estão bloqueados.');
         }
       },
-      async toggleImpresso(eventoId, ingressoId, p) {
-        const newVal = p.ingressos[0].impresso;
+      async toggleImpresso(eventoId, ingressoId, p, event) {
+        const newVal = p.ingressos[0].impresso; // x-model já atualizou este valor
+        
+        // Se está desmarcando, pedir confirmação
         if (!newVal) {
           if (!confirm('Deseja realmente desmarcar como impresso?')) {
+            // Reverte - x-model vai atualizar o checkbox automaticamente
             p.ingressos[0].impresso = true;
             return;
           }
         }
+        
         try {
           const res = await fetch(`/api/eventos/${eventoId}/ingresso/${ingressoId}/impresso`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ impresso: newVal })
           });
+          
           if (!res.ok) {
             console.error('Erro ao atualizar status de impresso');
-            // Reverte o checkbox se falhou
+            // Reverte - x-model vai atualizar o checkbox automaticamente
             p.ingressos[0].impresso = !newVal;
             return;
           }
+          
           // Aguarda um pouco para garantir que o banco foi atualizado
           await new Promise(resolve => setTimeout(resolve, 100));
           await this.loadMetrics();
         } catch (e) {
           console.warn('erro updating impresso', e);
-          // Reverte o checkbox em caso de erro
+          // Reverte - x-model vai atualizar o checkbox automaticamente
           p.ingressos[0].impresso = !newVal;
         }
       }
