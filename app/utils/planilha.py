@@ -205,7 +205,8 @@ async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db,
                 'participante_cpf': cpf_digits,
                 'status': 'Ativo',
                 'qrcode_hash': f'auto-{datetime.now(timezone.utc).timestamp()}',
-                'data_emissao': datetime.now(timezone.utc)
+                'data_emissao': datetime.now(timezone.utc),
+                'impresso': False
             }
             # embed layout into ingresso
             layout_source = evento.get("layout_ingresso")

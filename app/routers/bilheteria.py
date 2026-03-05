@@ -506,7 +506,8 @@ async def emitir_ingresso(
         "ilha_id": emissao.ilha_id,
         "status": "Ativo",
         "qrcode_hash": qrcode_hash,
-        "data_emissao": datetime.now(timezone.utc)
+        "data_emissao": datetime.now(timezone.utc),
+        "impresso": False
     }
 
     # Insere primeiro na coleção antiga para compatibilidade e obter _id

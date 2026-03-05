@@ -1029,7 +1029,8 @@ async def admin_emitir(req: EmissaoAdminRequest):
         'participante_cpf': cpf_digits,
         'status': 'Ativo',
         'qrcode_hash': qrcode_hash,
-        'data_emissao': datetime.now(timezone.utc)
+        'data_emissao': datetime.now(timezone.utc),
+        'impresso': False
     }
     # embed layout
     try:
