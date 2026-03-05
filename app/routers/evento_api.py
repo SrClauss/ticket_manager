@@ -603,18 +603,17 @@ async def print_ingresso_png(evento_id: str, ingresso_id: str, dpi: int = 300, o
             detail="Ingresso não encontrado para este evento"
         )
     
-    # mark as impresso by default when generating print image
-    try:
-        if ingresso.get("_id"):
-            await db.ingressos_emitidos.update_one({"_id": ObjectId(ingresso.get("_id"))}, {"$set": {"impresso": True}})
-    except Exception:
-        pass
-    if participante and ingresso.get("_id") is None:
+    # mark as impresso by default when generating print image (ONLY embedded collection)
+    if participante and ingresso.get("_id"):
         # ingresso embedded, update in participante doc
-        await db.participantes.update_one(
-            {"_id": ObjectId(participante.get("_id")), "ingressos._id": ingresso.get("id")},
-            {"$set": {"ingressos.$.impresso": True}}
-        )
+        try:
+            result = await db.participantes.update_one(
+                {"_id": ObjectId(participante.get("_id")), "ingressos._id": ingresso.get("_id")},
+                {"$set": {"ingressos.$.impresso": True}}
+            )
+            print(f"[PRINT.PNG] Marked embedded ingresso as impresso: matched={result.matched_count}, modified={result.modified_count}")
+        except Exception as e:
+            print(f"[PRINT.PNG] Failed to mark embedded ingresso as impresso: {e}")
     
     # Get evento for logo
     evento = await db.eventos.find_one({"_id": ObjectId(evento_id)})
@@ -652,34 +651,15 @@ async def print_ingresso_png(evento_id: str, ingresso_id: str, dpi: int = 300, o
 
 @router.put("/{evento_id}/ingresso/{ingresso_id}/impresso")
 async def set_ingresso_impresso(evento_id: str, ingresso_id: str, data: ImpressoUpdate):
-    """Marca ou desmarca um ingresso como impresso (boolean)."""
+    """Marca ou desmarca um ingresso como impresso (boolean) APENAS na coleção embedded."""
     db = get_database()
     impresso = data.impresso
     
     print(f"[IMPRESSO] Recebido PUT: evento_id={evento_id}, ingresso_id={ingresso_id}, impresso={impresso}")
     logger.info(f"Atualizando ingresso {ingresso_id} para impresso={impresso}")
     
-    # try to update in ingressos_emitidos
-    try:
-        oid = ObjectId(ingresso_id)
-        print(f"[IMPRESSO] Tentando ObjectId em ingressos_emitidos: {oid}")
-        result = await db.ingressos_emitidos.update_one(
-            {"_id": oid, "evento_id": evento_id},
-            {"$set": {"impresso": impresso}}
-        )
-        print(f"[IMPRESSO] ingressos_emitidos: matched={result.matched_count}, modified={result.modified_count}")
-        if result.matched_count:
-            logger.info(f"Ingresso {ingresso_id} atualizado em ingressos_emitidos")
-            print("[IMPRESSO] ✓ Sucesso em ingressos_emitidos")
-            return {"success": True}
-    except Exception as e:
-        print(f"[IMPRESSO] Erro ao atualizar em ingressos_emitidos: {e}")
-        logger.debug(f"Erro ao atualizar em ingressos_emitidos: {e}")
-        pass
-    
-    # fallback to embedded update
-    # search participante containing this ingresso id or qrcode_hash
-    # Try both string and ObjectId formats
+    # Atualizar APENAS no embedded (participantes.ingressos)
+    # Try ObjectId first
     print("[IMPRESSO] Tentando buscar em participantes...")
     try:
         oid = ObjectId(ingresso_id)
@@ -718,7 +698,7 @@ async def set_ingresso_impresso(evento_id: str, ingresso_id: str, data: Impresso
     return {"success": True}
 
 async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Optional[Dict], Optional[Dict]]:
-    """Fetch ingresso from database (embedded in participante or standalone).
+    """Fetch ingresso from database (ONLY embedded in participante).
     
     Args:
         db: MongoDB database instance (AsyncIOMotorDatabase)
@@ -772,31 +752,9 @@ async def _fetch_ingresso_data(db, evento_id: str, ingresso_id: str) -> Tuple[Op
         print(f"[DEBUG] Found ingresso embedded in participante by qrcode_hash")
         return participante["ingressos"][0], participante
     
-    # Fallback to standalone collection by ObjectId
-    if use_oid:
-        print(f"[DEBUG] Fallback: searching by ObjectId in ingressos_emitidos")
-        try:
-            ingresso = await db.ingressos_emitidos.find_one(
-                {"_id": oid, "evento_id": evento_id}
-            )
-            if ingresso:
-                print(f"[DEBUG] Found ingresso in ingressos_emitidos by ObjectId")
-                return ingresso, None
-        except Exception as e:
-            print(f"[DEBUG] Error querying ingressos_emitidos by ObjectId: {e}")
-    
-    # Fallback to standalone collection by qrcode_hash
-    print(f"[DEBUG] Fallback: searching by qrcode_hash in ingressos_emitidos")
-    ingresso = await db.ingressos_emitidos.find_one(
-        {"qrcode_hash": ingresso_id, "evento_id": evento_id}
-    )
-    
-    if ingresso:
-        print(f"[DEBUG] Found ingresso in ingressos_emitidos by qrcode_hash")
-    else:
-        print(f"[DEBUG] Ingresso not found anywhere for ingresso_id={ingresso_id}, evento_id={evento_id}")
-    
-    return ingresso, None
+    # NOT FOUND - only search embedded collection
+    print(f"[DEBUG] Ingresso not found in embedded collection for ingresso_id={ingresso_id}, evento_id={evento_id}")
+    return None, None
 
 
 async def _get_or_create_embedded_layout(db, ingresso: Dict, evento_id: str, from_participante: bool, participante: Optional[Dict]) -> Dict:
@@ -841,7 +799,7 @@ async def _get_or_create_embedded_layout(db, ingresso: Dict, evento_id: str, fro
     base_layout = evento.get("layout_ingresso")
     embedded = embed_layout(base_layout, participante or {}, tipo or {}, evento or {}, ingresso)
     
-    # Persist embedded layout
+    # Persist embedded layout (ONLY in participante embedded collection)
     try:
         if from_participante and participante:
             pid = participante.get("_id")
@@ -854,14 +812,7 @@ async def _get_or_create_embedded_layout(db, ingresso: Dict, evento_id: str, fro
                 {"$set": {"ingressos.$.layout_ingresso": embedded}}
             )
         else:
-            try:
-                oid = ObjectId(ingresso.get("_id"))
-            except Exception:
-                oid = ingresso.get("_id")
-            await db.ingressos_emitidos.update_one(
-                {"_id": oid}, 
-                {"$set": {"layout_ingresso": embedded}}
-            )
+            logger.warning(f"Ingresso not embedded in participante - cannot persist layout")
     except Exception as e:
         logger.warning(f"Failed to persist embedded layout: {e}")
     
@@ -1192,17 +1143,7 @@ async def capture_ingresso(evento_id: str, ingresso_id: str, file: UploadFile = 
                 }}
             )
         else:
-            try:
-                oid = ObjectId(ingresso.get("_id"))
-            except Exception:
-                oid = ingresso.get("_id")
-            await db.ingressos_emitidos.update_one(
-                {"_id": oid}, 
-                {"$set": {
-                    "captured_image_path": str(path), 
-                    "captured_at": ts
-                }}
-            )
+            logger.warning(f"Ingresso not embedded in participante - cannot persist capture info")
     except Exception as e:
         logger.warning(f"Failed to persist capture info for ingresso {ingresso_id}: {e}")
     
