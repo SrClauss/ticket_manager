@@ -262,11 +262,49 @@ def _render_layout_to_image(layout: Dict[str, Any], dpi: int = 300, logo_path: O
             # interpret size as points (pt) and convert to pixel size using DPI so font scales physically
             size_pt = float(el.get("size", 12))
             font_px = max(1, int(round(size_pt * dpi_effective / 72.0)))
+            
+            # Get font attributes from element
+            font_family = el.get("font", "Arial")
+            is_bold = el.get("bold", False)
+            is_italic = el.get("italic", False)
+            
+            # Map font family to available DejaVu fonts
+            font_path = None
             try:
-                font = ImageFont.truetype("DejaVuSans.ttf", font_px)
-            except Exception:
+                # Build font path based on attributes
+                if font_family in ["Times", "Times New Roman", "Serif"]:
+                    if is_bold and is_italic:
+                        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf"
+                    elif is_bold:
+                        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"
+                    elif is_italic:
+                        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"
+                    else:
+                        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
+                elif font_family in ["Courier", "Courier New", "Mono", "Monospace"]:
+                    if is_bold and is_italic:
+                        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-BoldOblique.ttf"
+                    elif is_bold:
+                        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf"
+                    elif is_italic:
+                        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Oblique.ttf"
+                    else:
+                        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
+                else:  # Default to Arial/Sans
+                    if is_bold and is_italic:
+                        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"
+                    elif is_bold:
+                        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+                    elif is_italic:
+                        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"
+                    else:
+                        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+                
+                font = ImageFont.truetype(font_path, font_px)
+            except Exception as e:
+                # Fallback to default font
                 try:
-                    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_px)
+                    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_px)
                 except Exception:
                     font = ImageFont.load_default()
 
