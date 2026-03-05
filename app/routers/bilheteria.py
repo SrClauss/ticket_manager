@@ -625,6 +625,82 @@ async def get_participante(
     return Participante(**participante)
 
 
+class ParticipanteUpdate(BaseModel):
+    """Model para atualização de dados do participante"""
+    nome: str = None
+    cpf: str = None
+    email: str = None
+    telefone: str = None
+    empresa: str = None
+    nacionalidade: str = None
+
+
+@router.put("/participantes/{participante_id}", response_model=Participante)
+async def update_participante(
+    participante_id: str,
+    participante_update: ParticipanteUpdate,
+    evento_id: str = Depends(verify_token_bilheteria)
+):
+    """Atualiza os dados de um participante"""
+    db = get_database()
+    
+    # Verifica se o participante existe
+    try:
+        participante = await db.participantes.find_one({"_id": ObjectId(participante_id)})
+        if not participante:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Participante não encontrado"
+            )
+    except InvalidId:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="ID de participante inválido"
+        )
+    
+    # Prepara update - apenas campos não-None
+    update_data = {}
+    if participante_update.nome is not None:
+        update_data["nome"] = participante_update.nome.strip()
+    if participante_update.cpf is not None:
+        cpf_clean = participante_update.cpf.strip()
+        # Valida CPF se fornecido
+        if cpf_clean:
+            try:
+                cpf_clean = validate_cpf(cpf_clean)
+            except HTTPException:
+                # CPF inválido, mas aceitar mesmo assim (pode ser CPF estrangeiro)
+                pass
+        update_data["cpf"] = cpf_clean
+    if participante_update.email is not None:
+        update_data["email"] = participante_update.email.strip()
+    if participante_update.telefone is not None:
+        update_data["telefone"] = participante_update.telefone.strip()
+    if participante_update.empresa is not None:
+        update_data["empresa"] = participante_update.empresa.strip()
+    if participante_update.nacionalidade is not None:
+        update_data["nacionalidade"] = participante_update.nacionalidade.strip()
+    
+    if not update_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nenhum campo para atualizar"
+        )
+    
+    # Atualiza o participante
+    await db.participantes.update_one(
+        {"_id": ObjectId(participante_id)},
+        {"$set": update_data}
+    )
+    
+    # Retorna o participante atualizado
+    participante_updated = await db.participantes.find_one({"_id": ObjectId(participante_id)})
+    participante_updated["_id"] = str(participante_updated["_id"])
+    participante_updated = normalize_bson_types(participante_updated)
+    
+    return Participante(**participante_updated)
+
+
 class ParticipantesListResponse(BaseModel):
     """Response model for paginated participants list"""
     participantes: List[Participante]
