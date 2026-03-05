@@ -1457,3 +1457,25 @@ async def admin_configuracoes(request: Request):
             "active_page": "configuracoes"
         }
     )
+
+@router.put("/eventos/{evento_id}/status")
+async def toggle_event_status(evento_id: str, request: Request):
+    """Ativa ou desativa um evento."""
+    redirect = check_admin_session(request)
+    if redirect:
+        return redirect
+
+    db = get_database()
+    try:
+        object_id = ObjectId(evento_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID de evento inválido")
+
+    evento = await db.eventos.find_one({"_id": object_id})
+    if not evento:
+        raise HTTPException(status_code=404, detail="Evento não encontrado")
+
+    novo_status = not evento.get("ativo", False)
+    await db.eventos.update_one({"_id": object_id}, {"$set": {"ativo": novo_status}})
+
+    return {"success": True, "novo_status": novo_status}
