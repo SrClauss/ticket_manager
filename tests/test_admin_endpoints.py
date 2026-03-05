@@ -5,7 +5,7 @@ Cobre criação, leitura, atualização e exclusão de eventos, ilhas e tipos de
 import pytest
 from datetime import datetime, timezone
 from bson import ObjectId
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 
 from app.routers import admin
 from tests.conftest import FakeDB
@@ -298,6 +298,57 @@ class TestAdminWebEventosFilter:
         resp = await admin_web.admin_eventos_list(req, busca="outro", periodo="passados")
         nomes = [e["nome"] for e in resp.context["eventos"]]
         assert nomes == ["outro passado"]
+
+
+class TestEventoNovo:
+    """Testes para criação de evento via interface admin."""
+
+    @pytest.mark.asyncio
+    async def test_get_novo_evento_page(self, fake_db, mock_get_database):
+        # request should render without error when admin session present
+        from app.routers import admin_web
+        admin_web.check_admin_session = lambda r: None
+        req = type("R", (object,), {"cookies": {}})()
+
+        resp = await admin_web.admin_evento_novo_page(req)
+        # TemplateResponse object has .body attribute
+        body = resp.body.decode()
+        assert "Novo Evento" in body
+        assert "form" in body
+
+    @pytest.mark.asyncio
+    async def test_post_novo_evento_creates_document(self, fake_db, mock_get_database):
+        # mock session and DB insertion
+        from app.routers import admin_web
+        admin_web.check_admin_session = lambda r: None
+        req = type("R", (object,), {"cookies": {}, "form": None})()
+
+        # simulate form submission
+        class DummyFile:
+            filename = "test.png"
+            content_type = "image/png"
+            async def read(self):
+                return b""  # empty content
+
+        data = {
+            "nome": "Teste",
+            "descricao": "desc",
+            "data_evento": "2026-04-01T12:00",
+            "ativo": "on",
+        }
+        # monkeypatch request.form() to return the dict
+        async def fake_form():
+            return data
+        req.form = fake_form
+
+        # call POST handler without logo
+        resp = await admin_web.admin_evento_criar(req, logo=None, **data)
+        # after creation it should redirect
+        assert resp.status_code == status.HTTP_303_SEE_OTHER
+        # verify document inserted into fake DB
+        assert fake_db.eventos.docs
+        evt = fake_db.eventos.docs[0]
+        assert evt["nome"] == "Teste"
 
 
 class TestIlhasAdmin:
