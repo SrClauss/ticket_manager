@@ -805,22 +805,11 @@ async def busca_smart_participantes(
 
     elif tipo == 'token':
         qrcode_hash = q.strip()
-        # Procura primeiro em ingressos embutidos no participante
+        # Procura em ingressos embutidos no participante com filtro de evento
         participante_doc = await db.participantes.find_one(
             {"ingressos.qrcode_hash": qrcode_hash},
-            {"ingressos": {"$elemMatch": {"qrcode_hash": qrcode_hash}}}
+            {"ingressos": {"$elemMatch": {"qrcode_hash": qrcode_hash, "evento_id": evento_id}}}
         )
-        if not participante_doc:
-            # Fallback para coleção de ingressos emitidos
-            ingresso = await db.ingressos_emitidos.find_one(
-                {"qrcode_hash": qrcode_hash, "evento_id": evento_id}
-            )
-            if ingresso:
-                pid = ingresso.get("participante_id")
-                try:
-                    participante_doc = await db.participantes.find_one({"_id": ObjectId(pid)})
-                except Exception:
-                    participante_doc = await db.participantes.find_one({"_id": pid})
         if participante_doc:
             participante_doc["_id"] = str(participante_doc["_id"])
             participante_doc = normalize_bson_types(participante_doc)
@@ -964,24 +953,6 @@ async def buscar_credenciamento(
                     "qrcode_hash": ing.get("qrcode_hash"),
                     "data_emissao": ing.get("data_emissao")
                 })
-        # fallback: se não encontrou nada, consulta coleção antiga
-        if not ingressos:
-            ingresso_cursor = db.ingressos_emitidos.find({
-                "participante_id": participante_id,
-                "evento_id": evento_id
-            })
-            async for ingresso in ingresso_cursor:
-                try:
-                    tipo = await db.tipos_ingresso.find_one({"_id": ObjectId(ingresso["tipo_ingresso_id"])})
-                except Exception:
-                    tipo = await db.tipos_ingresso.find_one({"_id": ingresso.get("tipo_ingresso_id")})
-                ingressos.append({
-                    "ingresso_id": str(ingresso["_id"]),
-                    "tipo": tipo["descricao"] if tipo else "Desconhecido",
-                    "status": ingresso["status"],
-                    "qrcode_hash": ingresso["qrcode_hash"],
-                    "data_emissao": ingresso["data_emissao"]
-                })
         
         if ingressos:  # Só retorna participantes que têm ingressos neste evento
             participantes.append({
@@ -1014,43 +985,31 @@ async def reimprimir_ingresso(
     
     # Tenta localizar ingresso embutido dentro de participantes pelo _id
     ingresso = None
-    participante = None  # Initialize to avoid UnboundLocalError
+    participante = None
     try:
-        participante = await db.participantes.find_one({"ingressos._id": ObjectId(ingresso_id)}, {"ingressos": {"$elemMatch": {"_id": ObjectId(ingresso_id)}}})
+        participante = await db.participantes.find_one(
+            {"ingressos._id": ObjectId(ingresso_id)},
+            {"ingressos": {"$elemMatch": {"_id": ObjectId(ingresso_id), "evento_id": evento_id}}}
+        )
         if participante and participante.get("ingressos"):
             ingresso = participante["ingressos"][0]
-    except Exception:
+    except (InvalidId, Exception):
         ingresso = None
 
-    # Se não encontrou embutido, fallback para coleção antiga
+    # Se não encontrou por _id, tenta por qrcode_hash (suporta QR code)  
     if not ingresso:
-        # Try to find by ObjectId in the legacy collection first
-        try:
-            ingresso = await db.ingressos_emitidos.find_one({"_id": ObjectId(ingresso_id), "evento_id": evento_id})
-            if not ingresso:
-                # If not found by ObjectId, fall through to try qrcode_hash lookup
-                ingresso = None
-        except InvalidId:
-            # ingresso_id is not a valid ObjectId -> try lookup by qrcode_hash instead of returning 400
-            ingresso = None
+        participante = await db.participantes.find_one(
+            {"ingressos.qrcode_hash": ingresso_id},
+            {"ingressos": {"$elemMatch": {"qrcode_hash": ingresso_id, "evento_id": evento_id}}}
+        )
+        if participante and participante.get("ingressos"):
+            ingresso = participante["ingressos"][0]
 
-        # If still not found, attempt to resolve by qrcode_hash (support QR contents)
-        if not ingresso:
-            # look for embedded ingresso in participantes by qrcode_hash
-            participante_q = await db.participantes.find_one(
-                {"ingressos.qrcode_hash": ingresso_id},
-                {"ingressos": {"$elemMatch": {"qrcode_hash": ingresso_id}}}
-            )
-            if participante_q and participante_q.get("ingressos"):
-                ingresso = participante_q["ingressos"][0]
-            else:
-                # fallback to ingressos_emitidos collection by qrcode_hash
-                ingresso = await db.ingressos_emitidos.find_one({"qrcode_hash": ingresso_id, "evento_id": evento_id})
-                if not ingresso:
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail="Ingresso não encontrado para este evento"
-                    )
+    if not ingresso:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ingresso não encontrado para este evento"
+        )
     
     # Busca dados relacionados
     # participante pode já estar disponível quando o ingresso é embutido
@@ -1171,11 +1130,6 @@ async def render_ingresso_by_qrcode(
     ingresso = None
     if participante and participante.get("ingressos"):
         ingresso = participante["ingressos"][0]
-    else:
-        # Fallback para ingressos_emitidos
-        ingresso = await db.ingressos_emitidos.find_one(
-            {"qrcode_hash": qrcode_hash, "evento_id": evento_id}
-        )
     
     if not ingresso:
         raise HTTPException(

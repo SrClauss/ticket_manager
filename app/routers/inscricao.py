@@ -98,7 +98,14 @@ async def buscar_ingresso_api(evento_slug: str, payload: dict):
     if not participant:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Participante não encontrado")
 
-    ingresso = await db.ingressos_emitidos.find_one({"evento_id": str(evento.get("_id")), "participante_id": str(participant.get("_id"))})
+    # Busca ingresso embedded no participante
+    evento_id_str = str(evento.get("_id"))
+    ingresso = None
+    for ing in participant.get("ingressos", []):
+        if ing.get("evento_id") == evento_id_str:
+            ingresso = ing
+            break
+    
     if not ingresso:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ingresso não encontrado para este CPF neste evento")
 
@@ -123,12 +130,13 @@ async def post_inscricao(evento_slug: str, participante: ParticipanteCreate):
 
     db = get_database()
     # Verifica se participante com este CPF já tem ingresso para este evento
+    evento_id_str = str(evento["_id"])
     existing_part = await db.participantes.find_one({"cpf": cpf_digits})
     if existing_part:
-        # procura ingresso para este participante no evento
-        ingressos = await db.ingressos_emitidos.find_one({"evento_id": str(evento["_id"]), "participante_id": str(existing_part.get("_id"))})
-        if ingressos:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="CPF já inscrito neste evento")
+        # procura ingresso embedded para este participante no evento
+        for ing in existing_part.get("ingressos", []):
+            if ing.get("evento_id") == evento_id_str:
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="CPF já inscrito neste evento")
 
     # Cria ou reutiliza participante
     if existing_part:
@@ -145,27 +153,38 @@ async def post_inscricao(evento_slug: str, participante: ParticipanteCreate):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Nenhum tipo de ingresso padrão definido para este evento")
 
     qrcode_hash = generate_qrcode_hash()
+    # Gera _id antecipadamente para embedded document
+    ingresso_id = str(ObjectId())
     ingresso_dict = {
+        "_id": ingresso_id,
         "evento_id": str(evento["_id"]),
         "tipo_ingresso_id": str(tipo.get("_id")),
         "participante_id": participante_id,
         "participante_cpf": cpf_digits,
         "status": "Ativo",
         "qrcode_hash": qrcode_hash,
-        "data_emissao": datetime.now(timezone.utc)
+        "data_emissao": datetime.now(timezone.utc),
+        "impresso": False
     }
 
     # Always use the event layout; embed it into the ingresso before saving
     layout_source = evento.get("layout_ingresso")
     try:
         from app.utils.layouts import embed_layout
-        embedded = embed_layout(layout_source, {"nome": participante.get("nome"), "cpf": participante.get("cpf"), "email": participante.get("email")}, tipo, evento, ingresso_dict)
+        embedded = embed_layout(layout_source, {"nome": participante.nome, "cpf": participante.cpf, "email": participante.email}, tipo, evento, ingresso_dict)
         ingresso_dict["layout_ingresso"] = embedded
     except Exception:
         pass
 
-    result = await db.ingressos_emitidos.insert_one(ingresso_dict)
-    created_ingresso = await db.ingressos_emitidos.find_one({"_id": result.inserted_id})
-    created_ingresso["_id"] = str(created_ingresso["_id"])
+    # Insere como embedded no participante (fonte primária)
+    await db.participantes.update_one(
+        {"_id": ObjectId(participante_id)},
+        {"$push": {"ingressos": ingresso_dict}}
+    )
 
-    return {"message": "Inscrição realizada com sucesso", "ingresso_id": str(created_ingresso["_id"]), "ingresso": IngressoEmitido(**created_ingresso)}
+    # Dual-write para collection antiga (compatibilidade)
+    ingresso_legacy = ingresso_dict.copy()
+    ingresso_legacy["_id"] = ObjectId(ingresso_id)
+    await db.ingressos_emitidos.insert_one(ingresso_legacy)
+
+    return {"message": "Inscrição realizada com sucesso", "ingresso_id": ingresso_id, "ingresso": IngressoEmitido(**ingresso_dict)}

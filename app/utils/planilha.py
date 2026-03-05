@@ -151,11 +151,6 @@ async def process_planilha(file_bytes: bytes, filename: str, evento_id: str, db,
                 part_has_ingresso = await db.participantes.find_one({'_id': existing_part.get('_id'), 'ingressos.evento_id': evento_id})
                 if part_has_ingresso:
                     row_errors.append('CPF já inscrito neste evento')
-                else:
-                    # Fallback: verifica coleção antiga ingressos_emitidos
-                    ingresso_exist = await db.ingressos_emitidos.find_one({'evento_id': evento_id, 'participante_id': str(existing_part.get('_id'))})
-                    if ingresso_exist:
-                        row_errors.append('CPF já inscrito neste evento')
 
         if row_errors:
             errors.append({'line': line_no, 'errors': row_errors, 'row': row})

@@ -16,10 +16,19 @@ async def coletar_lead(interacao: LeadInteracaoCreate):
     """
     db = database.get_database()
     
-    # Busca o ingresso pelo QR code
-    ingresso = await db.ingressos_emitidos.find_one({
-        "qrcode_hash": interacao.qrcode_hash
-    })
+    # Busca o ingresso embedded pelo QR code
+    participante = await db.participantes.find_one(
+        {"ingressos.qrcode_hash": interacao.qrcode_hash},
+        {"ingressos": {"$elemMatch": {"qrcode_hash": interacao.qrcode_hash}}}
+    )
+    
+    if not participante or not participante.get("ingressos"):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="QR Code não encontrado"
+        )
+    
+    ingresso = participante["ingressos"][0]
     
     if not ingresso:
         raise HTTPException(

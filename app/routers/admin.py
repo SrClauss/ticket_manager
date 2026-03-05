@@ -700,62 +700,8 @@ async def relatorio_vendas(evento_id: str):
                     "receita_total": (tipo_obj.get("valor") if tipo_obj else 0) * doc.get("ativos", 0)
                 })
     except Exception:
-        # fallback para coleção legada caso a agregação falhe
+        # Se aggregation falhar, retorna vazio
         pass
-
-    # If no vendas found via participantes, try legacy ingressos_emitidos collection
-    if not vendas_por_tipo:
-        pipeline = [
-            {"$match": {"evento_id": evento_id}},
-            {"$group": {
-                "_id": "$tipo_ingresso_id",
-                "quantidade": {"$sum": 1},
-                "ativos": {"$sum": {"$cond": [{"$eq": ["$status", "Ativo"]}, 1, 0]}},
-                "cancelados": {"$sum": {"$cond": [{"$eq": ["$status", "Cancelado"]}, 1, 0]}}
-            }}
-        ]
-        if hasattr(db.ingressos_emitidos, 'aggregate'):
-            async for doc in db.ingressos_emitidos.aggregate(pipeline):
-                tipo = None
-                try:
-                    tipo = await db.tipos_ingresso.find_one({"_id": ObjectId(doc.get("_id"))})
-                except Exception:
-                    tipo = await db.tipos_ingresso.find_one({"_id": doc.get("_id")})
-                vendas_por_tipo.append({
-                    "tipo_ingresso": tipo.get("descricao") if tipo else "Desconhecido",
-                    "valor": tipo.get("valor") if tipo else 0,
-                    "quantidade_total": doc.get("quantidade", 0),
-                    "ativos": doc.get("ativos", 0),
-                    "cancelados": doc.get("cancelados", 0),
-                    "receita_total": (tipo.get("valor") if tipo else 0) * doc.get("ativos", 0)
-                })
-        else:
-            # as a last fallback, do manual aggregation over ingressos_emitidos cursor
-            counts = {}
-            async for ing in db.ingressos_emitidos.find({"evento_id": evento_id}):
-                tipo_id = ing.get('tipo_ingresso_id')
-                status_ing = ing.get('status')
-                if tipo_id not in counts:
-                    counts[tipo_id] = {"quantidade": 0, "ativos": 0, "cancelados": 0}
-                counts[tipo_id]["quantidade"] += 1
-                if status_ing == "Ativo":
-                    counts[tipo_id]["ativos"] += 1
-                if status_ing == "Cancelado":
-                    counts[tipo_id]["cancelados"] += 1
-            for tipo_id, doc in counts.items():
-                tipo = None
-                try:
-                    tipo = await db.tipos_ingresso.find_one({"_id": ObjectId(tipo_id)})
-                except Exception:
-                    tipo = await db.tipos_ingresso.find_one({"_id": tipo_id})
-                vendas_por_tipo.append({
-                    "tipo_ingresso": tipo.get("descricao") if tipo else "Desconhecido",
-                    "valor": tipo.get("valor") if tipo else 0,
-                    "quantidade_total": doc.get("quantidade", 0),
-                    "ativos": doc.get("ativos", 0),
-                    "cancelados": doc.get("cancelados", 0),
-                    "receita_total": (tipo.get("valor") if tipo else 0) * doc.get("ativos", 0)
-                })
     
     # debug
     try:
