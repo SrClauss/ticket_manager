@@ -130,6 +130,8 @@
       console.error('Erro ao carregar métricas', e);
     }
 
+  // ── Participants List ─────────────────────────────────────────
+  function renderParticipant(p) {
     const ingressos = p.ingressos || [];
     const hasIngresso = ingressos.length > 0;
     const pid = p._id || p.id;
