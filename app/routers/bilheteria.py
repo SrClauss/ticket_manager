@@ -658,8 +658,10 @@ async def listar_participantes(
     if page < 1:
         page = 1
     
-    # Build query
-    query = {}
+    # Build query - SEMPRE filtrar por evento_id para mostrar apenas participantes do evento atual
+    query = {
+        "ingressos.evento_id": evento_id
+    }
     if nome and nome.strip():
         query["nome"] = {"$regex": nome, "$options": "i"}
     
@@ -716,10 +718,13 @@ async def buscar_participantes(
     cpf: str = None,
     evento_id: str = Depends(verify_token_bilheteria)
 ):
-    """Busca participantes por filtros (nome, email ou CPF)"""
+    """Busca participantes por filtros (nome, email ou CPF) do evento atual"""
     db = get_database()
     
-    query = {}
+    # SEMPRE filtrar por evento_id
+    query = {
+        "ingressos.evento_id": evento_id
+    }
     if nome:
         query["nome"] = {"$regex": nome, "$options": "i"}
     if email:
@@ -733,14 +738,17 @@ async def buscar_participantes(
         except Exception:
             query["cpf"] = {"$regex": cpf, "$options": "i"}
     
-    if not query:
-        return []
-    
     participantes = []
     cursor = db.participantes.find(query).limit(20)
     async for participante in cursor:
         participante["_id"] = str(participante["_id"])
         participante = normalize_bson_types(participante)
+        # Filtrar ingressos apenas do evento atual
+        if participante.get("ingressos"):
+            participante["ingressos"] = [
+                ing for ing in participante["ingressos"] 
+                if ing.get("evento_id") == evento_id
+            ]
         participantes.append(Participante(**participante))
     
     return participantes
@@ -788,10 +796,10 @@ async def busca_smart_participantes(
     if tipo == 'cpf':
         try:
             cpf_clean = validate_cpf(q)
-            query = {"cpf": cpf_clean}
+            query = {"cpf": cpf_clean, "ingressos.evento_id": evento_id}
         except Exception:
             digits = re.sub(r'\D', '', q)
-            query = {"cpf": {"$regex": digits, "$options": "i"}}
+            query = {"cpf": {"$regex": digits, "$options": "i"}, "ingressos.evento_id": evento_id}
         cursor = db.participantes.find(query).limit(20)
         async for p in cursor:
             p["_id"] = str(p["_id"])
@@ -824,7 +832,7 @@ async def busca_smart_participantes(
                 pass
 
     else:  # nome
-        query = {"nome": {"$regex": q, "$options": "i"}}
+        query = {"nome": {"$regex": q, "$options": "i"}, "ingressos.evento_id": evento_id}
         cursor = db.participantes.find(query).limit(20)
         async for p in cursor:
             p["_id"] = str(p["_id"])
