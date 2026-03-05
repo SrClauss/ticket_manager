@@ -89,18 +89,22 @@ async def ingresso_page(request: Request, ingresso_id: str):
     ingresso = None
     participante = None
     
-    try:
-        oid = ObjectId(ingresso_id)
-        participante = await db.participantes.find_one(
-            {"ingressos._id": oid},
-            {"ingressos": {"$elemMatch": {"_id": oid}}, "nome": 1, "email": 1, "cpf": 1}
-        )
-    except Exception:
-        # ingresso_id não é ObjectId válido, tentar como string
-        participante = await db.participantes.find_one(
-            {"ingressos._id": ingresso_id},
-            {"ingressos": {"$elemMatch": {"_id": ingresso_id}}, "nome": 1, "email": 1, "cpf": 1}
-        )
+    # Tenta primeiro como string (formato armazenado nos embedded)
+    participante = await db.participantes.find_one(
+        {"ingressos._id": ingresso_id},
+        {"ingressos": {"$elemMatch": {"_id": ingresso_id}}, "nome": 1, "email": 1, "cpf": 1}
+    )
+    
+    # Se não encontrou, tenta converter para ObjectId (caso legado)
+    if not participante:
+        try:
+            oid = ObjectId(ingresso_id)
+            participante = await db.participantes.find_one(
+                {"ingressos._id": oid},
+                {"ingressos": {"$elemMatch": {"_id": oid}}, "nome": 1, "email": 1, "cpf": 1}
+            )
+        except Exception:
+            pass
     
     if participante and participante.get("ingressos"):
         ingresso = participante["ingressos"][0]
