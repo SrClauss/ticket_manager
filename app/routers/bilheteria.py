@@ -653,9 +653,10 @@ async def update_participante(
                 detail="Participante não encontrado"
             )
     except InvalidId:
+        # invalid ID treated as not found
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="ID de participante inválido"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Participante não encontrado"
         )
     
     # Prepara update - apenas campos não-None
@@ -785,6 +786,23 @@ async def listar_participantes(
         current_page=page,
         per_page=per_page
     )
+
+
+@router.get("/participantes", response_model=List[Participante])
+async def listar_participantes_compat(
+    page: int = 1,
+    limit: int = 20,
+    nome: str = None,
+    evento_id: str = Depends(verify_token_bilheteria)
+):
+    """
+    Compat endpoint: permite GET em /participantes (legado).
+    Chama a função paginada `listar_participantes` e retorna apenas a lista
+    de participantes (formato aceito por clientes antigos).
+    """
+    # Reaproveita a implementação existente de listagem
+    resp = await listar_participantes(page=page, per_page=limit, nome=nome, evento_id=evento_id)
+    return resp.participantes
 
 
 @router.get("/participantes/buscar", response_model=List[Participante])
