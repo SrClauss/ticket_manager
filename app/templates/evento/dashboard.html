@@ -152,9 +152,9 @@
             <template x-if="p.ingressos && p.ingressos.length">
               <label @click.stop class="inline-flex items-center cursor-pointer">
                 <input type="checkbox" 
-                       x-model="p.ingressos[0].impresso" 
+                       x-model="p.ingressos[0].impresso"
                        @click.stop
-                       @change="toggleImpresso(EVENTO_ID, p.ingressos[0]._id, p, $event)" 
+                       @change="console.log('[CHECKBOX] Antes do toggle:', {nome: p.nome, ingresso_id: p.ingressos[0]._id, impresso_antes: !p.ingressos[0].impresso, impresso_depois: p.ingressos[0].impresso, evento: $event}); toggleImpresso(EVENTO_ID, p.ingressos[0]._id, p, $event)" 
                        class="mr-1 cursor-pointer" />
                 <span class="text-xs text-slate-300">Impresso</span>
               </label>
@@ -217,33 +217,55 @@
         }
       },
       async loadPage(page) {
+        console.log(`[LOAD] Carregando página ${page}...`);
         this.currentPage = page;
         const res = await fetch(`/evento/api/participantes?page=${page}&per_page=20`);
         if (!res.ok) return this.showError('Erro ao carregar participantes.');
         const data = await res.json();
+        console.log('[LOAD] Dados brutos recebidos do backend:', data);
+        
         this.participants = data.participantes || [];
         this.totalPages = data.total_pages || 1;
-        // Debug: log dos dados
-        console.log('Participantes carregados:', this.participants.map(p => ({
-          nome: p.nome,
-          impresso: p.ingressos?.[0]?.impresso,
-          tipo_impresso: typeof p.ingressos?.[0]?.impresso
-        })));
+        
+        // Debug detalhado: log dos dados de cada participante
+        console.log('[LOAD] Participantes após atribuição:', this.participants.length);
+        this.participants.forEach((p, idx) => {
+          const ing = p.ingressos?.[0];
+          console.log(`[LOAD] Participante ${idx}: ${p.nome}`, {
+            tem_ingressos: !!p.ingressos,
+            qtd_ingressos: p.ingressos?.length,
+            ingresso_id: ing?._id,
+            impresso_valor: ing?.impresso,
+            impresso_tipo: typeof ing?.impresso,
+            ingresso_completo: ing
+          });
+        });
       },
       async doSearch() {
         const q = this.searchQuery.trim();
         if (!q) { this.clearSearch(); return; }
+        console.log(`[SEARCH] Buscando por: "${q}"`);
         const res = await fetch(`/evento/api/participantes/busca-smart?q=${encodeURIComponent(q)}&evento_id=${encodeURIComponent(EVENTO_ID)}`);
         if (!res.ok) { this.showError('Erro ao buscar participantes.'); return; }
         const data = await res.json();
+        console.log('[SEARCH] Dados brutos recebidos:', data);
+        
         this.participants = data || [];
         this.totalPages = 1;
-        // Debug: log dos dados
-        console.log('Busca retornou:', this.participants.map(p => ({
-          nome: p.nome,
-          impresso: p.ingressos?.[0]?.impresso,
-          tipo_impresso: typeof p.ingressos?.[0]?.impresso
-        })));
+        
+        // Debug detalhado: log dos dados de cada participante
+        console.log('[SEARCH] Resultados após atribuição:', this.participants.length);
+        this.participants.forEach((p, idx) => {
+          const ing = p.ingressos?.[0];
+          console.log(`[SEARCH] Resultado ${idx}: ${p.nome}`, {
+            tem_ingressos: !!p.ingressos,
+            qtd_ingressos: p.ingressos?.length,
+            ingresso_id: ing?._id,
+            impresso_valor: ing?.impresso,
+            impresso_tipo: typeof ing?.impresso,
+            ingresso_completo: ing
+          });
+        });
       },
       handleSearchInput() {
         this.doSearch();
