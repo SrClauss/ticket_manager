@@ -21,8 +21,35 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 logger = logging.getLogger(__name__)
 
-COOKIE_TOKEN = "evento_token"
 
+async def _sync_impresso_field(db, ing: dict) -> None:
+    """Sincroniza o campo impresso do ingresso com a collection ingressos_emitidos."""
+    try:
+        ing_id_obj = ObjectId(ing["_id"])
+        emitido = await db.ingressos_emitidos.find_one(
+            {"_id": ing_id_obj},
+            {"impresso": 1}
+        )
+        if emitido and "impresso" in emitido:
+            ing["impresso"] = bool(emitido["impresso"])
+        else:
+            # Fallback: normaliza o valor embedded
+            impresso_original = ing.get("impresso")
+            if impresso_original is None or impresso_original == "":
+                ing["impresso"] = False
+            elif isinstance(impresso_original, str):
+                ing["impresso"] = impresso_original.lower() in ("true", "1", "yes")
+            else:
+                ing["impresso"] = bool(impresso_original)
+    except Exception:
+        # Fallback: normaliza o valor embedded
+        impresso_original = ing.get("impresso")
+        if impresso_original is None or impresso_original == "":
+            ing["impresso"] = False
+        elif isinstance(impresso_original, str):
+            ing["impresso"] = impresso_original.lower() in ("true", "1", "yes")
+        else:
+            ing["impresso"] = bool(impresso_original)
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -298,18 +325,10 @@ async def evento_api_participantes(request: Request, page: int = 1, per_page: in
                     # Garante que _id do ingresso é string
                     if ing.get("_id") and not isinstance(ing["_id"], str):
                         ing["_id"] = str(ing["_id"])
-                    # Normaliza campo impresso como booleano
-                    impresso_original = ing.get("impresso")
-                    print(f"[LOAD] Ingresso {ing.get('_id')}: impresso original = {impresso_original} (tipo: {type(impresso_original)})")
                     
-                    if impresso_original is None or impresso_original == "":
-                        ing["impresso"] = False
-                    elif isinstance(impresso_original, str):
-                        ing["impresso"] = impresso_original.lower() in ("true", "1", "yes")
-                    else:
-                        ing["impresso"] = bool(impresso_original)
+                    # Sincroniza campo impresso com ingressos_emitidos
+                    await _sync_impresso_field(db, ing)
                     
-                    print(f"[LOAD] Ingresso {ing.get('_id')}: impresso normalizado = {ing['impresso']} (tipo: {type(ing['impresso'])})")
                     filtered_ingressos.append(ing)
             p["ingressos"] = filtered_ingressos
         participantes.append(p)
@@ -357,14 +376,8 @@ async def evento_api_busca_smart(request: Request, q: str = ""):
                 filtered_ingressos = []
                 for ing in p["ingressos"]:
                     if ing.get("evento_id") == evento_id:
-                        # Normaliza campo impresso como booleano
-                        impresso = ing.get("impresso")
-                        if impresso is None or impresso == "":
-                            ing["impresso"] = False
-                        elif isinstance(impresso, str):
-                            ing["impresso"] = impresso.lower() in ("true", "1", "yes")
-                        else:
-                            ing["impresso"] = bool(impresso)
+                        # Sincroniza campo impresso com ingressos_emitidos
+                        await _sync_impresso_field(db, ing)
                         filtered_ingressos.append(ing)
                 p["ingressos"] = filtered_ingressos
             # append only if there remains at least one ingresso
@@ -392,14 +405,8 @@ async def evento_api_busca_smart(request: Request, q: str = ""):
                 filtered_ingressos = []
                 for ing in p_doc.get("ingressos", []):
                     if ing.get("evento_id") == evento_id:
-                        # Normaliza campo impresso como booleano
-                        impresso = ing.get("impresso")
-                        if impresso is None or impresso == "":
-                            ing["impresso"] = False
-                        elif isinstance(impresso, str):
-                            ing["impresso"] = impresso.lower() in ("true", "1", "yes")
-                        else:
-                            ing["impresso"] = bool(impresso)
+                        # Sincroniza campo impresso com ingressos_emitidos
+                        await _sync_impresso_field(db, ing)
                         filtered_ingressos.append(ing)
                 p_doc["ingressos"] = filtered_ingressos
             participantes.append(p_doc)
@@ -424,14 +431,8 @@ async def evento_api_busca_smart(request: Request, q: str = ""):
                 filtered_ingressos = []
                 for ing in p["ingressos"]:
                     if ing.get("evento_id") == evento_id:
-                        # Normaliza campo impresso como booleano
-                        impresso = ing.get("impresso")
-                        if impresso is None or impresso == "":
-                            ing["impresso"] = False
-                        elif isinstance(impresso, str):
-                            ing["impresso"] = impresso.lower() in ("true", "1", "yes")
-                        else:
-                            ing["impresso"] = bool(impresso)
+                        # Sincroniza campo impresso com ingressos_emitidos
+                        await _sync_impresso_field(db, ing)
                         filtered_ingressos.append(ing)
                 p["ingressos"] = filtered_ingressos
             if p.get("ingressos"):
