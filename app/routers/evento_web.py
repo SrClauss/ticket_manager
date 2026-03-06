@@ -185,6 +185,131 @@ async def evento_api_ilha_stats(request: Request, ilha_id: str):
     return JSONResponse({"ilha_id": ilha_id, "capacidade_maxima": capacidade, "ingressos_emitidos": total})
 
 
+@router.get("/evento/api/ingressos/stats")
+async def evento_api_ingressos_stats(request: Request):
+    """Estatísticas de ingressos impressos vs total emitidos (autenticado por cookie)."""
+    session = await _get_evento_from_cookie(request)
+    if not session:
+        return JSONResponse({"detail": "Não autenticado"}, status_code=401)
+    evento, _ = session
+    evento_id = _evento_id_str(evento)
+    db = database.get_database()
+
+    try:
+        evento_oid = ObjectId(evento_id)
+    except Exception:
+        evento_oid = None
+
+    # Build match clauses covering evento_id stored as str or ObjectId
+    id_or = [{"ingressos.evento_id": evento_id}]
+    if evento_oid:
+        id_or.append({"ingressos.evento_id": evento_oid})
+
+    pipeline = [
+        {"$match": {"$or": id_or}},
+        {"$unwind": "$ingressos"},
+        {"$match": {"$or": id_or}},
+        {"$group": {
+            "_id": None,
+            "total": {"$sum": 1},
+            "impressos": {"$sum": {"$cond": [{"$eq": ["$ingressos.impresso", True]}, 1, 0]}},
+        }},
+    ]
+    result = await db.participantes.aggregate(pipeline).to_list(length=1)
+    total = 0
+    impressos = 0
+    if result:
+        total = result[0].get("total", 0)
+        impressos = result[0].get("impressos", 0)
+
+    return JSONResponse({"total": total, "impressos": impressos})
+
+
+@router.get("/evento/api/ingresso/metrics")
+async def evento_api_ingresso_metrics(request: Request):
+    """Métricas detalhadas de ingressos por tipo e por ilha (autenticado por cookie)."""
+    session = await _get_evento_from_cookie(request)
+    if not session:
+        return JSONResponse({"detail": "Não autenticado"}, status_code=401)
+    evento, _ = session
+    evento_id = _evento_id_str(evento)
+    db = database.get_database()
+
+    # ── Tipo metrics ─────────────────────────────────────────────
+    pipeline_tipo = [
+        {"$match": {"evento_id": evento_id}},
+        {"$group": {
+            "_id": "$tipo_ingresso_id",
+            "total": {"$sum": 1},
+            "printed": {"$sum": {"$cond": [{"$eq": ["$impresso", True]}, 1, 0]}},
+        }},
+    ]
+    tipo_groups = await db.ingressos_emitidos.aggregate(pipeline_tipo).to_list(length=None)
+
+    tipo_metrics = []
+    for g in tipo_groups:
+        tipo_id = g.get("_id")
+        tipo_nome = "Desconhecido"
+        if tipo_id:
+            tipo = None
+            try:
+                tipo = await db.tipos_ingresso.find_one({"_id": ObjectId(str(tipo_id))})
+            except Exception:
+                pass
+            if not tipo:
+                tipo = await db.tipos_ingresso.find_one({"_id": tipo_id})
+            if tipo:
+                tipo_nome = tipo.get("nome") or tipo.get("descricao") or "Desconhecido"
+        tipo_metrics.append({
+            "tipo_id": str(tipo_id) if tipo_id else None,
+            "tipo_nome": tipo_nome,
+            "total": g.get("total", 0),
+            "printed": g.get("printed", 0),
+        })
+
+    # ── Ilha metrics ─────────────────────────────────────────────
+    # Collect ilhas for this event
+    ilhas = []
+    if evento.get("ilhas"):
+        ilhas = list(evento["ilhas"])
+    else:
+        cursor = db.ilhas.find({"evento_id": evento_id})
+        async for ilha in cursor:
+            ilhas.append(ilha)
+
+    # Build a map: tipo_id_str → set of ilha_id_str (from permissoes)
+    tipos_map = {}
+    cursor_tipos = db.tipos_ingresso.find({"evento_id": evento_id})
+    async for tipo in cursor_tipos:
+        t_id = str(tipo.get("_id"))
+        tipos_map[t_id] = set(str(p) for p in tipo.get("permissoes", []))
+
+    # Fetch all ingressos for the event
+    ingressos = []
+    cursor_ing = db.ingressos_emitidos.find({"evento_id": evento_id})
+    async for ing in cursor_ing:
+        ingressos.append(ing)
+
+    # For each ilha, count ingressos whose tipo grants access to it
+    ilha_metrics = []
+    for ilh in ilhas:
+        ilha_id_str = str(ilh.get("_id") or ilh.get("id"))
+        capacidade = ilh.get("capacidade_maxima", 0)
+        count = 0
+        for ing in ingressos:
+            tipo_id_str = str(ing.get("tipo_ingresso_id") or "")
+            if ilha_id_str in tipos_map.get(tipo_id_str, set()):
+                count += 1
+        ilha_metrics.append({
+            "ilha_id": ilha_id_str,
+            "nome_setor": ilh.get("nome_setor", ""),
+            "capacidade": capacidade,
+            "vendidos": count,
+        })
+
+    return JSONResponse({"tipo_metrics": tipo_metrics, "ilha_metrics": ilha_metrics})
+
+
 @router.get("/evento/api/participantes")
 async def evento_api_participantes(request: Request, page: int = 1, per_page: int = 20):
     """Lista paginada de participantes do evento (autenticado por cookie), ordenada por nome."""
